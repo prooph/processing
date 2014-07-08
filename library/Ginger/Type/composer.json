@@ -1,0 +1,20 @@
+{
+    "name": "gingerframework/ginger-type",
+    "description": "Provides base classes for source and target objects in a workflow",
+    "license": "BSD-3-Clause",
+    "keywords": [
+        "GingerWF",
+        "type"
+    ],
+    "autoload": {
+        "psr-0": {
+            "Ginger\\Type\\": ""
+        }
+    },
+    "target-dir": "Ginger/Type",
+    "require": {
+        "php": ">=5.4",
+        "beberlei/assert": "*",
+        "codeliner/php-equalsbuilder": "~1.1"
+    }
+}
