@@ -22,6 +22,13 @@ use Ginger\Type\Description\Description;
 interface Type 
 {
     /**
+     * Provides access to a prototype of the Ginger\Type\Type (empty Object, with a Description and a value with empty properties)
+     *
+     * @return Type
+     */
+    public static function prototype();
+
+    /**
      * @param string $valueString
      * @return Type
      */
@@ -60,5 +67,11 @@ interface Type
      * @return string representation of the value
      */
     public function toString();
+
+    /**
+     * @param Type $other
+     * @return boolean
+     */
+    public function sameAs(Type $other);
 }
  

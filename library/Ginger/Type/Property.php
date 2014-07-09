@@ -76,18 +76,5 @@ class Property
     {
         return $this->value;
     }
-
-    /**
-     * @param Property $other
-     * @return bool
-     */
-    public function sameAs(Property $other)
-    {
-        return EqualsBuilder::create()
-            ->append($this->name(), $other->name())
-            ->append($this->value(), $other->value())
-            ->strict()
-            ->equals();
-    }
 }
  

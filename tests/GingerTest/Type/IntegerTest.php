@@ -36,7 +36,7 @@ class IntegerTest extends TestCase
     /**
      * @test
      */
-    public function it_constructs_new_instance_from_string_representing_an_integer()
+    public function it_constructs_new_instance_from_string_representing_of_an_integer()
     {
         $int = Integer::fromString("10");
 
@@ -86,6 +86,40 @@ class IntegerTest extends TestCase
         $this->assertEquals('Integer', $description->label());
         $this->assertEquals('integer', $description->nativeType());
         $this->assertFalse($description->hasIdentifier());
+    }
+
+    /**
+     * @test
+     */
+    public function it_constructs_a_prototype()
+    {
+        $int = Integer::prototype();
+
+        $this->assertInstanceOf('Ginger\Type\Integer', $int);
+
+        $description = $int->description();
+
+        $this->assertEquals('Integer', $description->label());
+        $this->assertEquals('integer', $description->nativeType());
+        $this->assertFalse($description->hasIdentifier());
+
+        $this->assertNull($int->value());
+    }
+
+    /**
+     * @test
+     */
+    public function it_is_same_value_as_equal_integer()
+    {
+        $int1 = Integer::fromNativeValue(10);
+
+        $int2 = Integer::fromNativeValue(10);
+
+        $int3 = Integer::fromNativeValue(20);
+
+        $this->assertTrue($int1->sameAs($int2));
+
+        $this->assertFalse($int1->sameAs($int3));
     }
 }
  

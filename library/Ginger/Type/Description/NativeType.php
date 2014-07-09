@@ -19,15 +19,13 @@ class NativeType
 {
     const STRING      = "string";
 
-    const BOOLEAN      = "bool";
+    const BOOLEAN      = "boolean";
 
     const INTEGER      = "integer";
 
     const FLOAT        = "float";
 
     const DATETIME     = "datetime";
-
-    const DATEINTERVAL = "dateinterval";
 
     const COLLECTION   = "collection";
 
@@ -47,7 +45,6 @@ class NativeType
             self::INTEGER,
             self::FLOAT,
             self::DATETIME,
-            self::DATEINTERVAL,
             self::COLLECTION,
             self::DICTIONARY,
             self::OBJECT,

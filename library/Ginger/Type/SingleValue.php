@@ -34,6 +34,14 @@ abstract class SingleValue implements Type
     protected $description;
 
     /**
+     * @return Type
+     */
+    public static function prototype()
+    {
+        return new static(null, true);
+    }
+
+    /**
      * Performs assertions and sets the internal value property on success
      *
      * @param mixed $value
@@ -65,10 +73,13 @@ abstract class SingleValue implements Type
      * Use static factory methods to construct a SingleValue
      *
      * @param mixed $value
+     * @param bool $constructPrototype
      */
-    protected function __construct($value)
+    protected function __construct($value, $constructPrototype = false)
     {
-        $this->setValue($value);
+        if (! $constructPrototype) {
+            $this->setValue($value);
+        }
     }
 
     /**
@@ -107,6 +118,19 @@ abstract class SingleValue implements Type
     public function toString()
     {
         return (string)$this->value;
+    }
+
+    /**
+     * @param Type $other
+     * @return bool
+     */
+    public function sameAs(Type $other)
+    {
+        if (! $other instanceof SingleValue) {
+            return false;
+        }
+
+        return $this->value() === $other->value();
     }
 }
  
