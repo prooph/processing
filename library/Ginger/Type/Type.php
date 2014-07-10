@@ -24,7 +24,7 @@ interface Type
     /**
      * Provides access to a prototype of the Ginger\Type\Type (empty Object, with a Description and a value with empty properties)
      *
-     * @return Type
+     * @return Prototype
      */
     public static function prototype();
 
