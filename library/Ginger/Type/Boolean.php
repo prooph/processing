@@ -23,7 +23,7 @@ class Boolean extends SingleValue
      *
      * @return Description
      */
-    protected static function buildDescription()
+    public static function buildDescription()
     {
         return new Description("Boolean", NativeType::BOOLEAN, false);
     }

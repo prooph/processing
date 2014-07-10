@@ -29,7 +29,7 @@ class String extends SingleValue
      *
      * @return Description
      */
-    protected static function buildDescription()
+    public static function buildDescription()
     {
         return new Description('String', NativeType::STRING, false);
     }

@@ -50,15 +50,6 @@ abstract class SingleValue implements Type
     abstract protected function setValue($value);
 
     /**
-     * The description is cached in the internal description property
-     *
-     * Implement the method to build the description only once and only if it is requested
-     *
-     * @return Description
-     */
-    abstract static protected function buildDescription();
-
-    /**
      * @param mixed $value
      * @return Type
      */

@@ -29,6 +29,11 @@ interface Type
     public static function prototype();
 
     /**
+     * @return Description
+     */
+    public static function buildDescription();
+
+    /**
      * @param string $valueString
      * @return Type
      */

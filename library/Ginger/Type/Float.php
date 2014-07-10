@@ -29,7 +29,7 @@ class Float extends SingleValue
      *
      * @return Description
      */
-    protected static function buildDescription()
+    public static function buildDescription()
     {
         return new Description("Float", NativeType::FLOAT, false);
     }
