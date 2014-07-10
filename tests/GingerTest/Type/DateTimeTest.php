@@ -104,17 +104,15 @@ class DateTimeTest extends TestCase
      */
     public function it_constructs_a_prototype()
     {
-        $dateTime = DateTime::prototype();
+        $dateTimePrototype = DateTime::prototype();
 
-        $this->assertInstanceOf('Ginger\Type\DateTime', $dateTime);
+        $this->assertEquals('Ginger\Type\DateTime', $dateTimePrototype->of());
 
-        $description = $dateTime->description();
+        $description = $dateTimePrototype->typeDescription();
 
         $this->assertEquals('DateTime', $description->label());
         $this->assertEquals('datetime', $description->nativeType());
         $this->assertFalse($description->hasIdentifier());
-
-        $this->assertNull($dateTime->value());
     }
 
     /**

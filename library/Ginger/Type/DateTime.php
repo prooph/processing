@@ -27,10 +27,6 @@ class DateTime extends SingleValue
      */
     public function value()
     {
-        if (is_null($this->value)) {
-            return null;
-        }
-
         return clone $this->value;
     }
 
@@ -54,7 +50,7 @@ class DateTime extends SingleValue
      *
      * @return Description
      */
-    protected function buildDescription()
+    protected static function buildDescription()
     {
         return new Description('DateTime', NativeType::DATETIME, false);
     }

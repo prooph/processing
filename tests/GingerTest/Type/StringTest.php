@@ -82,17 +82,15 @@ class StringTest extends TestCase
      */
     public function it_constructs_a_prototype()
     {
-        $string = String::prototype();
+        $stringPrototype = String::prototype();
 
-        $this->assertInstanceOf('Ginger\Type\String', $string);
+        $this->assertEquals('Ginger\Type\String', $stringPrototype->of());
 
-        $description = $string->description();
+        $description = $stringPrototype->typeDescription();
 
         $this->assertEquals('String', $description->label());
         $this->assertEquals('string', $description->nativeType());
         $this->assertFalse($description->hasIdentifier());
-
-        $this->assertNull($string->value());
     }
 }
  

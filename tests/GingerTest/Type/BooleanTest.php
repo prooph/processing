@@ -92,17 +92,15 @@ class BooleanTest extends TestCase
      */
     public function it_constructs_a_prototype()
     {
-        $bool = Boolean::prototype();
+        $boolPrototype = Boolean::prototype();
 
-        $this->assertInstanceOf('Ginger\Type\Boolean', $bool);
+        $this->assertEquals('Ginger\Type\Boolean', $boolPrototype->of());
 
-        $description = $bool->description();
+        $description = $boolPrototype->typeDescription();
 
         $this->assertEquals('Boolean', $description->label());
         $this->assertEquals('boolean', $description->nativeType());
         $this->assertFalse($description->hasIdentifier());
-
-        $this->assertNull($bool->value());
     }
 }
  

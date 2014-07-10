@@ -34,11 +34,11 @@ abstract class SingleValue implements Type
     protected $description;
 
     /**
-     * @return Type
+     * @return Prototype
      */
     public static function prototype()
     {
-        return new static(null, true);
+        return new Prototype(get_called_class(), static::buildDescription(), array());
     }
 
     /**
@@ -56,7 +56,7 @@ abstract class SingleValue implements Type
      *
      * @return Description
      */
-    abstract protected function buildDescription();
+    abstract static protected function buildDescription();
 
     /**
      * @param mixed $value
@@ -73,13 +73,10 @@ abstract class SingleValue implements Type
      * Use static factory methods to construct a SingleValue
      *
      * @param mixed $value
-     * @param bool $constructPrototype
      */
-    protected function __construct($value, $constructPrototype = false)
+    protected function __construct($value)
     {
-        if (! $constructPrototype) {
-            $this->setValue($value);
-        }
+        $this->setValue($value);
     }
 
     /**
@@ -88,7 +85,7 @@ abstract class SingleValue implements Type
     public function description()
     {
         if (is_null($this->description)) {
-            $this->description = $this->buildDescription();
+            $this->description = static::buildDescription();
         }
 
         return $this->description;

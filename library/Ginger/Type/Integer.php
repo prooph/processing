@@ -25,6 +25,16 @@ use Ginger\Type\Description\NativeType;
 class Integer extends SingleValue
 {
     /**
+     * The description is cached in the internal description property
+     *
+     * @return Description
+     */
+    protected static function buildDescription()
+    {
+        return new Description('Integer', NativeType::INTEGER, false);
+    }
+
+    /**
      * @param string $valueString
      * @return Type
      */
@@ -43,16 +53,6 @@ class Integer extends SingleValue
     {
         \Assert\that($value)->integer();
         $this->value = $value;
-    }
-
-    /**
-     * The description is cached in the internal description property
-     *
-     * @return Description
-     */
-    protected function buildDescription()
-    {
-        return new Description('Integer', NativeType::INTEGER, false);
     }
 }
  

@@ -93,17 +93,15 @@ class FloatTest extends TestCase
      */
     public function it_constructs_a_prototype()
     {
-        $float = Float::prototype();
+        $floatPrototype = Float::prototype();
 
-        $this->assertInstanceOf('Ginger\Type\Float', $float);
+        $this->assertEquals('Ginger\Type\Float', $floatPrototype->of());
 
-        $description = $float->description();
+        $description = $floatPrototype->typeDescription();
 
         $this->assertEquals('Float', $description->label());
         $this->assertEquals('float', $description->nativeType());
         $this->assertFalse($description->hasIdentifier());
-
-        $this->assertNull($float->value());
     }
 
     /**

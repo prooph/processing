@@ -23,6 +23,18 @@ use Ginger\Type\Description\NativeType;
 class String extends SingleValue
 {
     /**
+     * The description is cached in the internal description property
+     *
+     * Implement the method to build the description only once and only if it is requested
+     *
+     * @return Description
+     */
+    protected static function buildDescription()
+    {
+        return new Description('String', NativeType::STRING, false);
+    }
+
+    /**
      * Performs assertions and sets the internal value property on success
      *
      * @param mixed $value
@@ -33,18 +45,6 @@ class String extends SingleValue
         \Assert\that($value)->string();
 
         $this->value = $value;
-    }
-
-    /**
-     * The description is cached in the internal description property
-     *
-     * Implement the method to build the description only once and only if it is requested
-     *
-     * @return Description
-     */
-    protected function buildDescription()
-    {
-        return new Description('String', NativeType::STRING, false);
     }
 
     /**

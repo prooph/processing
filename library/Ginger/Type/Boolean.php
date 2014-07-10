@@ -16,6 +16,17 @@ use Ginger\Type\Description\NativeType;
 
 class Boolean extends SingleValue
 {
+    /**
+     * The description is cached in the internal description property
+     *
+     * Implement the method to build the description only once and only if it is requested
+     *
+     * @return Description
+     */
+    protected static function buildDescription()
+    {
+        return new Description("Boolean", NativeType::BOOLEAN, false);
+    }
 
     /**
      * Performs assertions and sets the internal value property on success
@@ -28,18 +39,6 @@ class Boolean extends SingleValue
         \Assert\that($value)->boolean();
 
         $this->value = $value;
-    }
-
-    /**
-     * The description is cached in the internal description property
-     *
-     * Implement the method to build the description only once and only if it is requested
-     *
-     * @return Description
-     */
-    protected function buildDescription()
-    {
-        return new Description("Boolean", NativeType::BOOLEAN, false);
     }
 
     /**

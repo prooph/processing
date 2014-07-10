@@ -93,17 +93,16 @@ class IntegerTest extends TestCase
      */
     public function it_constructs_a_prototype()
     {
-        $int = Integer::prototype();
+        $intPrototype = Integer::prototype();
 
-        $this->assertInstanceOf('Ginger\Type\Integer', $int);
+        $this->assertInstanceOf('Ginger\Type\Prototype', $intPrototype);
 
-        $description = $int->description();
+        $description = $intPrototype->typeDescription();
 
+        $this->assertEquals('Ginger\Type\Integer', $intPrototype->of());
         $this->assertEquals('Integer', $description->label());
         $this->assertEquals('integer', $description->nativeType());
         $this->assertFalse($description->hasIdentifier());
-
-        $this->assertNull($int->value());
     }
 
     /**
