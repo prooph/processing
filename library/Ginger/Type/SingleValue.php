@@ -12,6 +12,7 @@
 namespace Ginger\Type;
 
 use Ginger\Type\Description\Description;
+use Ginger\Type\Exception\InvalidTypeException;
 
 /**
  * Abstract Class SingleValue
@@ -64,10 +65,16 @@ abstract class SingleValue implements Type
      * Use static factory methods to construct a SingleValue
      *
      * @param mixed $value
+     * @throws Exception\InvalidTypeException
      */
     protected function __construct($value)
     {
-        $this->setValue($value);
+        try {
+            $this->setValue($value);
+        } catch (\InvalidArgumentException $ex) {
+            throw InvalidTypeException::fromInvalidArgumentExceptionAndPrototype($ex, static::prototype());
+        }
+
     }
 
     /**

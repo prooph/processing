@@ -38,7 +38,7 @@ class StringTest extends TestCase
      */
     public function it_rejects_value_if_it_is_not_a_sting()
     {
-        $this->setExpectedException('\InvalidArgumentException');
+        $this->setExpectedException('Ginger\Type\Exception\InvalidTypeException');
 
         String::fromNativeValue(10);
     }
