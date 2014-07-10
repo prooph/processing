@@ -12,6 +12,7 @@
 namespace GingerTest\Type;
 
 use Ginger\Type\Boolean;
+use Ginger\Type\Exception\InvalidTypeException;
 use GingerTest\TestCase;
 
 /**
@@ -54,9 +55,18 @@ class BooleanTest extends TestCase
      */
     public function it_rejects_value_if_it_is_not_an_boolean()
     {
-        $this->setExpectedException('\InvalidArgumentException');
+        $prototype = null;
 
-        Boolean::fromNativeValue(1);
+        try {
+            Boolean::fromNativeValue(1);
+        } catch (InvalidTypeException $invalidTypeException) {
+            $prototype = $invalidTypeException->getPrototypeOfRelatedType();
+        }
+
+        $this->assertInstanceOf('Ginger\Type\Prototype', $prototype);
+
+        $this->assertEquals('Ginger\Type\Boolean', $prototype->of());
+
     }
 
     /**

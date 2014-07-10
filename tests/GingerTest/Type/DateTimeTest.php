@@ -70,7 +70,7 @@ class DateTimeTest extends TestCase
      */
     public function it_rejects_value_if_it_is_not_an_integer()
     {
-        $this->setExpectedException('\InvalidArgumentException');
+        $this->setExpectedException('Ginger\Type\Exception\InvalidTypeException');
 
         DateTime::fromNativeValue('2014-07-09 20:50:10');
     }

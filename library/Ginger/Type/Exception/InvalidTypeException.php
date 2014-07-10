@@ -11,22 +11,35 @@
 
 namespace Ginger\Type\Exception;
 
-use Ginger\Type\Type;
+use Ginger\Type\Prototype;
 
 class InvalidTypeException extends \InvalidArgumentException
 {
     /**
-     * @var
+     * @var Prototype
      */
     protected $relatedPrototypeOfType;
 
     /**
      * @param \InvalidArgumentException $exception
-     * @param Type $type
+     * @param \Ginger\Type\Prototype $prototype
+     * @return InvalidTypeException
      */
-    public static function fromInvalidArgumentExceptionAndType(\InvalidArgumentException $exception, Type $type)
+    public static function fromInvalidArgumentExceptionAndPrototype(\InvalidArgumentException $exception, Prototype $prototype)
     {
+        $invalidTypeException = new static($exception->getMessage(), $exception->getCode(), $exception);
 
+        $invalidTypeException->relatedPrototypeOfType = $prototype;
+
+        return $invalidTypeException;
+    }
+
+    /**
+     * @return Prototype
+     */
+    public function getPrototypeOfRelatedType()
+    {
+        return $this->relatedPrototypeOfType;
     }
 }
  
