@@ -46,6 +46,12 @@ interface Type extends \JsonSerializable
     public static function fromNativeValue($value);
 
     /**
+     * @param $value
+     * @return Type
+     */
+    public static function jsonDecode($value);
+
+    /**
      * @return Description
      */
     public function description();

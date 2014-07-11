@@ -60,6 +60,15 @@ abstract class SingleValue implements Type
     }
 
     /**
+     * @param mixed $value
+     * @return Type
+     */
+    public static function jsonDecode($value)
+    {
+        return static::fromNativeValue($value);
+    }
+
+    /**
      * Non accessible construct
      *
      * Use static factory methods to construct a SingleValue
@@ -116,11 +125,11 @@ abstract class SingleValue implements Type
     }
 
     /**
-     * @return string
+     * @return mixed
      */
     public function jsonSerialize()
     {
-        return $this->toString();
+        return $this->value();
     }
 
     /**

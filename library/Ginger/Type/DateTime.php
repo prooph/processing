@@ -65,6 +65,15 @@ class DateTime extends SingleValue
     }
 
     /**
+     * @param mixed $value
+     * @return Type
+     */
+    public static function jsonDecode($value)
+    {
+        return static::fromString($value);
+    }
+
+    /**
      * @return string
      */
     public function toString()
@@ -74,6 +83,14 @@ class DateTime extends SingleValue
         } else {
             return $this->value->format(\DateTime::ISO8601);
         }
+    }
+
+    /**
+     * @return string
+     */
+    public function jsonSerialize()
+    {
+        return $this->toString();
     }
 
     /**

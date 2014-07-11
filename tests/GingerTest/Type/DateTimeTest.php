@@ -143,6 +143,12 @@ class DateTimeTest extends TestCase
         $jsonStringCheck = json_encode(array("datetime" => $dateTime1->value()->format(\DateTime::ISO8601)));
 
         $this->assertEquals($jsonStringCheck, $jsonString);
+
+        $decodedJson = json_decode($jsonString, true);
+
+        $dateTimeDecoded = DateTime::jsonDecode($decodedJson["datetime"]);
+
+        $this->assertTrue($dateTime1->sameAs($dateTimeDecoded));
     }
 }
  
