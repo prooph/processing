@@ -66,5 +66,13 @@ class Property
     {
         return $this->type;
     }
+
+    /**
+     * @return mixed
+     */
+    public function value()
+    {
+        return $this->type()->value();
+    }
 }
  
