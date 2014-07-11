@@ -11,6 +11,7 @@
 
 namespace GingerTest\Type;
 
+use Ginger\Type\Exception\InvalidTypeException;
 use Ginger\Type\String;
 use Ginger\Type\StringCollection;
 use GingerTest\TestCase;
@@ -29,14 +30,110 @@ class StringCollectionTest extends TestCase
     public function it_constructs_a_collection_from_array_containing_string_types()
     {
         $fruits = StringCollection::fromNativeValue(array(
-            String::fromNativeValue("Apple"),
+            "Apple",
             String::fromNativeValue("Banana"),
-            String::fromNativeValue("Strawberry")
+            "Strawberry"
         ));
 
         $this->assertInstanceOf('Ginger\Type\StringCollection', $fruits);
+
+        $fruitList = array();
+
+        foreach ($fruits->value() as $fruit) {
+            $fruitList[] = $fruit->value();
+        }
+
+        $this->assertEquals(array("Apple", "Banana", "Strawberry"), $fruitList);
     }
 
-    //@TODO: Add more tests
+    /**
+     * @test
+     */
+    public function it_constructs_collection_from_string_representation()
+    {
+        $fruitsString = json_encode(array("Apple", "Banana", "Strawberry"));
+
+        $fruits = StringCollection::fromString($fruitsString);
+
+        $fruitList = array();
+
+        foreach ($fruits->value() as $fruit) {
+            $fruitList[] = $fruit->value();
+        }
+
+        $this->assertEquals(array("Apple", "Banana", "Strawberry"), $fruitList);
+    }
+
+    /**
+     * @test
+     */
+    public function it_constructs_collection_from_json_decoded_value()
+    {
+        $fruits = StringCollection::fromNativeValue(array(
+            "Apple",
+            String::fromNativeValue("Banana"),
+            "Strawberry"
+        ));
+
+        $jsonString = json_encode($fruits);
+
+        $decodedJson = json_decode($jsonString);
+
+        $decodedFruits = StringCollection::jsonDecode($decodedJson);
+
+        $fruitList = array();
+
+        foreach ($decodedFruits->value() as $fruit) {
+            $fruitList[] = $fruit->value();
+        }
+
+        $this->assertEquals(array("Apple", "Banana", "Strawberry"), $fruitList);
+    }
+
+    /**
+     * @test
+     */
+    public function it_rejects_value_if_it_is_not_an_array()
+    {
+        try {
+            StringCollection::fromNativeValue("not an array");
+        } catch (InvalidTypeException $invalidTypeException) {
+            $prototype = $invalidTypeException->getPrototypeOfRelatedType();
+        }
+
+        $this->assertInstanceOf('Ginger\Type\Prototype', $prototype);
+
+        $this->assertEquals('Ginger\Type\StringCollection', $prototype->of());
+    }
+
+    /**
+     * @test
+     */
+    public function it_rejects_value_if_it_is_not_a_collection_containing_only_one_item_type()
+    {
+        try {
+            StringCollection::fromNativeValue(array("Apple", 123, "Strawberry"));
+        } catch (InvalidTypeException $invalidTypeException) {
+            $prototype = $invalidTypeException->getPrototypeOfRelatedType();
+        }
+
+        $this->assertInstanceOf('Ginger\Type\Prototype', $prototype);
+
+        $this->assertEquals('Ginger\Type\StringCollection', $prototype->of());
+    }
+
+    /**
+     * @test
+     */
+    public function it_has_a_convenient_description()
+    {
+        $stringCol = StringCollection::fromNativeValue(array("Apple", "Banana"));
+
+        $description = $stringCol->description();
+
+        $this->assertEquals('StringCollection', $description->label());
+        $this->assertEquals('collection', $description->nativeType());
+        $this->assertFalse($description->hasIdentifier());
+    }
 }
  

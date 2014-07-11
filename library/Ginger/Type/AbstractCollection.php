@@ -22,8 +22,6 @@ use Ginger\Type\Exception\InvalidTypeException;
  */
 abstract class AbstractCollection implements CollectionType
 {
-    const DELIMITER = '/||/';
-
     /**
      * @var array
      */
@@ -56,14 +54,14 @@ abstract class AbstractCollection implements CollectionType
      */
     public static function fromString($valueString)
     {
-        $itemsStrings = explode(self::DELIMITER, $valueString);
+        $itemsEncoded = json_decode($valueString, true);
 
         $itemClass = static::prototype()->propertiesOfType()['item']->typePrototype()->of();
 
         $items = array();
 
-        foreach ($itemsStrings as $itemString) {
-            $items = $itemClass::fromString($itemString);
+        foreach ($itemsEncoded as $encodedItem) {
+            $items[] = $itemClass::jsonDecode($encodedItem);
         }
 
         return new static($items);
@@ -86,6 +84,23 @@ abstract class AbstractCollection implements CollectionType
     }
 
     /**
+     * @param $value
+     * @return AbstractCollection
+     */
+    public static function jsonDecode($value)
+    {
+        $itemClass = static::prototype()->propertiesOfType()['item']->typePrototype()->of();
+
+        $items = array();
+
+        foreach ($value as $encodedItem) {
+            $items[] = $itemClass::jsonDecode($encodedItem);
+        }
+
+        return new static($items);
+    }
+
+    /**
      * @param array $value
      * @throws Exception\InvalidTypeException If value is not an array containing only items of related Ginger\Type
      */
@@ -94,7 +109,13 @@ abstract class AbstractCollection implements CollectionType
         $itemClass = static::prototype()->propertiesOfType()['item']->typePrototype()->of();
 
         try {
-            \Assert\that($value)->all()->isInstanceOf($itemClass);
+
+            foreach ($value as $index => $itemOrNativeValue) {
+                if (! $itemOrNativeValue instanceof $itemClass) {
+                    $value[$index] = $itemClass::fromNativeValue($itemOrNativeValue);
+                }
+            }
+
         } catch (\InvalidArgumentException $ex) {
             throw InvalidTypeException::fromInvalidArgumentExceptionAndPrototype($ex, static::prototype());
         }
@@ -146,13 +167,12 @@ abstract class AbstractCollection implements CollectionType
      */
     public function toString()
     {
-        $itemsStrings = array();
+        return json_encode($this->value());
+    }
 
-        foreach ($this->value as $item) {
-            $itemsStrings[] = $item->toString();
-        }
-
-        return implode(static::DELIMITER, $itemsStrings);
+    public function jsonSerialize()
+    {
+        return $this->value();
     }
 
     /**
