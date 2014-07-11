@@ -52,21 +52,21 @@ class AbstractDictionaryTest extends TestCase
 
         $this->assertInstanceOf('GingerTest\Type\Mock\AddressDictionary', $user->property("address")->type());
 
-        $this->assertInstanceOf('Ginger\Type\String', $user->property("address")->type()->property("street")->type());
+        $this->assertInstanceOf('Ginger\Type\String', $user->property("address")->property("street")->type());
 
-        $this->assertEquals("Main Street", $user->property("address")->type()->property("street")->value());
+        $this->assertEquals("Main Street", $user->property("address")->property("street")->value());
 
-        $this->assertInstanceOf('Ginger\Type\Integer', $user->property("address")->type()->property("streetNumber")->type());
+        $this->assertInstanceOf('Ginger\Type\Integer', $user->property("address")->property("streetNumber")->type());
 
-        $this->assertEquals(10, $user->property("address")->type()->property("streetNumber")->value());
+        $this->assertEquals(10, $user->property("address")->property("streetNumber")->value());
 
-        $this->assertInstanceOf('Ginger\Type\String', $user->property("address")->type()->property("zip")->type());
+        $this->assertInstanceOf('Ginger\Type\String', $user->property("address")->property("zip")->type());
 
-        $this->assertEquals("12345", $user->property("address")->type()->property("zip")->value());
+        $this->assertEquals("12345", $user->property("address")->property("zip")->value());
 
-        $this->assertInstanceOf('Ginger\Type\String', $user->property("address")->type()->property("city")->type());
+        $this->assertInstanceOf('Ginger\Type\String', $user->property("address")->property("city")->type());
 
-        $this->assertEquals("Test City", $user->property("address")->type()->property("city")->value());
+        $this->assertEquals("Test City", $user->property("address")->property("city")->value());
     }
 
     /**
@@ -101,21 +101,21 @@ class AbstractDictionaryTest extends TestCase
 
         $this->assertInstanceOf('GingerTest\Type\Mock\AddressDictionary', $sameUser->property("address")->type());
 
-        $this->assertInstanceOf('Ginger\Type\String', $sameUser->property("address")->type()->property("street")->type());
+        $this->assertInstanceOf('Ginger\Type\String', $sameUser->property("address")->property("street")->type());
 
-        $this->assertEquals("Main Street", $sameUser->property("address")->type()->property("street")->value());
+        $this->assertEquals("Main Street", $sameUser->property("address")->property("street")->value());
 
-        $this->assertInstanceOf('Ginger\Type\Integer', $sameUser->property("address")->type()->property("streetNumber")->type());
+        $this->assertInstanceOf('Ginger\Type\Integer', $sameUser->property("address")->property("streetNumber")->type());
 
-        $this->assertEquals(10, $sameUser->property("address")->type()->property("streetNumber")->value());
+        $this->assertEquals(10, $sameUser->property("address")->property("streetNumber")->value());
 
-        $this->assertInstanceOf('Ginger\Type\String', $sameUser->property("address")->type()->property("zip")->type());
+        $this->assertInstanceOf('Ginger\Type\String', $sameUser->property("address")->property("zip")->type());
 
-        $this->assertEquals("12345", $sameUser->property("address")->type()->property("zip")->value());
+        $this->assertEquals("12345", $sameUser->property("address")->property("zip")->value());
 
-        $this->assertInstanceOf('Ginger\Type\String', $sameUser->property("address")->type()->property("city")->type());
+        $this->assertInstanceOf('Ginger\Type\String', $sameUser->property("address")->property("city")->type());
 
-        $this->assertEquals("Test City", $sameUser->property("address")->type()->property("city")->value());
+        $this->assertEquals("Test City", $sameUser->property("address")->property("city")->value());
     }
 
     /**
@@ -152,21 +152,21 @@ class AbstractDictionaryTest extends TestCase
 
         $this->assertInstanceOf('GingerTest\Type\Mock\AddressDictionary', $sameUser->property("address")->type());
 
-        $this->assertInstanceOf('Ginger\Type\String', $sameUser->property("address")->type()->property("street")->type());
+        $this->assertInstanceOf('Ginger\Type\String', $sameUser->property("address")->property("street")->type());
 
-        $this->assertEquals("Main Street", $sameUser->property("address")->type()->property("street")->value());
+        $this->assertEquals("Main Street", $sameUser->property("address")->property("street")->value());
 
-        $this->assertInstanceOf('Ginger\Type\Integer', $sameUser->property("address")->type()->property("streetNumber")->type());
+        $this->assertInstanceOf('Ginger\Type\Integer', $sameUser->property("address")->property("streetNumber")->type());
 
-        $this->assertEquals(10, $sameUser->property("address")->type()->property("streetNumber")->value());
+        $this->assertEquals(10, $sameUser->property("address")->property("streetNumber")->value());
 
-        $this->assertInstanceOf('Ginger\Type\String', $sameUser->property("address")->type()->property("zip")->type());
+        $this->assertInstanceOf('Ginger\Type\String', $sameUser->property("address")->property("zip")->type());
 
-        $this->assertEquals("12345", $sameUser->property("address")->type()->property("zip")->value());
+        $this->assertEquals("12345", $sameUser->property("address")->property("zip")->value());
 
-        $this->assertInstanceOf('Ginger\Type\String', $sameUser->property("address")->type()->property("city")->type());
+        $this->assertInstanceOf('Ginger\Type\String', $sameUser->property("address")->property("city")->type());
 
-        $this->assertEquals("Test City", $sameUser->property("address")->type()->property("city")->value());
+        $this->assertEquals("Test City", $sameUser->property("address")->property("city")->value());
     }
 
     /**

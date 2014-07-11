@@ -74,5 +74,23 @@ class Property
     {
         return $this->type()->value();
     }
+
+    /**
+     * @param string $name
+     * @return bool
+     */
+    public function hasProperty($name)
+    {
+        return $this->type()->hasProperty($name);
+    }
+
+    /**
+     * @param string $name
+     * @return Property|null
+     */
+    public function property($name)
+    {
+        return $this->type()->property($name);
+    }
 }
  
