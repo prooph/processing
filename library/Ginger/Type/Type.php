@@ -22,7 +22,7 @@ use Ginger\Type\Description\Description;
 interface Type extends \JsonSerializable
 {
     /**
-     * Provides access to a prototype of the Ginger\Type\Type (empty Object, with a Description and a value with empty properties)
+     * Provides access to a prototype of the Ginger\Type\Type (empty Object, with a Description and PrototypeProperties)
      *
      * @return Prototype
      */

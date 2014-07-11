@@ -31,7 +31,7 @@ class Prototype
     protected $descriptionOfType;
 
     /**
-     * @var PrototypeProperty[]
+     * @var PrototypeProperty[propertyName => PrototypeProperty]
      */
     protected $propertiesOfType;
 

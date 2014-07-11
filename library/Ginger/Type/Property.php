@@ -42,15 +42,13 @@ class Property
     /**
      * @param string     $name
      * @param Type       $type
-     * @param mixed|null $value
      */
-    public function __construct($name, Type $type, $value = null)
+    public function __construct($name, Type $type)
     {
         \Assert\that($name)->notEmpty()->string();
 
         $this->name  = $name;
         $this->type  = $type;
-        $this->value = $value;
     }
 
     /**
@@ -67,14 +65,6 @@ class Property
     public function type()
     {
         return $this->type;
-    }
-
-    /**
-     * @return mixed|null
-     */
-    public function value()
-    {
-        return $this->value;
     }
 }
  
