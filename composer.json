@@ -12,7 +12,8 @@
         "php": ">=5.4",
         "beberlei/assert": "*",
         "codeliner/php-equalsbuilder": "~1.1",
-        "codeliner/array-reader": "~1.1"
+        "codeliner/array-reader": "~1.1",
+        "prooph/service-bus" : "~0.3"
     },
     "require-dev": {
         "phpunit/phpunit": "~3.7"
@@ -26,6 +27,7 @@
         }
     },
     "replace": {
-        "gingerframework/ginger-type": "self.version"
+        "gingerframework/ginger-type": "self.version",
+        "gingerframework/ginger-message": "self.version"
     }
 }

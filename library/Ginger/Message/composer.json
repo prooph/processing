@@ -1,0 +1,20 @@
+{
+    "name": "gingerframework/ginger-message",
+    "description": "Provides base classes for ginger workflow messaging",
+    "license": "BSD-3-Clause",
+    "keywords": [
+        "GingerWF",
+        "message"
+    ],
+    "autoload": {
+        "psr-0": {
+            "Ginger\\Message\\": ""
+        }
+    },
+    "target-dir": "Ginger/Message",
+    "require": {
+        "php": ">=5.4",
+        "beberlei/assert": "*",
+        "prooph/service-bus" : "~0.3"
+    }
+}
