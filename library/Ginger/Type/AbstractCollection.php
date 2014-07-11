@@ -33,6 +33,11 @@ abstract class AbstractCollection implements CollectionType
     protected $description;
 
     /**
+     * @var Property
+     */
+    protected $itemProperty;
+
+    /**
      * Provides access to a prototype of the Ginger\Type\Type (empty Object, with a Description and PrototypeProperties)
      *
      * @return Prototype
@@ -121,6 +126,10 @@ abstract class AbstractCollection implements CollectionType
         }
 
         $this->value = $value;
+
+        $refItem = new \ReflectionClass($itemClass);
+
+        $this->itemProperty = new Property("item", $refItem->newInstanceWithoutConstructor());
     }
 
     /**
@@ -147,11 +156,25 @@ abstract class AbstractCollection implements CollectionType
      */
     public function properties()
     {
-        $itemClass = static::prototype()->propertiesOfType()['item']->typePrototype()->of();
+        return array('item' => $this->itemProperty);
+    }
 
-        $refItem = new \ReflectionClass($itemClass);
+    /**
+     * @param string $name
+     * @return bool
+     */
+    public function hasProperty($name)
+    {
+        return $name === "item";
+    }
 
-        return array('item' => new Property('item', $refItem->newInstanceWithoutConstructor()));
+    /**
+     * @param string $name
+     * @return Property|null
+     */
+    public function property($name)
+    {
+        return $name === "item" ? $this->itemProperty : null;
     }
 
     /**

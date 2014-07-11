@@ -70,6 +70,18 @@ interface Type extends \JsonSerializable
     public function properties();
 
     /**
+     * @param string $name of the property
+     * @return bool
+     */
+    public function hasProperty($name);
+
+    /**
+     * @param string $name of the property
+     * @return null|Property
+     */
+    public function property($name);
+
+    /**
      * @return mixed Type of the value is defined in Ginger\Type\Description of the type
      */
     public function value();

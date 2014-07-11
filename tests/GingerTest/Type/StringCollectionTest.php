@@ -95,6 +95,8 @@ class StringCollectionTest extends TestCase
      */
     public function it_rejects_value_if_it_is_not_an_array()
     {
+        $prototype = null;
+
         try {
             StringCollection::fromNativeValue("not an array");
         } catch (InvalidTypeException $invalidTypeException) {
@@ -111,6 +113,8 @@ class StringCollectionTest extends TestCase
      */
     public function it_rejects_value_if_it_is_not_a_collection_containing_only_one_item_type()
     {
+        $prototype = null;
+
         try {
             StringCollection::fromNativeValue(array("Apple", 123, "Strawberry"));
         } catch (InvalidTypeException $invalidTypeException) {
@@ -134,6 +138,28 @@ class StringCollectionTest extends TestCase
         $this->assertEquals('StringCollection', $description->label());
         $this->assertEquals('collection', $description->nativeType());
         $this->assertFalse($description->hasIdentifier());
+    }
+
+    /**
+     * @test
+     */
+    public function it_has_item_property_but_no_other()
+    {
+        $stringCol = StringCollection::fromNativeValue(array("Apple", "Banana"));
+
+        $this->assertTrue($stringCol->hasProperty('item'));
+        $this->assertFalse($stringCol->hasProperty('Apple'));
+    }
+
+    /**
+     * @test
+     */
+    public function it_returns_item_property_if_requested()
+    {
+        $stringCol = StringCollection::fromNativeValue(array("Apple", "Banana"));
+
+        $this->assertEquals('Ginger\Type\String',get_class($stringCol->property('item')->type()));
+        $this->assertNull($stringCol->property('Apple'));
     }
 }
  

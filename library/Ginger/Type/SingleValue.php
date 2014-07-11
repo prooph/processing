@@ -109,6 +109,24 @@ abstract class SingleValue implements Type
     }
 
     /**
+     * @param string $name
+     * @return bool
+     */
+    public function hasProperty($name)
+    {
+        return false;
+    }
+
+    /**
+     * @param string $name
+     * @return Property|null
+     */
+    public function property($name)
+    {
+        return null;
+    }
+
+    /**
      * @return mixed Type of the value is defined in Ginger\Type\Description of the type
      */
     public function value()
