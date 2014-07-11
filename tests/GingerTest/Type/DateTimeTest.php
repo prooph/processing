@@ -130,5 +130,19 @@ class DateTimeTest extends TestCase
 
         $this->assertFalse($dateTime1->sameAs($dateTime3));
     }
+
+    /**
+     * @test
+     */
+    public function it_uses_the_toString_method_when_it_is_passed_to_json_encode()
+    {
+        $dateTime1 = DateTime::fromNativeValue(new \DateTime('2014-07-09 20:50:10'));
+
+        $jsonString = json_encode(array("datetime" => $dateTime1));
+
+        $jsonStringCheck = json_encode(array("datetime" => $dateTime1->value()->format(\DateTime::ISO8601)));
+
+        $this->assertEquals($jsonStringCheck, $jsonString);
+    }
 }
  

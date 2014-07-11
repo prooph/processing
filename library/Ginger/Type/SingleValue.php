@@ -116,6 +116,14 @@ abstract class SingleValue implements Type
     }
 
     /**
+     * @return string
+     */
+    public function jsonSerialize()
+    {
+        return $this->toString();
+    }
+
+    /**
      * @param Type $other
      * @return bool
      */
