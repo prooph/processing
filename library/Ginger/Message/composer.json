@@ -14,7 +14,10 @@
     "target-dir": "Ginger/Message",
     "require": {
         "php": ">=5.4",
+        "gingerframework/ginger-type" : "self.version",
         "beberlei/assert": "*",
-        "prooph/service-bus" : "~0.3"
+        "prooph/service-bus" : "~0.3",
+        "codeliner/array-reader": "~1.1",
+        "zendframework/zend-stdlib" : "~2.3"
     }
 }

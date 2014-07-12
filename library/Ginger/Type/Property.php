@@ -92,5 +92,17 @@ class Property
     {
         return $this->type()->property($name);
     }
+
+    /**
+     * @param Property $other
+     * @return bool
+     */
+    public function sameAs(Property $other)
+    {
+        return EqualsBuilder::create()
+            ->append($this->type()->sameAs($other->type()))
+            ->append($this->name(), $other->name())
+            ->equals();
+    }
 }
  
