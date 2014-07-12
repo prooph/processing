@@ -18,6 +18,7 @@
         "beberlei/assert": "*",
         "prooph/service-bus" : "~0.3",
         "codeliner/array-reader": "~1.1",
-        "zendframework/zend-stdlib" : "~2.3"
+        "zendframework/zend-stdlib" : "~2.3",
+        "rhumsaa/uuid" : "2.5.*"
     }
 }

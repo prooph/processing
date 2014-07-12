@@ -12,6 +12,7 @@
 namespace Ginger\Message;
 
 use Codeliner\ArrayReader\ArrayReader;
+use Ginger\Type\Prototype;
 use Ginger\Type\Type;
 
 /**
@@ -36,6 +37,15 @@ class Payload implements \JsonSerializable
      * @var ArrayReader
      */
     protected $payloadReader;
+
+    /**
+     * @param Prototype $aPrototype
+     * @return Payload
+     */
+    public static function fromPrototype(Prototype $aPrototype)
+    {
+        return new static($aPrototype->of(), array());
+    }
 
     /**
      * @param Type $aType

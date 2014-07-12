@@ -11,7 +11,11 @@
 
 namespace Ginger\Message;
 
+use Ginger\Type\Exception\InvalidTypeException;
+use Ginger\Type\Prototype;
+use Ginger\Type\Type;
 use Prooph\ServiceBus\Message\MessageNameProvider;
+use Rhumsaa\Uuid\Uuid;
 
 /**
  * Class WorkflowMessage
@@ -21,9 +25,7 @@ use Prooph\ServiceBus\Message\MessageNameProvider;
  */
 class WorkflowMessage implements MessageNameProvider
 {
-    const MESSAGE_NAME_PREFIX = "GINGER-MESSAGE-";
-
-    protected $messageName = "DEFAULT";
+    protected $messageName;
 
     /**
      * @var Uuid
@@ -41,35 +43,163 @@ class WorkflowMessage implements MessageNameProvider
     protected $createdOn;
 
     /**
-     * @var \DateTime
+     * @var Payload
      */
-    protected $updatedOn;
+    protected $payload;
 
     /**
-     * @var array
+     * @param Prototype $aPrototype
+     * @return WorkflowMessage
      */
-    protected $payload = array();
+    public static function collectDataOf(Prototype $aPrototype)
+    {
+        $messageName = MessageNameUtils::getCollectDataCommandName($aPrototype->of());
+
+        return new static(Payload::fromPrototype($aPrototype), $messageName);
+    }
+
+    /**
+     * @param \Ginger\Type\Type $data
+     * @return WorkflowMessage
+     */
+    public static function newDataCollected(Type $data)
+    {
+        $payload = Payload::fromType($data);
+
+        $messageName = MessageNameUtils::getDataCollectedEventName($payload->getTypeClass());
+
+        return new static($payload, $messageName);
+    }
+
+    /**
+     * @param Payload $payload
+     * @param string $messageName
+     * @param Uuid|null $uuid
+     * @param int $version
+     * @param \DateTime|null $createdOn
+     */
+    protected function __construct(
+        Payload $payload,
+        $messageName,
+        Uuid $uuid = null,
+        $version = 1,
+        \DateTime $createdOn = null
+    ) {
+        $this->payload = $payload;
+
+        \Assert\that($messageName)->notEmpty()->string();
+
+        $this->messageName = $messageName;
+
+        if (is_null($uuid)) {
+            $uuid = Uuid::uuid4();
+        }
+
+        $this->uuid = $uuid;
+
+        $this->version = $version;
+
+        if (is_null($createdOn)) {
+            $createdOn = new \DateTime();
+        }
+
+        $this->createdOn = $createdOn;
+    }
+
+    /**
+     * Transforms current message to a data collected event and replaces payload data with collected data
+     *
+     * @param Type $collectedData
+     * @throws \Ginger\Type\Exception\InvalidTypeException If answer type does not match with the previous requested type
+     */
+    public function answerWith(Type $collectedData)
+    {
+        $collectedPayload = Payload::fromType($collectedData);
+
+        $collectedDataTypeClass = $collectedPayload->getTypeClass();
+
+        if ($this->payload->getTypeClass() !== $collectedPayload->getTypeClass()) {
+            throw InvalidTypeException::fromInvalidArgumentExceptionAndPrototype(
+                new \InvalidArgumentException(sprintf(
+                    "Type %s of collected data does not match the type of requested data %s",
+                    $collectedPayload->getTypeClass(),
+                    $this->payload->getTypeClass()
+                )),
+                $collectedDataTypeClass::prototype()
+            );
+        }
+
+        $type = MessageNameUtils::getTypePartOfMessageName($this->messageName);
+
+        $this->messageName = MessageNameUtils::getDataCollectedEventName($type);
+
+        $this->version++;
+
+        $this->payload->replaceData($collectedPayload->getData());
+    }
+
+    /**
+     * Transforms current message to a process data command
+     */
+    public function prepareDataProcessing()
+    {
+        $type = MessageNameUtils::getTypePartOfMessageName($this->messageName);
+
+        $this->messageName = MessageNameUtils::getProcessDataCommandName($type);
+
+        $this->version++;
+    }
+
+    /**
+     * Transforms current message to a data processed event
+     */
+    public function answerWithDataProcessingCompleted()
+    {
+        $type = MessageNameUtils::getTypePartOfMessageName($this->messageName);
+
+        $this->messageName = MessageNameUtils::getDataProcessedEventName($type);
+
+        $this->version++;
+    }
 
     /**
      * @return string Name of the message
      */
     public function getMessageName()
     {
-        return static::MESSAGE_NAME_PREFIX . $this->messageName;
+        return $this->messageName;
     }
 
     /**
-     * @param string $aMessageName
+     * @return Payload
      */
-    public function setMessageName($aMessageName)
+    public function getPayload()
     {
-        \Assert\that($aMessageName)->notEmpty()->string();
-
-        $part = str_replace(static::MESSAGE_NAME_PREFIX, "", $aMessageName);
-
-        $this->messageName = $part;
+        return $this->payload;
     }
 
+    /**
+     * @return Uuid
+     */
+    public function getUuid()
+    {
+        return $this->uuid;
+    }
 
+    /**
+     * @return int
+     */
+    public function getVersion()
+    {
+        return $this->version;
+    }
+
+    /**
+     * @return \DateTime
+     */
+    public function getCreatedOn()
+    {
+        return $this->createdOn;
+    }
 }
  

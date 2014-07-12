@@ -221,5 +221,36 @@ class PayloadTest extends TestCase
 
         $this->assertTrue($user->property("address")->type()->sameAs($address));
     }
+
+    /**
+     * @test
+     */
+    public function it_constructs_payload_from_prototype()
+    {
+        $payload = Payload::fromPrototype(UserDictionary::prototype());
+
+        $this->assertInstanceOf('Ginger\Message\Payload', $payload);
+
+        $this->assertEquals('GingerTest\Type\Mock\UserDictionary', $payload->getTypeClass());
+
+        $this->assertEquals(array(), $payload->getData());
+
+        $userData = array(
+            'id' => 1,
+            'name' => 'Alex',
+            'address' => array(
+                'street' => 'Main Street',
+                'streetNumber' => 10,
+                'zip' => '12345',
+                'city' => 'Test City'
+            )
+        );
+
+        $payload->replaceData($userData);
+
+        $user = $payload->toType();
+
+        $this->assertEquals('Alex', $user->property("name")->value());
+    }
 }
  
