@@ -146,7 +146,7 @@ class DateTimeTest extends TestCase
 
         $decodedJson = json_decode($jsonString, true);
 
-        $dateTimeDecoded = DateTime::jsonDecode($decodedJson["datetime"]);
+        $dateTimeDecoded = DateTime::fromJsonDecodedData($decodedJson["datetime"]);
 
         $this->assertTrue($dateTime1->sameAs($dateTimeDecoded));
     }

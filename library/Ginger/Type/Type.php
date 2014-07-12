@@ -49,7 +49,7 @@ interface Type extends \JsonSerializable
      * @param $value
      * @return Type
      */
-    public static function jsonDecode($value);
+    public static function fromJsonDecodedData($value);
 
     /**
      * @return Description

@@ -14,6 +14,7 @@ namespace Ginger\Message;
 use Ginger\Type\Exception\InvalidTypeException;
 use Ginger\Type\Prototype;
 use Ginger\Type\Type;
+use Prooph\ServiceBus\Message\MessageInterface;
 use Prooph\ServiceBus\Message\MessageNameProvider;
 use Rhumsaa\Uuid\Uuid;
 
@@ -69,6 +70,28 @@ class WorkflowMessage implements MessageNameProvider
         $messageName = MessageNameUtils::getDataCollectedEventName($payload->getTypeClass());
 
         return new static($payload, $messageName);
+    }
+
+    /**
+     * @param MessageInterface $aMessage
+     * @return WorkflowMessage
+     * @throws \RuntimeException
+     */
+    public static function fromServiceBusMessage(MessageInterface $aMessage)
+    {
+        $messagePayload = $aMessage->payload();
+
+        \Assert\that($messagePayload)->keyExists('json');
+
+        $messagePayload = Payload::fromJsonDecodedData(json_decode($messagePayload['json'], true));
+
+        return new static(
+            $messagePayload,
+            $aMessage->name(),
+            $aMessage->header()->uuid(),
+            $aMessage->header()->version(),
+            $aMessage->header()->createdOn()
+        );
     }
 
     /**

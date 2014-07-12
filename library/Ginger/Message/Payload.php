@@ -65,7 +65,7 @@ class Payload implements \JsonSerializable
      * @param array $jsonDecodedData
      * @return Payload
      */
-    public static function jsonDecode(array $jsonDecodedData)
+    public static function fromJsonDecodedData(array $jsonDecodedData)
     {
         \Assert\that($jsonDecodedData)->keyExists("typeClass");
         \Assert\that($jsonDecodedData)->keyExists("data");
@@ -165,7 +165,7 @@ class Payload implements \JsonSerializable
     {
         $typeClass = $this->typeClass;
 
-        return $typeClass::jsonDecode($this->convertToOriginalData($this->data));
+        return $typeClass::fromJsonDecodedData($this->convertToOriginalData($this->data));
     }
 
     /**

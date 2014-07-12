@@ -63,7 +63,7 @@ abstract class SingleValue implements Type
      * @param mixed $value
      * @return Type
      */
-    public static function jsonDecode($value)
+    public static function fromJsonDecodedData($value)
     {
         return static::fromNativeValue($value);
     }

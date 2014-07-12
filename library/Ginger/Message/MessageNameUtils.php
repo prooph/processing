@@ -31,6 +31,10 @@ class MessageNameUtils
 
     const MESSAGE_PARTS_PATTERN = "/^ginger-message-(?P<type>[^-]+)-(?<message>[^-]+-[\w]+)$/";
 
+    static protected $commandSuffixes = array("collect-data", "process-data");
+
+    static protected $eventSuffixes = array("data-collected", "data-processed");
+
     /**
      * @param string $typeClassOfData
      * @return string
@@ -117,6 +121,65 @@ class MessageNameUtils
         } else {
             return null;
         }
+    }
+
+    /**
+     * Is given message name a ginger command or ginger event
+     *
+     * @param string $aMessageName
+     * @return bool
+     */
+    public static function isGingerMessage($aMessageName)
+    {
+        $match = array();
+
+        preg_match(static::MESSAGE_PARTS_PATTERN, $aMessageName, $match);
+
+        if (isset($match['message'])) {
+            $choices = array_merge(static::$commandSuffixes, static::$eventSuffixes);
+
+            return in_array($match['message'], $choices);
+        }
+
+        return false;
+    }
+
+    /**
+     * Is given message name a ginger command
+     *
+     * @param string $aMessageName
+     * @return bool
+     */
+    public static function isGingerCommand($aMessageName)
+    {
+        $match = array();
+
+        preg_match(static::MESSAGE_PARTS_PATTERN, $aMessageName, $match);
+
+        if (isset($match['message'])) {
+            return in_array($match['message'], static::$commandSuffixes);
+        }
+
+        return false;
+    }
+
+    /**
+     * Is given message name a ginger event
+     *
+     * @param string $aMessageName
+     * @return bool
+     */
+    public static function isGingerEvent($aMessageName)
+    {
+        $match = array();
+
+        preg_match(static::MESSAGE_PARTS_PATTERN, $aMessageName, $match);
+
+        if (isset($match['message'])) {
+            return in_array($match['message'], static::$eventSuffixes);
+        }
+
+        return false;
     }
 }
  

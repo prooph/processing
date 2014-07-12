@@ -51,7 +51,7 @@ class DateTimeCollectionTest extends TestCase
 
         $decodedJson = json_decode($jsonString);
 
-        $decodedDates = DateTimeCollection::jsonDecode($decodedJson);
+        $decodedDates = DateTimeCollection::fromJsonDecodedData($decodedJson);
 
         $dateList = array();
 

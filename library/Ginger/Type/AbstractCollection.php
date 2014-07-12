@@ -66,7 +66,7 @@ abstract class AbstractCollection implements CollectionType
         $items = array();
 
         foreach ($itemsEncoded as $encodedItem) {
-            $items[] = $itemClass::jsonDecode($encodedItem);
+            $items[] = $itemClass::fromJsonDecodedData($encodedItem);
         }
 
         return new static($items);
@@ -92,14 +92,14 @@ abstract class AbstractCollection implements CollectionType
      * @param $value
      * @return AbstractCollection
      */
-    public static function jsonDecode($value)
+    public static function fromJsonDecodedData($value)
     {
         $itemClass = static::prototype()->propertiesOfType()['item']->typePrototype()->of();
 
         $items = array();
 
         foreach ($value as $encodedItem) {
-            $items[] = $itemClass::jsonDecode($encodedItem);
+            $items[] = $itemClass::fromJsonDecodedData($encodedItem);
         }
 
         return new static($items);

@@ -69,7 +69,7 @@ abstract class AbstractDictionary implements DictionaryType
 
             $propertyClass = $propertyPrototype->of();
 
-            $properties[$propertyName] = $propertyClass::jsonDecode($encodedProperty);
+            $properties[$propertyName] = $propertyClass::fromJsonDecodedData($encodedProperty);
         }
 
         return new static($properties);
@@ -99,7 +99,7 @@ abstract class AbstractDictionary implements DictionaryType
      * @param $value
      * @return AbstractDictionary
      */
-    public static function jsonDecode($value)
+    public static function fromJsonDecodedData($value)
     {
         $prototypes = static::getPropertyPrototypes();
 
@@ -108,7 +108,7 @@ abstract class AbstractDictionary implements DictionaryType
 
             $propertyClass = $propertyPrototype->of();
 
-            $value[$propertyName] = $propertyClass::jsonDecode($encodedProperty);
+            $value[$propertyName] = $propertyClass::fromJsonDecodedData($encodedProperty);
         }
 
         return new static($value);

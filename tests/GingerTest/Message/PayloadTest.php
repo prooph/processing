@@ -74,7 +74,7 @@ class PayloadTest extends TestCase
 
         $jsonDecodedData = json_decode($jsonString, true);
 
-        $decodedPayload = Payload::jsonDecode($jsonDecodedData);
+        $decodedPayload = Payload::fromJsonDecodedData($jsonDecodedData);
 
         $this->assertInstanceOf('Ginger\Message\Payload', $decodedPayload);
 

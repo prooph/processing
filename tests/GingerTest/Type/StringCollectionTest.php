@@ -79,7 +79,7 @@ class StringCollectionTest extends TestCase
 
         $decodedJson = json_decode($jsonString);
 
-        $decodedFruits = StringCollection::jsonDecode($decodedJson);
+        $decodedFruits = StringCollection::fromJsonDecodedData($decodedJson);
 
         $fruitList = array();
 

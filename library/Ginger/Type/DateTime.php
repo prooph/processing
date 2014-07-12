@@ -68,7 +68,7 @@ class DateTime extends SingleValue
      * @param mixed $value
      * @return Type
      */
-    public static function jsonDecode($value)
+    public static function fromJsonDecodedData($value)
     {
         return static::fromString($value);
     }

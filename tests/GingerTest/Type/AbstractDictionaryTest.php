@@ -138,7 +138,7 @@ class AbstractDictionaryTest extends TestCase
 
         $encodedUserData = json_decode($jsonUserString, true);
 
-        $sameUser = UserDictionary::jsonDecode($encodedUserData);
+        $sameUser = UserDictionary::fromJsonDecodedData($encodedUserData);
 
         $this->assertInstanceOf('GingerTest\Type\Mock\UserDictionary', $sameUser);
 
