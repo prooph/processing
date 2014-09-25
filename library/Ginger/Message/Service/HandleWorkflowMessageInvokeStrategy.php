@@ -14,7 +14,7 @@ namespace Ginger\Message\Service;
 use Ginger\Message\MessageNameUtils;
 use Ginger\Message\WorkflowMessage;
 use Ginger\Message\WorkflowMessageHandler;
-use Prooph\ServiceBus\InvokeStrategy\InvokeStrategyInterface;
+use Prooph\ServiceBus\InvokeStrategy\AbstractInvokeStrategy;
 use Prooph\ServiceBus\Message\MessageNameProvider;
 
 /**
@@ -23,7 +23,7 @@ use Prooph\ServiceBus\Message\MessageNameProvider;
  * @package Ginger\Message\Service
  * @author Alexander Miertsch <kontakt@codeliner.ws>
  */
-class HandleWorkflowMessageInvokeStrategy implements InvokeStrategyInterface
+class HandleWorkflowMessageInvokeStrategy extends AbstractInvokeStrategy
 {
     /**
      * @param mixed $aHandler
