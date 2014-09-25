@@ -13,7 +13,7 @@
     },
     "target-dir": "Ginger/Message",
     "require": {
-        "php": ">=5.4",
+        "php": ">=5.4.8",
         "gingerframework/ginger-type" : "self.version",
         "beberlei/assert": "~2.0",
         "prooph/service-bus" : "~0.4",

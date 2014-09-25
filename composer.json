@@ -10,7 +10,7 @@
     "homepage": "https://github.com/gingerframework",
     "license": "BSD-3-Clause",
     "require": {
-        "php": ">=5.4",
+        "php": ">=5.4.8",
         "beberlei/assert": "~2.0",
         "codeliner/php-equalsbuilder": "~1.1",
         "codeliner/array-reader": "~1.1",
