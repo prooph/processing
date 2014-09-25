@@ -14,8 +14,8 @@ namespace GingerTest\Message;
 use Ginger\Message\MessageNameUtils;
 use Ginger\Message\WorkflowMessage;
 use GingerTest\TestCase;
-use GingerTest\Type\Mock\AddressDictionary;
-use GingerTest\Type\Mock\UserDictionary;
+use GingerTest\Mock\AddressDictionary;
+use GingerTest\Mock\UserDictionary;
 
 /**
  * Class WorkflowMessageTest
@@ -35,7 +35,7 @@ class WorkflowMessageTest extends TestCase
         $this->assertInstanceOf('Ginger\Message\WorkflowMessage', $wfMessage);
 
         $this->assertEquals(
-            MessageNameUtils::MESSAGE_NAME_PREFIX . 'gingertesttypemockuserdictionary-collect-data',
+            MessageNameUtils::MESSAGE_NAME_PREFIX . 'gingertestmockuserdictionary-collect-data',
             $wfMessage->getMessageName()
         );
 
@@ -65,7 +65,7 @@ class WorkflowMessageTest extends TestCase
         $this->assertInstanceOf('Ginger\Message\WorkflowMessage', $wfMessage);
 
         $this->assertEquals(
-            MessageNameUtils::MESSAGE_NAME_PREFIX . 'gingertesttypemockuserdictionary-data-collected',
+            MessageNameUtils::MESSAGE_NAME_PREFIX . 'gingertestmockuserdictionary-data-collected',
             $wfMessage->getMessageName()
         );
 
@@ -97,7 +97,7 @@ class WorkflowMessageTest extends TestCase
         $wfMessage->answerWith($user);
 
         $this->assertEquals(
-            MessageNameUtils::MESSAGE_NAME_PREFIX . 'gingertesttypemockuserdictionary-data-collected',
+            MessageNameUtils::MESSAGE_NAME_PREFIX . 'gingertestmockuserdictionary-data-collected',
             $wfMessage->getMessageName()
         );
 
@@ -158,7 +158,7 @@ class WorkflowMessageTest extends TestCase
         $wfMessage->prepareDataProcessing();
 
         $this->assertEquals(
-            MessageNameUtils::MESSAGE_NAME_PREFIX . 'gingertesttypemockuserdictionary-process-data',
+            MessageNameUtils::MESSAGE_NAME_PREFIX . 'gingertestmockuserdictionary-process-data',
             $wfMessage->getMessageName()
         );
 
@@ -202,7 +202,7 @@ class WorkflowMessageTest extends TestCase
         $wfMessage->answerWithDataProcessingCompleted();
 
         $this->assertEquals(
-            MessageNameUtils::MESSAGE_NAME_PREFIX . 'gingertesttypemockuserdictionary-data-processed',
+            MessageNameUtils::MESSAGE_NAME_PREFIX . 'gingertestmockuserdictionary-data-processed',
             $wfMessage->getMessageName()
         );
 

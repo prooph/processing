@@ -9,7 +9,7 @@
  * Date: 11.07.14 - 20:18
  */
 
-namespace GingerTest\Type\Mock;
+namespace GingerTest\Mock;
 
 use Ginger\Type\AbstractDictionary;
 use Ginger\Type\Description\Description;
@@ -17,7 +17,7 @@ use Ginger\Type\Description\NativeType;
 use Ginger\Type\Integer;
 use Ginger\Type\String;
 
-class UserDictionary extends AbstractDictionary
+class AddressDictionary extends AbstractDictionary
 {
     /**
      * @return array[propertyName => Prototype]
@@ -25,9 +25,10 @@ class UserDictionary extends AbstractDictionary
     public static function getPropertyPrototypes()
     {
         return array(
-            'id' => Integer::prototype(),
-            'name' => String::prototype(),
-            'address' => AddressDictionary::prototype()
+            'street' => String::prototype(),
+            'streetNumber' => Integer::prototype(),
+            'zip' => String::prototype(),
+            'city' => String::prototype()
         );
     }
 
@@ -36,7 +37,7 @@ class UserDictionary extends AbstractDictionary
      */
     public static function buildDescription()
     {
-        return new Description("User", NativeType::DICTIONARY, true, "id");
+        return new Description("Address", NativeType::DICTIONARY, false);
     }
 }
  

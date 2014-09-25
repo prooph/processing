@@ -13,8 +13,8 @@ namespace GingerTest\Type;
 
 use Ginger\Type\Exception\InvalidTypeException;
 use GingerTest\TestCase;
-use GingerTest\Type\Mock\AddressDictionary;
-use GingerTest\Type\Mock\UserDictionary;
+use GingerTest\Mock\AddressDictionary;
+use GingerTest\Mock\UserDictionary;
 
 /**
  * Class AbstractDictionaryTest
@@ -40,7 +40,7 @@ class AbstractDictionaryTest extends TestCase
             )
         ));
 
-        $this->assertInstanceOf('GingerTest\Type\Mock\UserDictionary', $user);
+        $this->assertInstanceOf('GingerTest\Mock\UserDictionary', $user);
 
         $this->assertInstanceOf('Ginger\Type\Integer', $user->property("id")->type());
 
@@ -50,7 +50,7 @@ class AbstractDictionaryTest extends TestCase
 
         $this->assertEquals("Alex", $user->property("name")->value());
 
-        $this->assertInstanceOf('GingerTest\Type\Mock\AddressDictionary', $user->property("address")->type());
+        $this->assertInstanceOf('GingerTest\Mock\AddressDictionary', $user->property("address")->type());
 
         $this->assertInstanceOf('Ginger\Type\String', $user->property("address")->property("street")->type());
 
@@ -89,7 +89,7 @@ class AbstractDictionaryTest extends TestCase
 
         $sameUser = UserDictionary::fromString($userString);
 
-        $this->assertInstanceOf('GingerTest\Type\Mock\UserDictionary', $sameUser);
+        $this->assertInstanceOf('GingerTest\Mock\UserDictionary', $sameUser);
 
         $this->assertInstanceOf('Ginger\Type\Integer', $sameUser->property("id")->type());
 
@@ -99,7 +99,7 @@ class AbstractDictionaryTest extends TestCase
 
         $this->assertEquals("Alex", $sameUser->property("name")->value());
 
-        $this->assertInstanceOf('GingerTest\Type\Mock\AddressDictionary', $sameUser->property("address")->type());
+        $this->assertInstanceOf('GingerTest\Mock\AddressDictionary', $sameUser->property("address")->type());
 
         $this->assertInstanceOf('Ginger\Type\String', $sameUser->property("address")->property("street")->type());
 
@@ -140,7 +140,7 @@ class AbstractDictionaryTest extends TestCase
 
         $sameUser = UserDictionary::fromJsonDecodedData($encodedUserData);
 
-        $this->assertInstanceOf('GingerTest\Type\Mock\UserDictionary', $sameUser);
+        $this->assertInstanceOf('GingerTest\Mock\UserDictionary', $sameUser);
 
         $this->assertInstanceOf('Ginger\Type\Integer', $sameUser->property("id")->type());
 
@@ -150,7 +150,7 @@ class AbstractDictionaryTest extends TestCase
 
         $this->assertEquals("Alex", $sameUser->property("name")->value());
 
-        $this->assertInstanceOf('GingerTest\Type\Mock\AddressDictionary', $sameUser->property("address")->type());
+        $this->assertInstanceOf('GingerTest\Mock\AddressDictionary', $sameUser->property("address")->type());
 
         $this->assertInstanceOf('Ginger\Type\String', $sameUser->property("address")->property("street")->type());
 
@@ -184,7 +184,7 @@ class AbstractDictionaryTest extends TestCase
 
         $this->assertInstanceOf('Ginger\Type\Prototype', $prototype);
 
-        $this->assertEquals('GingerTest\Type\Mock\UserDictionary', $prototype->of());
+        $this->assertEquals('GingerTest\Mock\UserDictionary', $prototype->of());
     }
 
     /**
@@ -210,7 +210,7 @@ class AbstractDictionaryTest extends TestCase
 
         $this->assertInstanceOf('Ginger\Type\Prototype', $prototype);
 
-        $this->assertEquals('GingerTest\Type\Mock\UserDictionary', $prototype->of());
+        $this->assertEquals('GingerTest\Mock\UserDictionary', $prototype->of());
     }
 
     /**
@@ -238,7 +238,7 @@ class AbstractDictionaryTest extends TestCase
 
         $this->assertInstanceOf('Ginger\Type\Prototype', $prototype);
 
-        $this->assertEquals('GingerTest\Type\Mock\UserDictionary', $prototype->of());
+        $this->assertEquals('GingerTest\Mock\UserDictionary', $prototype->of());
     }
 
     /**
@@ -264,7 +264,7 @@ class AbstractDictionaryTest extends TestCase
 
         $this->assertInstanceOf('Ginger\Type\Prototype', $prototype);
 
-        $this->assertEquals('GingerTest\Type\Mock\UserDictionary', $prototype->of());
+        $this->assertEquals('GingerTest\Mock\UserDictionary', $prototype->of());
     }
 
     /**

@@ -15,7 +15,7 @@ use Ginger\Message\ProophPlugin\FromGingerMessageTranslator;
 use Ginger\Message\ProophPlugin\ToGingerMessageTranslator;
 use Ginger\Message\WorkflowMessage;
 use GingerTest\TestCase;
-use GingerTest\Type\Mock\UserDictionary;
+use GingerTest\Mock\UserDictionary;
 use Prooph\ServiceBus\CommandBus;
 use Prooph\ServiceBus\EventBus;
 use Prooph\ServiceBus\InvokeStrategy\CallbackStrategy;
@@ -46,7 +46,7 @@ class ServiceBusGingerIntegrationTest extends TestCase
 
         $eventRouter = new EventRouter();
 
-        $eventRouter->route('ginger-message-gingertesttypemockuserdictionary-data-collected')
+        $eventRouter->route('ginger-message-gingertestmockuserdictionary-data-collected')
             ->to(function (WorkflowMessage $workflowMessage) {
                 $this->receivedWorkflowMessage = $workflowMessage;
             });

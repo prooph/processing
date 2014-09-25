@@ -9,10 +9,12 @@
  * Date: 13.07.14 - 18:57
  */
 
-namespace GingerTest\Type\Mock;
+namespace GingerTest\Mock;
 
 use Ginger\Message\WorkflowMessage;
 use Ginger\Message\WorkflowMessageHandler;
+use Prooph\ServiceBus\CommandBus;
+use Prooph\ServiceBus\EventBus;
 
 /**
  * Class TestWorkflowMessageHandler
@@ -26,6 +28,16 @@ class TestWorkflowMessageHandler implements WorkflowMessageHandler
      * @var WorkflowMessage
      */
     protected $lastWorkflowMessage;
+
+    /**
+     * @var CommandBus
+     */
+    protected $commandBus;
+
+    /**
+     * @var EventBus
+     */
+    protected $eventBus;
 
     /**
      * @param WorkflowMessage $aWorkflowMessage
@@ -42,6 +54,28 @@ class TestWorkflowMessageHandler implements WorkflowMessageHandler
     public function lastWorkflowMessage()
     {
         return $this->lastWorkflowMessage;
+    }
+
+    /**
+     * Register command bus that can be used to send new commands to the workflow processor
+     *
+     * @param CommandBus $commandBus
+     * @return void
+     */
+    public function useCommandBus(CommandBus $commandBus)
+    {
+        $this->commandBus = $commandBus;
+    }
+
+    /**
+     * Register event bus that can be used to send events to the workflow processor
+     *
+     * @param EventBus $eventBus
+     * @return void
+     */
+    public function useEventBus(EventBus $eventBus)
+    {
+        $this->eventBus = $eventBus;
     }
 }
  

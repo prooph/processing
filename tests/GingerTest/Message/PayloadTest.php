@@ -13,7 +13,7 @@ namespace GingerTest\Message;
 
 use Ginger\Message\Payload;
 use GingerTest\TestCase;
-use GingerTest\Type\Mock\UserDictionary;
+use GingerTest\Mock\UserDictionary;
 
 /**
  * Class PayloadTest
@@ -45,7 +45,7 @@ class PayloadTest extends TestCase
 
         $this->assertInstanceOf('Ginger\Message\Payload', $payload);
 
-        $this->assertEquals('GingerTest\Type\Mock\UserDictionary', $payload->getTypeClass());
+        $this->assertEquals('GingerTest\Mock\UserDictionary', $payload->getTypeClass());
 
         $this->assertEquals($userData, $payload->getData());
     }
@@ -78,7 +78,7 @@ class PayloadTest extends TestCase
 
         $this->assertInstanceOf('Ginger\Message\Payload', $decodedPayload);
 
-        $this->assertEquals('GingerTest\Type\Mock\UserDictionary', $decodedPayload->getTypeClass());
+        $this->assertEquals('GingerTest\Mock\UserDictionary', $decodedPayload->getTypeClass());
 
         $this->assertEquals($userData, $decodedPayload->getData());
     }
@@ -211,13 +211,13 @@ class PayloadTest extends TestCase
 
         $payload = Payload::fromType($user);
 
-        $payload->changeTypeClass('GingerTest\Type\Mock\AddressDictionary');
+        $payload->changeTypeClass('GingerTest\Mock\AddressDictionary');
 
         $payload->replaceData($userData['address']);
 
         $address = $payload->toType();
 
-        $this->assertInstanceOf('GingerTest\Type\Mock\AddressDictionary', $address);
+        $this->assertInstanceOf('GingerTest\Mock\AddressDictionary', $address);
 
         $this->assertTrue($user->property("address")->type()->sameAs($address));
     }
@@ -231,7 +231,7 @@ class PayloadTest extends TestCase
 
         $this->assertInstanceOf('Ginger\Message\Payload', $payload);
 
-        $this->assertEquals('GingerTest\Type\Mock\UserDictionary', $payload->getTypeClass());
+        $this->assertEquals('GingerTest\Mock\UserDictionary', $payload->getTypeClass());
 
         $this->assertEquals(array(), $payload->getData());
 

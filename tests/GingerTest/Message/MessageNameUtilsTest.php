@@ -27,10 +27,10 @@ class MessageNameUtilsTest extends TestCase
      */
     public function it_returns_a_collect_data_command_name_including_the_type_class_normalized()
     {
-        $commandName = MessageNameUtils::getCollectDataCommandName('GingerTest\Type\Mock\UserDictionary');
+        $commandName = MessageNameUtils::getCollectDataCommandName('GingerTest\Mock\UserDictionary');
 
         $this->assertEquals(
-            MessageNameUtils::MESSAGE_NAME_PREFIX . 'gingertesttypemockuserdictionary-collect-data',
+            MessageNameUtils::MESSAGE_NAME_PREFIX . 'gingertestmockuserdictionary-collect-data',
             $commandName
         );
     }
@@ -40,10 +40,10 @@ class MessageNameUtilsTest extends TestCase
      */
     public function it_returns_a_data_collected_event_name_including_the_type_class_normalized()
     {
-        $eventName = MessageNameUtils::getDataCollectedEventName('GingerTest\Type\Mock\UserDictionary');
+        $eventName = MessageNameUtils::getDataCollectedEventName('GingerTest\Mock\UserDictionary');
 
         $this->assertEquals(
-            MessageNameUtils::MESSAGE_NAME_PREFIX . 'gingertesttypemockuserdictionary-data-collected',
+            MessageNameUtils::MESSAGE_NAME_PREFIX . 'gingertestmockuserdictionary-data-collected',
             $eventName
         );
     }
@@ -53,10 +53,10 @@ class MessageNameUtilsTest extends TestCase
      */
     public function it_returns_a_process_data_command_name_including_the_type_class_normalized()
     {
-        $commandName = MessageNameUtils::getProcessDataCommandName('GingerTest\Type\Mock\UserDictionary');
+        $commandName = MessageNameUtils::getProcessDataCommandName('GingerTest\Mock\UserDictionary');
 
         $this->assertEquals(
-            MessageNameUtils::MESSAGE_NAME_PREFIX . 'gingertesttypemockuserdictionary-process-data',
+            MessageNameUtils::MESSAGE_NAME_PREFIX . 'gingertestmockuserdictionary-process-data',
             $commandName
         );
     }
@@ -66,10 +66,10 @@ class MessageNameUtilsTest extends TestCase
      */
     public function it_returns_a_data_processed_event_name_including_the_type_class_normalized()
     {
-        $eventName = MessageNameUtils::getDataProcessedEventName('GingerTest\Type\Mock\UserDictionary');
+        $eventName = MessageNameUtils::getDataProcessedEventName('GingerTest\Mock\UserDictionary');
 
         $this->assertEquals(
-            MessageNameUtils::MESSAGE_NAME_PREFIX . 'gingertesttypemockuserdictionary-data-processed',
+            MessageNameUtils::MESSAGE_NAME_PREFIX . 'gingertestmockuserdictionary-data-processed',
             $eventName
         );
     }
@@ -79,9 +79,9 @@ class MessageNameUtilsTest extends TestCase
      */
     public function it_returns_the_type_part_of_the_message_name()
     {
-        $typePart = MessageNameUtils::getTypePartOfMessageName('ginger-message-gingertesttypemockuserdictionary-data-processed');
+        $typePart = MessageNameUtils::getTypePartOfMessageName('ginger-message-gingertestmockuserdictionary-data-processed');
 
-        $this->assertEquals('gingertesttypemockuserdictionary', $typePart);
+        $this->assertEquals('gingertestmockuserdictionary', $typePart);
     }
 
     /**
@@ -99,21 +99,21 @@ class MessageNameUtilsTest extends TestCase
      */
     public function it_detects_ginger_messages_by_name()
     {
-        $this->assertTrue(MessageNameUtils::isGingerMessage('ginger-message-gingertesttypemockuserdictionary-collect-data'));
-        $this->assertTrue(MessageNameUtils::isGingerCommand('ginger-message-gingertesttypemockuserdictionary-collect-data'));
-        $this->assertFalse(MessageNameUtils::isGingerEvent('ginger-message-gingertesttypemockuserdictionary-collect-data'));
+        $this->assertTrue(MessageNameUtils::isGingerMessage('ginger-message-gingertestmockuserdictionary-collect-data'));
+        $this->assertTrue(MessageNameUtils::isGingerCommand('ginger-message-gingertestmockuserdictionary-collect-data'));
+        $this->assertFalse(MessageNameUtils::isGingerEvent('ginger-message-gingertestmockuserdictionary-collect-data'));
 
-        $this->assertTrue(MessageNameUtils::isGingerMessage('ginger-message-gingertesttypemockuserdictionary-data-collected'));
-        $this->assertFalse(MessageNameUtils::isGingerCommand('ginger-message-gingertesttypemockuserdictionary-data-collected'));
-        $this->assertTrue(MessageNameUtils::isGingerEvent('ginger-message-gingertesttypemockuserdictionary-data-collected'));
+        $this->assertTrue(MessageNameUtils::isGingerMessage('ginger-message-gingertestmockuserdictionary-data-collected'));
+        $this->assertFalse(MessageNameUtils::isGingerCommand('ginger-message-gingertestmockuserdictionary-data-collected'));
+        $this->assertTrue(MessageNameUtils::isGingerEvent('ginger-message-gingertestmockuserdictionary-data-collected'));
 
-        $this->assertTrue(MessageNameUtils::isGingerMessage('ginger-message-gingertesttypemockuserdictionary-process-data'));
-        $this->assertTrue(MessageNameUtils::isGingerCommand('ginger-message-gingertesttypemockuserdictionary-process-data'));
+        $this->assertTrue(MessageNameUtils::isGingerMessage('ginger-message-gingertestmockuserdictionary-process-data'));
+        $this->assertTrue(MessageNameUtils::isGingerCommand('ginger-message-gingertestmockuserdictionary-process-data'));
         $this->assertFalse(MessageNameUtils::isGingerEvent('ginger-message-gingertesttypemockuserdictionary-process-data'));
 
-        $this->assertTrue(MessageNameUtils::isGingerMessage('ginger-message-gingertesttypemockuserdictionary-data-processed'));
-        $this->assertFalse(MessageNameUtils::isGingerCommand('ginger-message-gingertesttypemockuserdictionary-data-processed'));
-        $this->assertTrue(MessageNameUtils::isGingerEvent('ginger-message-gingertesttypemockuserdictionary-data-processed'));
+        $this->assertTrue(MessageNameUtils::isGingerMessage('ginger-message-gingertestmockuserdictionary-data-processed'));
+        $this->assertFalse(MessageNameUtils::isGingerCommand('ginger-message-gingertestmockuserdictionary-data-processed'));
+        $this->assertTrue(MessageNameUtils::isGingerEvent('ginger-message-gingertestmockuserdictionary-data-processed'));
     }
 }
  

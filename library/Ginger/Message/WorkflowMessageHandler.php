@@ -10,6 +10,8 @@
  */
 
 namespace Ginger\Message;
+use Prooph\ServiceBus\CommandBus;
+use Prooph\ServiceBus\EventBus;
 
 /**
  * Interface WorkflowMessageHandler
@@ -24,5 +26,21 @@ interface WorkflowMessageHandler
      * @return void
      */
     public function handleWorkflowMessage(WorkflowMessage $aWorkflowMessage);
+
+    /**
+     * Register command bus that can be used to send new commands to the workflow processor
+     *
+     * @param CommandBus $commandBus
+     * @return void
+     */
+    public function useCommandBus(CommandBus $commandBus);
+
+    /**
+     * Register event bus that can be used to send events to the workflow processor
+     *
+     * @param EventBus $eventBus
+     * @return void
+     */
+    public function useEventBus(EventBus $eventBus);
 }
  
