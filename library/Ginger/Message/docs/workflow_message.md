@@ -1,7 +1,7 @@
 The WorkflowMessage
 ===================
 
-[Back to index](../README.md)
+[Back to index](../README.md#index)
 
 # API
 
