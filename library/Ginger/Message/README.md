@@ -1,4 +1,4 @@
-Component_GingerType
-====================
+Component_GingerMessage
+=======================
 
-Type component from GingerWF
+Message component from GingerWF

@@ -11,20 +11,17 @@
 
 namespace GingerTest\Message\Service;
 
-use Ginger\Message\Service\ServiceBusGingerFactoriesProvider;
-use Ginger\Message\Service\ServiceBusGingerMessageRouter;
+use Ginger\Message\ProophPlugin\FromGingerMessageTranslator;
+use Ginger\Message\ProophPlugin\ToGingerMessageTranslator;
 use Ginger\Message\WorkflowMessage;
 use GingerTest\TestCase;
 use GingerTest\Type\Mock\UserDictionary;
-use Prooph\ServiceBus\Command\CommandReceiver;
-use Prooph\ServiceBus\Event\EventReceiver;
+use Prooph\ServiceBus\CommandBus;
+use Prooph\ServiceBus\EventBus;
+use Prooph\ServiceBus\InvokeStrategy\CallbackStrategy;
+use Prooph\ServiceBus\InvokeStrategy\ForwardToMessageDispatcherStrategy;
 use Prooph\ServiceBus\Message\InMemoryMessageDispatcher;
-use Prooph\ServiceBus\Message\Queue;
-use Prooph\ServiceBus\Service\CommandReceiverLoader;
-use Prooph\ServiceBus\Service\Definition;
-use Prooph\ServiceBus\Service\EventReceiverLoader;
-use Prooph\ServiceBus\Service\ServiceBusConfiguration;
-use Prooph\ServiceBus\Service\ServiceBusManager;
+use Prooph\ServiceBus\Router\EventRouter;
 
 /**
  * Class ServiceBusGingerIntegrationTest
@@ -34,57 +31,36 @@ use Prooph\ServiceBus\Service\ServiceBusManager;
  */
 class ServiceBusGingerIntegrationTest extends TestCase
 {
-    /**
-     * @var ServiceBusManager
-     */
-    private $serviceBus;
-
     private $receivedWorkflowMessage;
+
+    /**
+     * @var InMemoryMessageDispatcher
+     */
+    private $messageDispatcher;
 
     protected function setUp()
     {
-        $queue = new Queue('ginger-gingertesttypemockuserdictionary-bus');
+        $eventBus = new EventBus();
 
-        $messageDispatcher = new InMemoryMessageDispatcher();
+        $this->messageDispatcher = new InMemoryMessageDispatcher(new CommandBus(), $eventBus);
 
-        $serviceBusManager = new ServiceBusManager(
-            new ServiceBusConfiguration(array(
-                Definition::EVENT_MAP => array(
-                    'ginger-message-gingertesttypemockuserdictionary-data-collected'
-                    => function (WorkflowMessage $workflowMessage) {
-                            $this->receivedWorkflowMessage = $workflowMessage;
-                        }
-                ),
-                Definition::EVENT_BUS => array(
-                    $queue->name() => array(
-                        Definition::MESSAGE_DISPATCHER => 'in_memory_message_dispatcher'
-                    )
-                )
-            ))
-        );
+        $eventRouter = new EventRouter();
 
-        $serviceBusManager->events()->attach(new ServiceBusGingerFactoriesProvider());
+        $eventRouter->route('ginger-message-gingertesttypemockuserdictionary-data-collected')
+            ->to(function (WorkflowMessage $workflowMessage) {
+                $this->receivedWorkflowMessage = $workflowMessage;
+            });
 
-        $serviceBusManager->events()->attach(new ServiceBusGingerMessageRouter());
+        $eventBus->utilize($eventRouter);
 
-        $serviceBusManager->initialize();
+        $eventBus->utilize(new ToGingerMessageTranslator());
 
-        $eventReceiver = new EventReceiver($serviceBusManager);
-
-        $eventReceiverLoader = new EventReceiverLoader();
-
-        $eventReceiverLoader->setService($queue->name(), $eventReceiver);
-
-        $messageDispatcher->registerEventReceiverLoaderForQueue($queue, $eventReceiverLoader);
-
-        $serviceBusManager->getMessageDispatcherLoader()->setService('in_memory_message_dispatcher', $messageDispatcher);
-
-        $this->serviceBus = $serviceBusManager;
+        $eventBus->utilize(new CallbackStrategy());
     }
     /**
      * @test
      */
-    public function it_registers_all_required_factories_so_that_a_workflow_message_can_be_send_through_service_bus()
+    public function it_sends_workflow_message_via_message_dispatcher_to_a_handler()
     {
         $userData = array(
             'id' => 1,
@@ -101,7 +77,17 @@ class ServiceBusGingerIntegrationTest extends TestCase
 
         $wfMessage = WorkflowMessage::newDataCollected($user);
 
-        $this->serviceBus->route($wfMessage);
+        $eventBus = new EventBus();
+
+        $eventRouter = new EventRouter();
+
+        $eventRouter->route($wfMessage->getMessageName())->to($this->messageDispatcher);
+
+        $eventBus->utilize($eventRouter);
+
+        $eventBus->utilize(new ForwardToMessageDispatcherStrategy(new FromGingerMessageTranslator()));
+
+        $eventBus->dispatch($wfMessage);
 
         $this->assertInstanceOf('Ginger\Message\WorkflowMessage', $this->receivedWorkflowMessage);
     }

@@ -10,14 +10,16 @@
  */
 
 namespace GingerTest\Message\Service;
-use Ginger\Message\Service\ServiceBusInvokeStrategyProvider;
+
+use Ginger\Message\Service\HandleWorkflowMessageInvokeStrategy;
 use Ginger\Message\WorkflowMessage;
+use GingerTest\TestCase;
 use GingerTest\Type\Mock\TestWorkflowMessageHandler;
 use GingerTest\Type\Mock\UserDictionary;
-use Prooph\ServiceBus\Service\Definition;
-use Prooph\ServiceBus\Service\ServiceBusConfiguration;
-use Prooph\ServiceBus\Service\ServiceBusManager;
-use Prooph\ServiceBusTest\TestCase;
+use Prooph\ServiceBus\CommandBus;
+use Prooph\ServiceBus\EventBus;
+use Prooph\ServiceBus\Router\CommandRouter;
+use Prooph\ServiceBus\Router\EventRouter;
 
 /**
  * Class HandleWorkflowMessageInvokeStrategyTest
@@ -28,33 +30,13 @@ use Prooph\ServiceBusTest\TestCase;
 class HandleWorkflowMessageInvokeStrategyTest extends TestCase
 {
     /**
-     * @var ServiceBusManager
-     */
-    private $serviceBusManager;
-
-    /**
      * @var TestWorkflowMessageHandler
      */
     private $testWorkflowMessageHandler;
 
     protected function setUp()
     {
-        $this->serviceBusManager = new ServiceBusManager(
-            new ServiceBusConfiguration(array(
-                Definition::COMMAND_MAP => array(
-                    'ginger-message-gingertesttypemockuserdictionary-collect-data' => "test_workflow_message_handler"
-                ),
-                Definition::EVENT_MAP => array(
-                    'ginger-message-gingertesttypemockuserdictionary-data-collected' => "test_workflow_message_handler"
-                )
-            ))
-        );
-
-        $this->serviceBusManager->events()->attach(new ServiceBusInvokeStrategyProvider());
-
         $this->testWorkflowMessageHandler = new TestWorkflowMessageHandler();
-
-        $this->serviceBusManager->setService("test_workflow_message_handler", $this->testWorkflowMessageHandler);
     }
 
     /**
@@ -64,7 +46,17 @@ class HandleWorkflowMessageInvokeStrategyTest extends TestCase
     {
         $wfCommand = WorkflowMessage::collectDataOf(UserDictionary::prototype());
 
-        $this->serviceBusManager->route($wfCommand);
+        $commandBus = new CommandBus();
+
+        $commandRouter = new CommandRouter();
+
+        $commandRouter->route($wfCommand->getMessageName())->to($this->testWorkflowMessageHandler);
+
+        $commandBus->utilize($commandRouter);
+
+        $commandBus->utilize(new HandleWorkflowMessageInvokeStrategy());
+
+        $commandBus->dispatch($wfCommand);
 
         $this->assertSame($wfCommand, $this->testWorkflowMessageHandler->lastWorkflowMessage());
     }
@@ -89,7 +81,17 @@ class HandleWorkflowMessageInvokeStrategyTest extends TestCase
 
         $wfEvent = WorkflowMessage::newDataCollected($user);
 
-        $this->serviceBusManager->route($wfEvent);
+        $eventBus = new EventBus();
+
+        $eventRouter = new EventRouter();
+
+        $eventRouter->route($wfEvent->getMessageName())->to($this->testWorkflowMessageHandler);
+
+        $eventBus->utilize($eventRouter);
+
+        $eventBus->utilize(new HandleWorkflowMessageInvokeStrategy());
+
+        $eventBus->dispatch($wfEvent);
 
         $this->assertSame($wfEvent, $this->testWorkflowMessageHandler->lastWorkflowMessage());
     }
