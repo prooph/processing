@@ -15,10 +15,10 @@
     "require": {
         "php": ">=5.4",
         "gingerframework/ginger-type" : "self.version",
-        "beberlei/assert": "*",
-        "prooph/service-bus" : "~0.3",
+        "beberlei/assert": "~2.0",
+        "prooph/service-bus" : "~0.4",
         "codeliner/array-reader": "~1.1",
         "zendframework/zend-stdlib" : "~2.3",
-        "rhumsaa/uuid" : "2.5.*"
+        "rhumsaa/uuid" : "~2.5"
     }
 }

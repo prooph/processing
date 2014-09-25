@@ -14,7 +14,7 @@
     "target-dir": "Ginger/Type",
     "require": {
         "php": ">=5.4",
-        "beberlei/assert": "*",
+        "beberlei/assert": "~2.0",
         "codeliner/php-equalsbuilder": "~1.1"
     }
 }
