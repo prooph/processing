@@ -14,7 +14,9 @@
         "beberlei/assert": "~2.0",
         "codeliner/php-equalsbuilder": "~1.1",
         "codeliner/array-reader": "~1.1",
-        "prooph/service-bus" : "~0.4",
+        "prooph/service-bus" : "~1.0",
+        "prooph/event-store" : "~1.0",
+        "prooph/event-sourcing" : "~1.0",
         "zendframework/zend-stdlib" : "~2.3",
         "rhumsaa/uuid" : "~2.7"
     },
