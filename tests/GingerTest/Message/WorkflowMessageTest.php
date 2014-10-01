@@ -13,6 +13,7 @@ namespace GingerTest\Message;
 
 use Ginger\Message\MessageNameUtils;
 use Ginger\Message\WorkflowMessage;
+use Ginger\Processor\ProcessId;
 use GingerTest\TestCase;
 use GingerTest\Mock\AddressDictionary;
 use GingerTest\Mock\UserDictionary;
@@ -79,6 +80,8 @@ class WorkflowMessageTest extends TestCase
     {
         $wfMessage = WorkflowMessage::collectDataOf(UserDictionary::prototype());
 
+        $wfMessage->connectToProcess(ProcessId::generate());
+
         $userData = array(
             'id' => 1,
             'name' => 'Alex',
@@ -92,26 +95,21 @@ class WorkflowMessageTest extends TestCase
 
         $user = UserDictionary::fromNativeValue($userData);
 
-        $originalWfMessage = clone $wfMessage;
-
-        $wfMessage->answerWith($user);
+        $wfAnswer = $wfMessage->answerWith($user);
 
         $this->assertEquals(
             MessageNameUtils::MESSAGE_NAME_PREFIX . 'gingertestmockuserdictionary-data-collected',
-            $wfMessage->getMessageName()
+            $wfAnswer->getMessageName()
         );
 
-        $this->assertEquals($userData, $wfMessage->getPayload()->getData());
+        $this->assertEquals($userData, $wfAnswer->getPayload()->getData());
 
-        $this->assertTrue($originalWfMessage->getUuid()->equals($wfMessage->getUuid()));
+        $this->assertFalse($wfMessage->getUuid()->equals($wfAnswer->getUuid()));
 
-        $this->assertEquals(
-            $originalWfMessage->getCreatedOn()->format("Y-m-d H:i:s"),
-            $wfMessage->getCreatedOn()->format("Y-m-d H:i:s")
-        );
+        $this->assertEquals(1, $wfMessage->getVersion());
+        $this->assertEquals(2, $wfAnswer->getVersion());
 
-        $this->assertEquals(1, $originalWfMessage->getVersion());
-        $this->assertEquals(2, $wfMessage->getVersion());
+        $this->assertTrue($wfMessage->getProcessId()->equals($wfAnswer->getProcessId()));
     }
 
     /**
@@ -153,26 +151,23 @@ class WorkflowMessageTest extends TestCase
 
         $wfMessage = WorkflowMessage::newDataCollected($user);
 
-        $originalWfMessage = clone $wfMessage;
+        $wfMessage->connectToProcess(ProcessId::generate());
 
-        $wfMessage->prepareDataProcessing();
+        $wfCommand = $wfMessage->prepareDataProcessing();
 
         $this->assertEquals(
             MessageNameUtils::MESSAGE_NAME_PREFIX . 'gingertestmockuserdictionary-process-data',
-            $wfMessage->getMessageName()
+            $wfCommand->getMessageName()
         );
 
-        $this->assertEquals($userData, $wfMessage->getPayload()->getData());
+        $this->assertEquals($userData, $wfCommand->getPayload()->getData());
 
-        $this->assertTrue($originalWfMessage->getUuid()->equals($wfMessage->getUuid()));
+        $this->assertFalse($wfMessage->getUuid()->equals($wfCommand->getUuid()));
 
-        $this->assertEquals(
-            $originalWfMessage->getCreatedOn()->format("Y-m-d H:i:s"),
-            $wfMessage->getCreatedOn()->format("Y-m-d H:i:s")
-        );
+        $this->assertEquals(1, $wfMessage->getVersion());
+        $this->assertEquals(2, $wfCommand->getVersion());
 
-        $this->assertEquals(1, $originalWfMessage->getVersion());
-        $this->assertEquals(2, $wfMessage->getVersion());
+        $this->assertTrue($wfMessage->getProcessId()->equals($wfCommand->getProcessId()));
     }
 
     /**
@@ -195,28 +190,27 @@ class WorkflowMessageTest extends TestCase
 
         $wfMessage = WorkflowMessage::newDataCollected($user);
 
-        $originalWfMessage = clone $wfMessage;
+        $wfMessage->connectToProcess(ProcessId::generate());
 
-        $wfMessage->prepareDataProcessing();
+        $wfCommand = $wfMessage->prepareDataProcessing();
 
-        $wfMessage->answerWithDataProcessingCompleted();
+        $wfAnswer = $wfCommand->answerWithDataProcessingCompleted();
 
         $this->assertEquals(
             MessageNameUtils::MESSAGE_NAME_PREFIX . 'gingertestmockuserdictionary-data-processed',
-            $wfMessage->getMessageName()
+            $wfAnswer->getMessageName()
         );
 
-        $this->assertEquals($userData, $wfMessage->getPayload()->getData());
+        $this->assertEquals($userData, $wfAnswer->getPayload()->getData());
 
-        $this->assertTrue($originalWfMessage->getUuid()->equals($wfMessage->getUuid()));
+        $this->assertFalse($wfCommand->getUuid()->equals($wfAnswer->getUuid()));
 
-        $this->assertEquals(
-            $originalWfMessage->getCreatedOn()->format("Y-m-d H:i:s"),
-            $wfMessage->getCreatedOn()->format("Y-m-d H:i:s")
-        );
+        $this->assertEquals(1, $wfMessage->getVersion());
+        $this->assertEquals(2, $wfCommand->getVersion());
+        $this->assertEquals(3, $wfAnswer->getVersion());
 
-        $this->assertEquals(1, $originalWfMessage->getVersion());
-        $this->assertEquals(3, $wfMessage->getVersion());
+        $this->assertTrue($wfMessage->getProcessId()->equals($wfCommand->getProcessId()));
+        $this->assertTrue($wfCommand->getProcessId()->equals($wfAnswer->getProcessId()));
     }
 }
  

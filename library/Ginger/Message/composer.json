@@ -15,6 +15,7 @@
     "require": {
         "php": ">=5.4.8",
         "gingerframework/ginger-type" : "self.version",
+        "gingerframework/ginger-processor" : "self.version",
         "beberlei/assert": "~2.0",
         "prooph/service-bus" : "~0.4",
         "codeliner/array-reader": "~1.1",

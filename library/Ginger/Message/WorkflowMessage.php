@@ -11,6 +11,7 @@
 
 namespace Ginger\Message;
 
+use Ginger\Processor\ProcessId;
 use Ginger\Type\Exception\InvalidTypeException;
 use Ginger\Type\Prototype;
 use Ginger\Type\Type;
@@ -26,12 +27,20 @@ use Rhumsaa\Uuid\Uuid;
  */
 class WorkflowMessage implements MessageNameProvider
 {
+    /**
+     * @var string
+     */
     protected $messageName;
 
     /**
      * @var Uuid
      */
     protected $uuid;
+
+    /**
+     * @var ProcessId
+     */
+    protected $processId;
 
     /**
      * @var int
@@ -83,36 +92,43 @@ class WorkflowMessage implements MessageNameProvider
 
         \Assert\that($messagePayload)->keyExists('json');
 
+        $processId = (isset($messagePayload['processId']))? $messagePayload['processId'] : null;
+
         $messagePayload = Payload::fromJsonDecodedData(json_decode($messagePayload['json'], true));
 
         return new static(
             $messagePayload,
             $aMessage->name(),
-            $aMessage->header()->uuid(),
+            $processId,
             $aMessage->header()->version(),
-            $aMessage->header()->createdOn()
+            $aMessage->header()->createdOn(),
+            $aMessage->header()->uuid()
         );
     }
 
     /**
      * @param Payload $payload
      * @param string $messageName
-     * @param Uuid|null $uuid
+     * @param ProcessId|null $processId
      * @param int $version
      * @param \DateTime|null $createdOn
+     * @param Uuid|null $uuid
      */
     protected function __construct(
         Payload $payload,
         $messageName,
-        Uuid $uuid = null,
+        ProcessId $processId = null,
         $version = 1,
-        \DateTime $createdOn = null
+        \DateTime $createdOn = null,
+        Uuid $uuid = null
     ) {
         $this->payload = $payload;
 
         \Assert\that($messageName)->notEmpty()->string();
 
         $this->messageName = $messageName;
+
+        $this->processId = $processId;
 
         if (is_null($uuid)) {
             $uuid = Uuid::uuid4();
@@ -133,6 +149,7 @@ class WorkflowMessage implements MessageNameProvider
      * Transforms current message to a data collected event and replaces payload data with collected data
      *
      * @param Type $collectedData
+     * @return WorkflowMessage
      * @throws \Ginger\Type\Exception\InvalidTypeException If answer type does not match with the previous requested type
      */
     public function answerWith(Type $collectedData)
@@ -154,23 +171,29 @@ class WorkflowMessage implements MessageNameProvider
 
         $type = MessageNameUtils::getTypePartOfMessageName($this->messageName);
 
-        $this->messageName = MessageNameUtils::getDataCollectedEventName($type);
-
-        $this->version++;
-
-        $this->payload->replaceData($collectedPayload->getData());
+        return new self(
+            $collectedPayload,
+            MessageNameUtils::getDataCollectedEventName($type),
+            $this->processId,
+            $this->version + 1
+        );
     }
 
     /**
      * Transforms current message to a process data command
+     *
+     * @return WorkflowMessage
      */
     public function prepareDataProcessing()
     {
         $type = MessageNameUtils::getTypePartOfMessageName($this->messageName);
 
-        $this->messageName = MessageNameUtils::getProcessDataCommandName($type);
-
-        $this->version++;
+        return new self(
+            $this->payload,
+            MessageNameUtils::getProcessDataCommandName($type),
+            $this->processId,
+            $this->version + 1
+        );
     }
 
     /**
@@ -180,9 +203,31 @@ class WorkflowMessage implements MessageNameProvider
     {
         $type = MessageNameUtils::getTypePartOfMessageName($this->messageName);
 
-        $this->messageName = MessageNameUtils::getDataProcessedEventName($type);
+        return new self(
+            $this->payload,
+            MessageNameUtils::getDataProcessedEventName($type),
+            $this->processId,
+            $this->version + 1
+        );
+    }
 
-        $this->version++;
+    /**
+     * @param ProcessId $processId
+     * @throws \RuntimeException
+     */
+    public function connectToProcess(ProcessId $processId)
+    {
+        if (! is_null($this->processId)) {
+            throw new \RuntimeException(sprintf(
+                "Connecting WorkflowMessage %s (%s) to process %s is not possible cause it is already connected to process %s",
+                $this->getMessageName(),
+                $this->uuid->toString(),
+                $processId->toString(),
+                $this->processId->toString()
+            ));
+        }
+
+        $this->processId = $processId;
     }
 
     /**
@@ -199,6 +244,14 @@ class WorkflowMessage implements MessageNameProvider
     public function getPayload()
     {
         return $this->payload;
+    }
+
+    /**
+     * @return ProcessId|null
+     */
+    public function getProcessId()
+    {
+        return $this->processId;
     }
 
     /**
