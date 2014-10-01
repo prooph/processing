@@ -17,7 +17,7 @@ is one type or the other. Imagine the following scenario:
 
 A workflow processor sends a "collect user data" command to a CRM-WorkflowMessageHandler. The connector then fetches the required data
 from database and uses the message to respond with the data. The command becomes a "user data collected" event, but has the
-same UUID as before. With that in mind the workflow processor can easily track the status of the workflow.
+same connected ProcessId as before. With that in mind the workflow processor can easily track the status of the workflow.
 
 ## Index
 

@@ -213,7 +213,7 @@ class WorkflowMessage implements MessageNameProvider
 
     /**
      * @param ProcessId $processId
-     * @throws \RuntimeException
+     * @throws \RuntimeException If message is already connected to process
      */
     public function connectToProcess(ProcessId $processId)
     {
