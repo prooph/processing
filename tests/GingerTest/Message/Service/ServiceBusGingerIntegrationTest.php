@@ -14,6 +14,8 @@ namespace GingerTest\Message\Service;
 use Ginger\Message\ProophPlugin\FromGingerMessageTranslator;
 use Ginger\Message\ProophPlugin\ToGingerMessageTranslator;
 use Ginger\Message\WorkflowMessage;
+use Ginger\Processor\Process;
+use Ginger\Processor\ProcessId;
 use GingerTest\TestCase;
 use GingerTest\Mock\UserDictionary;
 use Prooph\ServiceBus\CommandBus;
@@ -77,6 +79,10 @@ class ServiceBusGingerIntegrationTest extends TestCase
 
         $wfMessage = WorkflowMessage::newDataCollected($user);
 
+        $processId = ProcessId::generate();
+
+        $wfMessage->connectToProcess($processId);
+
         $eventBus = new EventBus();
 
         $eventRouter = new EventRouter();
@@ -90,6 +96,11 @@ class ServiceBusGingerIntegrationTest extends TestCase
         $eventBus->dispatch($wfMessage);
 
         $this->assertInstanceOf('Ginger\Message\WorkflowMessage', $this->receivedWorkflowMessage);
+        $this->assertTrue($processId->equals($this->receivedWorkflowMessage->getProcessId()));
+        $this->assertTrue($wfMessage->getUuid()->equals($this->receivedWorkflowMessage->getUuid()));
+        $this->assertEquals($wfMessage->getPayload()->getData(), $this->receivedWorkflowMessage->getPayload()->getData());
+        $this->assertEquals($wfMessage->getVersion(), $this->receivedWorkflowMessage->getVersion());
+        $this->assertEquals($wfMessage->getCreatedOn()->format('Y-m-d H:i:s'), $this->receivedWorkflowMessage->getCreatedOn()->format('Y-m-d H:i:s'));
     }
 }
  

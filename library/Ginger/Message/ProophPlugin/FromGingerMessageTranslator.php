@@ -61,10 +61,16 @@ class FromGingerMessageTranslator implements ToMessageTranslatorInterface
             $messageType
         );
 
+        $msgPayload = array('json' => json_encode($aCommandOrEvent->getPayload()));
+
+        if ($aCommandOrEvent->getProcessId()) {
+            $msgPayload['processId'] = $aCommandOrEvent->getProcessId()->toString();
+        }
+
         return new StandardMessage(
             $aCommandOrEvent->getMessageName(),
             $messageHeader,
-            array('json' => json_encode($aCommandOrEvent->getPayload()))
+            $msgPayload
         );
     }
 }

@@ -92,7 +92,8 @@ class WorkflowMessage implements MessageNameProvider
 
         \Assert\that($messagePayload)->keyExists('json');
 
-        $processId = (isset($messagePayload['processId']))? $messagePayload['processId'] : null;
+        $processId = (isset($messagePayload['processId']))?
+            ProcessId::reconstituteFromString($messagePayload['processId']) : null;
 
         $messagePayload = Payload::fromJsonDecodedData(json_decode($messagePayload['json'], true));
 
