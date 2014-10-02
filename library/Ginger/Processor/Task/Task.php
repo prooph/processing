@@ -9,17 +9,35 @@
  * Date: 30.09.14 - 22:32
  */
 
-namespace Ginger\Processor;
+namespace Ginger\Processor\Task;
 
 /**
- * Class Task
+ * Interface Task
  *
  * @package Ginger\Processor
  * @author Alexander Miertsch <kontakt@codeliner.ws>
  */
-class Task 
+interface Task
 {
     //a task can be: send command on commandBus xyz
     //or publish event on eventBus xyz
+    //or trigger SupProcess
+
+    /**
+     * @param array $taskData
+     * @return static
+     */
+    public static function reconstituteFromArray(array $taskData);
+
+    /**
+     * @return array
+     */
+    public function getArrayCopy();
+
+    /**
+     * @param Task $task
+     * @return bool
+     */
+    public function equals(Task $task);
 }
  
