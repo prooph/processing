@@ -11,12 +11,15 @@
 
 namespace Ginger\Message;
 
+use Ginger\Message\ProophPlugin\ServiceBusTranslatableMessage;
 use Ginger\Processor\ProcessId;
 use Ginger\Type\Exception\InvalidTypeException;
 use Ginger\Type\Prototype;
 use Ginger\Type\Type;
+use Prooph\ServiceBus\Message\MessageHeader;
 use Prooph\ServiceBus\Message\MessageInterface;
 use Prooph\ServiceBus\Message\MessageNameProvider;
+use Prooph\ServiceBus\Message\StandardMessage;
 use Rhumsaa\Uuid\Uuid;
 
 /**
@@ -25,7 +28,7 @@ use Rhumsaa\Uuid\Uuid;
  * @package Ginger\Message
  * @author Alexander Miertsch <kontakt@codeliner.ws>
  */
-class WorkflowMessage implements MessageNameProvider
+class WorkflowMessage implements MessageNameProvider, ServiceBusTranslatableMessage
 {
     /**
      * @var string
@@ -277,6 +280,44 @@ class WorkflowMessage implements MessageNameProvider
     public function getCreatedOn()
     {
         return $this->createdOn;
+    }
+
+    /**
+     * @throws \RuntimeException
+     * @return MessageInterface
+     */
+    public function toServiceBusMessage()
+    {
+        $messageType = null;
+
+        if (MessageNameUtils::isGingerCommand($this->getMessageName()))
+            $messageType = MessageHeader::TYPE_COMMAND;
+        else if (MessageNameUtils::isGingerEvent($this->getMessageName()))
+            $messageType = MessageHeader::TYPE_EVENT;
+        else
+            throw new \RuntimeException(sprintf(
+                'Ginger message %s can not be converted to service bus message. Type of the message could not be detected',
+                $this->getMessageName()
+            ));
+
+        $messageHeader = new MessageHeader(
+            $this->getUuid(),
+            $this->getCreatedOn(),
+            $this->getVersion(),
+            $messageType
+        );
+
+        $msgPayload = array('json' => json_encode($this->getPayload()));
+
+        if ($this->getProcessId()) {
+            $msgPayload['processId'] = $this->getProcessId()->toString();
+        }
+
+        return new StandardMessage(
+            $this->getMessageName(),
+            $messageHeader,
+            $msgPayload
+        );
     }
 }
  

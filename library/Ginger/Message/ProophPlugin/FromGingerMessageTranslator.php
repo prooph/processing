@@ -32,7 +32,7 @@ class FromGingerMessageTranslator implements ToMessageTranslatorInterface
      */
     public function canTranslateToMessage($aCommandOrEvent)
     {
-        return $aCommandOrEvent instanceof WorkflowMessage;
+        return $aCommandOrEvent instanceof ServiceBusTranslatableMessage;
     }
 
     /**
@@ -42,36 +42,10 @@ class FromGingerMessageTranslator implements ToMessageTranslatorInterface
      */
     public function translateToMessage($aCommandOrEvent)
     {
-        $messageType = null;
-
-        if (MessageNameUtils::isGingerCommand($aCommandOrEvent->getMessageName()))
-            $messageType = MessageHeader::TYPE_COMMAND;
-        else if (MessageNameUtils::isGingerEvent($aCommandOrEvent->getMessageName()))
-            $messageType = MessageHeader::TYPE_EVENT;
-        else
-            throw new \RuntimeException(sprintf(
-                'Ginger message %s can not be converted to service bus message. Type of the message could not be detected',
-                $aCommandOrEvent->getMessageName()
-            ));
-
-        $messageHeader = new MessageHeader(
-            $aCommandOrEvent->getUuid(),
-            $aCommandOrEvent->getCreatedOn(),
-            $aCommandOrEvent->getVersion(),
-            $messageType
-        );
-
-        $msgPayload = array('json' => json_encode($aCommandOrEvent->getPayload()));
-
-        if ($aCommandOrEvent->getProcessId()) {
-            $msgPayload['processId'] = $aCommandOrEvent->getProcessId()->toString();
+        if ($aCommandOrEvent instanceof ServiceBusTranslatableMessage)
+        {
+            return $aCommandOrEvent->toServiceBusMessage();
         }
-
-        return new StandardMessage(
-            $aCommandOrEvent->getMessageName(),
-            $messageHeader,
-            $msgPayload
-        );
     }
 }
  

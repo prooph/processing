@@ -115,5 +115,14 @@ class MessageNameUtilsTest extends TestCase
         $this->assertFalse(MessageNameUtils::isGingerCommand('ginger-message-gingertestmockuserdictionary-data-processed'));
         $this->assertTrue(MessageNameUtils::isGingerEvent('ginger-message-gingertestmockuserdictionary-data-processed'));
     }
+
+    /**
+     * @test
+     */
+    public function it_detects_ginger_log_message_by_name()
+    {
+        $this->assertTrue(MessageNameUtils::isGingerLogMessage(MessageNameUtils::LOG_MESSAGE_NAME));
+        $this->assertFalse(MessageNameUtils::isGingerLogMessage('ginger-message-gingertestmockuserdictionary-process-data'));
+    }
 }
  

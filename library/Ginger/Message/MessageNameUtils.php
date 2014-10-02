@@ -29,6 +29,8 @@ class MessageNameUtils
 
     const DATA_PROCESSED = "%s%s-data-processed";
 
+    const LOG_MESSAGE_NAME = "ginger-log-message";
+
     const MESSAGE_PARTS_PATTERN = "/^ginger-message-(?P<type>[^-]+)-(?<message>[^-]+-[\w]+)$/";
 
     static protected $commandSuffixes = array("collect-data", "process-data");
@@ -180,6 +182,15 @@ class MessageNameUtils
         }
 
         return false;
+    }
+
+    /**
+     * @param string $aMessageName
+     * @return bool
+     */
+    public static function isGingerLogMessage($aMessageName)
+    {
+        return self::LOG_MESSAGE_NAME === $aMessageName;
     }
 }
  

@@ -11,6 +11,8 @@
 
 namespace Ginger\Message\ProophPlugin;
 
+use Ginger\Message\LogMessage;
+use Ginger\Message\MessageNameUtils;
 use Ginger\Message\WorkflowMessage;
 use Prooph\ServiceBus\Message\MessageInterface;
 use Prooph\ServiceBus\Process\CommandDispatch;
@@ -50,7 +52,9 @@ class ToGingerMessageTranslator extends AbstractListenerAggregate
 
         if (! $command instanceof MessageInterface) return;
 
-        $commandDispatch->setCommand(WorkflowMessage::fromServiceBusMessage($command));
+        if (MessageNameUtils::isGingerCommand($command->name())) {
+            $commandDispatch->setCommand(WorkflowMessage::fromServiceBusMessage($command));
+        }
     }
 
     public function onInitializeEventDispatch(EventDispatch $eventDispatch)
@@ -59,7 +63,11 @@ class ToGingerMessageTranslator extends AbstractListenerAggregate
 
         if (! $event instanceof MessageInterface) return;
 
-        $eventDispatch->setEvent(WorkflowMessage::fromServiceBusMessage($event));
+        if (MessageNameUtils::isGingerEvent($event->name())) {
+            $eventDispatch->setEvent(WorkflowMessage::fromServiceBusMessage($event));
+        } else if (MessageNameUtils::isGingerLogMessage($event->name())) {
+            $eventDispatch->setEvent(LogMessage::fromServiceBusMessage($event));
+        }
     }
 }
  
