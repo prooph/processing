@@ -6,20 +6,19 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  * 
- * Date: 30.09.14 - 21:48
+ * Date: 02.10.14 - 23:16
  */
 
-namespace Ginger\Processor;
-
+namespace Ginger\Processor\Task;
 use Rhumsaa\Uuid\Uuid;
 
 /**
- * Class ProcessId
+ * Class TaskListId
  *
- * @package Ginger\Processor
+ * @package Ginger\Processor\Task
  * @author Alexander Miertsch <kontakt@codeliner.ws>
  */
-class ProcessId 
+class TaskListId 
 {
     /**
      * @var Uuid
@@ -27,7 +26,7 @@ class ProcessId
     private $uuid;
 
     /**
-     * @return ProcessId
+     * @return TaskListId
      */
     public static function generate()
     {
@@ -36,7 +35,7 @@ class ProcessId
 
     /**
      * @param $uuid
-     * @return ProcessId
+     * @return TaskListId
      */
     public static function fromString($uuid)
     {
@@ -68,12 +67,12 @@ class ProcessId
     }
 
     /**
-     * @param ProcessId $processId
+     * @param TaskListId $taskListId
      * @return bool
      */
-    public function equals(ProcessId $processId)
+    public function equals(TaskListId $taskListId)
     {
-        return $this->uuid->equals($processId->uuid);
+        return $this->uuid->equals($taskListId->uuid);
     }
 }
  

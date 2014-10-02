@@ -96,7 +96,7 @@ class WorkflowMessage implements MessageNameProvider, ServiceBusTranslatableMess
         \Assert\that($messagePayload)->keyExists('json');
 
         $processId = (isset($messagePayload['processId']))?
-            ProcessId::reconstituteFromString($messagePayload['processId']) : null;
+            ProcessId::fromString($messagePayload['processId']) : null;
 
         $messagePayload = Payload::fromJsonDecodedData(json_decode($messagePayload['json'], true));
 

@@ -71,7 +71,7 @@ final class LogMessage implements MessageNameProvider, ServiceBusTranslatableMes
             ->keyExists('msgParams')
             ->keyExists('msgCode');
 
-        $processId = ProcessId::reconstituteFromString($payload['processId']);
+        $processId = ProcessId::fromString($payload['processId']);
 
         return new self(
             $processId,

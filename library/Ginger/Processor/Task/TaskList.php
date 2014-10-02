@@ -23,9 +23,9 @@ use Rhumsaa\Uuid\Uuid;
 class TaskList
 {
     /**
-     * @var Uuid
+     * @var TaskListId
      */
-    private $uuid;
+    private $taskListId;
 
     /**
      * @var ProcessId
