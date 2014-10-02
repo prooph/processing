@@ -10,7 +10,6 @@
  */
 
 namespace Ginger\Processor\Task;
-use Codeliner\Comparison\EqualsBuilder;
 
 /**
  * Class TaskListPosition
@@ -44,18 +43,18 @@ class TaskListPosition
     {
         \Assert\that($taskListPositionStr)->string();
 
-        $parts = explode('::', $taskListPositionStr);
+        $parts = explode(':TASK_POSITION:', $taskListPositionStr);
 
         if (count($parts) != 2) {
             throw new \InvalidArgumentException(sprintf(
-                "Invalid taskListPositionStr %s provided. Needs to have the format: task-list-uuid::position",
+                "Invalid taskListPositionStr %s provided. Needs to have the format: task-list-uuid:TASK_POSITION:position",
                 $taskListPositionStr
             ));
         }
 
         $taskListId = TaskListId::fromString($parts[0]);
 
-        return new self($taskListId, $parts[1]);
+        return new self($taskListId, (int)$parts[1]);
     }
 
     private function __construct(TaskListId $taskListId, $position)
@@ -87,7 +86,7 @@ class TaskListPosition
      */
     public function toString()
     {
-        return $this->taskListId()->toString() . '::' . $this->position();
+        return $this->taskListId()->toString() . ':TASK_POSITION:' . $this->position();
     }
 
     /**

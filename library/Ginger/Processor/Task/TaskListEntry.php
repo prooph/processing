@@ -11,6 +11,8 @@
 
 namespace Ginger\Processor\Task;
 
+use Ginger\Message\LogMessage;
+
 /**
  * Class TaskListEntry
  *
@@ -23,6 +25,7 @@ class TaskListEntry
     const STATUS_IN_PROGRESS = "in_progress";
     const STATUS_FAILED = "failed";
     CONST STATUS_DONE = "done";
+    const STATUS_DONE_WITH_WARNING = "done_with_warning";
 
     /**
      * @var int
@@ -39,18 +42,14 @@ class TaskListEntry
      */
     private $status;
 
-    private $createdOn;
-
     private $startedOn;
 
     private $finishedOn;
 
-    private $infoMessages;
-
-    private $warningMessages;
-
-    private $errorMessages;
-
+    /**
+     * @var LogMessage[]
+     */
+    private $log = array();
     /**
      * @param Task $task
      * @return TaskListEntry

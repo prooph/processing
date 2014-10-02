@@ -10,6 +10,8 @@
  */
 
 namespace Ginger\Processor\Task;
+
+use Ginger\Processor\ProcessId;
 use Rhumsaa\Uuid\Uuid;
 
 /**
@@ -21,33 +23,71 @@ use Rhumsaa\Uuid\Uuid;
 class TaskListId 
 {
     /**
+     * @var ProcessId
+     */
+    private $processId;
+
+    /**
      * @var Uuid
      */
     private $uuid;
 
     /**
+     * @param ProcessId $processId
      * @return TaskListId
      */
-    public static function generate()
+    public static function linkWith(ProcessId $processId)
     {
-        return new self(Uuid::uuid4());
+        return new self($processId, Uuid::uuid4());
     }
 
     /**
-     * @param $uuid
+     * @param string $taskListIdStr
+     * @throws \InvalidArgumentException
      * @return TaskListId
      */
-    public static function fromString($uuid)
+    public static function fromString($taskListIdStr)
     {
-        return new self(Uuid::fromString($uuid));
+        \Assert\that($taskListIdStr)->string();
+
+        $parts = explode(':TASK_LIST_ID:', $taskListIdStr);
+
+        if (count($parts) != 2) {
+            throw new \InvalidArgumentException(sprintf(
+                "Invalid taskLIstIdStr %s provided. Needs to have the format: process-uuid:TASK_LIST_ID:task-list-uuid",
+                $taskListIdStr
+            ));
+        }
+
+        $processId = ProcessId::fromString($parts[0]);
+
+        return new self($processId, Uuid::fromString($parts[1]));
     }
 
     /**
+     * @param \Ginger\Processor\ProcessId $processId
      * @param Uuid $uuid
      */
-    private function __construct(Uuid $uuid)
+    private function __construct(ProcessId $processId, Uuid $uuid)
     {
+        $this->processId = $processId;
         $this->uuid = $uuid;
+    }
+
+    /**
+     * @return ProcessId
+     */
+    public function processId()
+    {
+        return $this->processId;
+    }
+
+    /**
+     * @return Uuid
+     */
+    public function uuid()
+    {
+        return $this->uuid;
     }
 
     /**
@@ -55,7 +95,7 @@ class TaskListId
      */
     public function toString()
     {
-        return $this->uuid->toString();
+        return $this->processId()->toString() . ':TASK_LIST_ID:' . $this->uuid()->toString();
     }
 
     /**
@@ -72,7 +112,7 @@ class TaskListId
      */
     public function equals(TaskListId $taskListId)
     {
-        return $this->uuid->equals($taskListId->uuid);
+        return $this->processId()->equals($taskListId->processId()) && $this->uuid->equals($taskListId->uuid);
     }
 }
  

@@ -13,6 +13,7 @@ namespace Ginger\Message;
 
 use Ginger\Message\ProophPlugin\ServiceBusTranslatableMessage;
 use Ginger\Processor\ProcessId;
+use Ginger\Processor\Task\TaskListPosition;
 use Prooph\ServiceBus\Message\MessageHeader;
 use Prooph\ServiceBus\Message\MessageInterface;
 use Prooph\ServiceBus\Message\MessageNameProvider;
@@ -33,9 +34,9 @@ final class LogMessage implements MessageNameProvider, ServiceBusTranslatableMes
     private $uuid;
 
     /**
-     * @var ProcessId
+     * @var TaskListPosition
      */
-    private $processId;
+    private $processTaskListPosition;
 
     /**
      * @var int
@@ -66,15 +67,15 @@ final class LogMessage implements MessageNameProvider, ServiceBusTranslatableMes
     {
         $payload = $aMessage->payload();
 
-        \Assert\that($payload)->keyExists('processId')
+        \Assert\that($payload)->keyExists('processTaskListPosition')
             ->keyExists('technicalMsg')
             ->keyExists('msgParams')
             ->keyExists('msgCode');
 
-        $processId = ProcessId::fromString($payload['processId']);
+        $taskListPosition = TaskListPosition::fromString($payload['processTaskListPosition']);
 
         return new self(
-            $processId,
+            $taskListPosition,
             $payload['technicalMsg'],
             $payload['msgCode'],
             $payload['msgParams'],
@@ -84,7 +85,7 @@ final class LogMessage implements MessageNameProvider, ServiceBusTranslatableMes
     }
 
     /**
-     * @param ProcessId $processId
+     * @param TaskListPosition $taskListPosition
      * @param string $technicalMsg
      * @param int $msgCode
      * @param array $msgParams
@@ -92,7 +93,7 @@ final class LogMessage implements MessageNameProvider, ServiceBusTranslatableMes
      * @param \DateTime $createdOn
      * @throws \InvalidArgumentException
      */
-    private function __construct(ProcessId $processId, $technicalMsg, $msgCode = 0, array $msgParams = array(), Uuid $uuid = null, \DateTime $createdOn = null)
+    private function __construct(TaskListPosition $taskListPosition, $technicalMsg, $msgCode = 0, array $msgParams = array(), Uuid $uuid = null, \DateTime $createdOn = null)
     {
         \Assert\that($technicalMsg)->string();
         \Assert\that($msgCode)->integer();
@@ -110,7 +111,7 @@ final class LogMessage implements MessageNameProvider, ServiceBusTranslatableMes
         $this->technicalMsg = $technicalMsg;
         $this->msgCode = $msgCode;
         $this->msgParams = $msgParams;
-        $this->processId = $processId;
+        $this->processTaskListPosition = $taskListPosition;
 
         if (is_null($uuid)) {
             $uuid = Uuid::uuid4();
@@ -149,7 +150,7 @@ final class LogMessage implements MessageNameProvider, ServiceBusTranslatableMes
             $this->getMessageName(),
             $header,
             [
-                'processId' => $this->getProcessId()->toString(),
+                'processTaskListPosition' => $this->getProcessTaskListPosition()->toString(),
                 'technicalMsg' => $this->getTechnicalMsg(),
                 'msgParams' => $this->getMsgParams(),
                  'msgCode' => $this->getMsgCode()
@@ -174,11 +175,11 @@ final class LogMessage implements MessageNameProvider, ServiceBusTranslatableMes
     }
 
     /**
-     * @return ProcessId
+     * @return TaskListPosition
      */
-    public function getProcessId()
+    public function getProcessTaskListPosition()
     {
-        return $this->processId;
+        return $this->processTaskListPosition;
     }
 
     /**

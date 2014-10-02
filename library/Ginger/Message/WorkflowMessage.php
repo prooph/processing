@@ -13,6 +13,7 @@ namespace Ginger\Message;
 
 use Ginger\Message\ProophPlugin\ServiceBusTranslatableMessage;
 use Ginger\Processor\ProcessId;
+use Ginger\Processor\Task\TaskListPosition;
 use Ginger\Type\Exception\InvalidTypeException;
 use Ginger\Type\Prototype;
 use Ginger\Type\Type;
@@ -41,9 +42,9 @@ class WorkflowMessage implements MessageNameProvider, ServiceBusTranslatableMess
     protected $uuid;
 
     /**
-     * @var ProcessId
+     * @var TaskListPosition
      */
-    protected $processId;
+    protected $processTaskListPosition;
 
     /**
      * @var int
@@ -95,15 +96,15 @@ class WorkflowMessage implements MessageNameProvider, ServiceBusTranslatableMess
 
         \Assert\that($messagePayload)->keyExists('json');
 
-        $processId = (isset($messagePayload['processId']))?
-            ProcessId::fromString($messagePayload['processId']) : null;
+        $taskListPosition = (isset($messagePayload['processTaskListPosition']))?
+            TaskListPosition::fromString($messagePayload['processTaskListPosition']) : null;
 
         $messagePayload = Payload::fromJsonDecodedData(json_decode($messagePayload['json'], true));
 
         return new static(
             $messagePayload,
             $aMessage->name(),
-            $processId,
+            $taskListPosition,
             $aMessage->header()->version(),
             $aMessage->header()->createdOn(),
             $aMessage->header()->uuid()
@@ -113,7 +114,7 @@ class WorkflowMessage implements MessageNameProvider, ServiceBusTranslatableMess
     /**
      * @param Payload $payload
      * @param string $messageName
-     * @param ProcessId|null $processId
+     * @param TaskListPosition|null $taskListPosition
      * @param int $version
      * @param \DateTime|null $createdOn
      * @param Uuid|null $uuid
@@ -121,7 +122,7 @@ class WorkflowMessage implements MessageNameProvider, ServiceBusTranslatableMess
     protected function __construct(
         Payload $payload,
         $messageName,
-        ProcessId $processId = null,
+        TaskListPosition $taskListPosition = null,
         $version = 1,
         \DateTime $createdOn = null,
         Uuid $uuid = null
@@ -132,7 +133,7 @@ class WorkflowMessage implements MessageNameProvider, ServiceBusTranslatableMess
 
         $this->messageName = $messageName;
 
-        $this->processId = $processId;
+        $this->processTaskListPosition = $taskListPosition;
 
         if (is_null($uuid)) {
             $uuid = Uuid::uuid4();
@@ -178,7 +179,7 @@ class WorkflowMessage implements MessageNameProvider, ServiceBusTranslatableMess
         return new self(
             $collectedPayload,
             MessageNameUtils::getDataCollectedEventName($type),
-            $this->processId,
+            $this->processTaskListPosition,
             $this->version + 1
         );
     }
@@ -195,7 +196,7 @@ class WorkflowMessage implements MessageNameProvider, ServiceBusTranslatableMess
         return new self(
             $this->payload,
             MessageNameUtils::getProcessDataCommandName($type),
-            $this->processId,
+            $this->processTaskListPosition,
             $this->version + 1
         );
     }
@@ -210,28 +211,28 @@ class WorkflowMessage implements MessageNameProvider, ServiceBusTranslatableMess
         return new self(
             $this->payload,
             MessageNameUtils::getDataProcessedEventName($type),
-            $this->processId,
+            $this->processTaskListPosition,
             $this->version + 1
         );
     }
 
     /**
-     * @param ProcessId $processId
+     * @param TaskListPosition $taskListPosition
      * @throws \RuntimeException If message is already connected to process
      */
-    public function connectToProcess(ProcessId $processId)
+    public function connectToProcessTask(TaskListPosition $taskListPosition)
     {
-        if (! is_null($this->processId)) {
+        if (! is_null($this->processTaskListPosition)) {
             throw new \RuntimeException(sprintf(
                 "Connecting WorkflowMessage %s (%s) to process %s is not possible cause it is already connected to process %s",
                 $this->getMessageName(),
                 $this->uuid->toString(),
-                $processId->toString(),
-                $this->processId->toString()
+                $taskListPosition->toString(),
+                $this->processTaskListPosition->toString()
             ));
         }
 
-        $this->processId = $processId;
+        $this->processTaskListPosition = $taskListPosition;
     }
 
     /**
@@ -251,11 +252,11 @@ class WorkflowMessage implements MessageNameProvider, ServiceBusTranslatableMess
     }
 
     /**
-     * @return ProcessId|null
+     * @return TaskListPosition|null
      */
-    public function getProcessId()
+    public function getProcessTaskListPosition()
     {
-        return $this->processId;
+        return $this->processTaskListPosition;
     }
 
     /**
@@ -309,8 +310,8 @@ class WorkflowMessage implements MessageNameProvider, ServiceBusTranslatableMess
 
         $msgPayload = array('json' => json_encode($this->getPayload()));
 
-        if ($this->getProcessId()) {
-            $msgPayload['processId'] = $this->getProcessId()->toString();
+        if ($this->getProcessTaskListPosition()) {
+            $msgPayload['processTaskListPosition'] = $this->getProcessTaskListPosition()->toString();
         }
 
         return new StandardMessage(

@@ -16,6 +16,8 @@ use Ginger\Message\ProophPlugin\ToGingerMessageTranslator;
 use Ginger\Message\WorkflowMessage;
 use Ginger\Processor\Process;
 use Ginger\Processor\ProcessId;
+use Ginger\Processor\Task\TaskListId;
+use Ginger\Processor\Task\TaskListPosition;
 use GingerTest\TestCase;
 use GingerTest\Mock\UserDictionary;
 use Prooph\ServiceBus\CommandBus;
@@ -79,9 +81,9 @@ class ServiceBusGingerIntegrationTest extends TestCase
 
         $wfMessage = WorkflowMessage::newDataCollected($user);
 
-        $processId = ProcessId::generate();
+        $taskListPosition = TaskListPosition::at(TaskListId::linkWith(ProcessId::generate()), 1);
 
-        $wfMessage->connectToProcess($processId);
+        $wfMessage->connectToProcessTask($taskListPosition);
 
         $eventBus = new EventBus();
 
@@ -96,7 +98,7 @@ class ServiceBusGingerIntegrationTest extends TestCase
         $eventBus->dispatch($wfMessage);
 
         $this->assertInstanceOf('Ginger\Message\WorkflowMessage', $this->receivedWorkflowMessage);
-        $this->assertTrue($processId->equals($this->receivedWorkflowMessage->getProcessId()));
+        $this->assertTrue($taskListPosition->equals($this->receivedWorkflowMessage->getProcessTaskListPosition()));
         $this->assertTrue($wfMessage->getUuid()->equals($this->receivedWorkflowMessage->getUuid()));
         $this->assertEquals($wfMessage->getPayload()->getData(), $this->receivedWorkflowMessage->getPayload()->getData());
         $this->assertEquals($wfMessage->getVersion(), $this->receivedWorkflowMessage->getVersion());

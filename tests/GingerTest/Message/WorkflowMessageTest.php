@@ -14,6 +14,8 @@ namespace GingerTest\Message;
 use Ginger\Message\MessageNameUtils;
 use Ginger\Message\WorkflowMessage;
 use Ginger\Processor\ProcessId;
+use Ginger\Processor\Task\TaskListId;
+use Ginger\Processor\Task\TaskListPosition;
 use GingerTest\TestCase;
 use GingerTest\Mock\AddressDictionary;
 use GingerTest\Mock\UserDictionary;
@@ -80,7 +82,7 @@ class WorkflowMessageTest extends TestCase
     {
         $wfMessage = WorkflowMessage::collectDataOf(UserDictionary::prototype());
 
-        $wfMessage->connectToProcess(ProcessId::generate());
+        $wfMessage->connectToProcessTask(TaskListPosition::at(TaskListId::linkWith(ProcessId::generate()), 1));
 
         $userData = array(
             'id' => 1,
@@ -109,7 +111,7 @@ class WorkflowMessageTest extends TestCase
         $this->assertEquals(1, $wfMessage->getVersion());
         $this->assertEquals(2, $wfAnswer->getVersion());
 
-        $this->assertTrue($wfMessage->getProcessId()->equals($wfAnswer->getProcessId()));
+        $this->assertTrue($wfMessage->getProcessTaskListPosition()->equals($wfAnswer->getProcessTaskListPosition()));
     }
 
     /**
@@ -151,7 +153,7 @@ class WorkflowMessageTest extends TestCase
 
         $wfMessage = WorkflowMessage::newDataCollected($user);
 
-        $wfMessage->connectToProcess(ProcessId::generate());
+        $wfMessage->connectToProcessTask(TaskListPosition::at(TaskListId::linkWith(ProcessId::generate()), 1));
 
         $wfCommand = $wfMessage->prepareDataProcessing();
 
@@ -167,7 +169,7 @@ class WorkflowMessageTest extends TestCase
         $this->assertEquals(1, $wfMessage->getVersion());
         $this->assertEquals(2, $wfCommand->getVersion());
 
-        $this->assertTrue($wfMessage->getProcessId()->equals($wfCommand->getProcessId()));
+        $this->assertTrue($wfMessage->getProcessTaskListPosition()->equals($wfCommand->getProcessTaskListPosition()));
     }
 
     /**
@@ -190,7 +192,7 @@ class WorkflowMessageTest extends TestCase
 
         $wfMessage = WorkflowMessage::newDataCollected($user);
 
-        $wfMessage->connectToProcess(ProcessId::generate());
+        $wfMessage->connectToProcessTask(TaskListPosition::at(TaskListId::linkWith(ProcessId::generate()), 1));
 
         $wfCommand = $wfMessage->prepareDataProcessing();
 
@@ -209,8 +211,8 @@ class WorkflowMessageTest extends TestCase
         $this->assertEquals(2, $wfCommand->getVersion());
         $this->assertEquals(3, $wfAnswer->getVersion());
 
-        $this->assertTrue($wfMessage->getProcessId()->equals($wfCommand->getProcessId()));
-        $this->assertTrue($wfCommand->getProcessId()->equals($wfAnswer->getProcessId()));
+        $this->assertTrue($wfMessage->getProcessTaskListPosition()->equals($wfCommand->getProcessTaskListPosition()));
+        $this->assertTrue($wfCommand->getProcessTaskListPosition()->equals($wfAnswer->getProcessTaskListPosition()));
     }
 }
  
