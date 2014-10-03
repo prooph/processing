@@ -12,7 +12,6 @@
 namespace Ginger\Processor;
 
 use Ginger\Message\WorkflowMessage;
-use Ginger\Message\WorkflowMessageHandler;
 
 /**
  * Interface Process
@@ -22,7 +21,7 @@ use Ginger\Message\WorkflowMessageHandler;
  * @package Ginger\Processor
  * @author Alexander Miertsch <kontakt@codeliner.ws>
  */
-interface Process extends WorkflowMessageHandler
+interface Process
 {
     /**
      * Creates new process from given config
@@ -33,14 +32,7 @@ interface Process extends WorkflowMessageHandler
     public static function setUpNew(array $config);
 
     /**
-     * The ProcessId must be derived from the uuid of the initial WorkflowMessage
-     *
-     * The initial message is either received by method receiveMessage or generated internally if
-     * the first message is a command.
-     *
-     * As long as the process has not received a message it has no ProcessId
-     *
-     * @return null|ProcessId
+     * @return ProcessId
      */
     public function processId();
 
