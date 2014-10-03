@@ -19,18 +19,17 @@ use Ginger\Message\LogMessage;
  * @package Ginger\Processor
  * @author Alexander Miertsch <kontakt@codeliner.ws>
  */
-class TaskListEntry 
+class TaskListEntry
 {
     CONST STATUS_NOT_STARTED = "not_started";
     const STATUS_IN_PROGRESS = "in_progress";
     const STATUS_FAILED = "failed";
     CONST STATUS_DONE = "done";
-    const STATUS_DONE_WITH_WARNING = "done_with_warning";
 
-    /**
-     * @var int
+     /**
+     * @var TaskListPosition
      */
-    private $listPosition;
+    private $taskListPosition;
 
     /**
      * @var Task
@@ -42,67 +41,203 @@ class TaskListEntry
      */
     private $status;
 
+    /**
+     * @var \DateTime
+     */
     private $startedOn;
 
+    /**
+     * @var \DateTime
+     */
     private $finishedOn;
 
     /**
      * @var LogMessage[]
      */
     private $log = array();
+
     /**
+     * @param TaskListPosition $taskListPosition
      * @param Task $task
      * @return TaskListEntry
      */
-    public static function newEntry(Task $task)
+    public static function newEntryAt(TaskListPosition $taskListPosition, Task $task)
     {
-        return new self($task, self::STATUS_NOT_STARTED, null);
+        return new self($taskListPosition, $task);
     }
 
     /**
-     * @param array $entryData
-     * @return TaskListEntry
+     * @param TaskListPosition $position
+     * @param Task $task
      */
-    public static function reconstituteFromArray(array $entryData)
+    private function __construct(TaskListPosition $position, Task $task)
     {
-        \Assert\that($entryData)->keyExists('task');
-        \Assert\that($entryData)->keyExists('status');
-        \Assert\that($entryData)->keyExists('comments');
+        $this->taskListPosition = $position;
+        $this->task = $task;
+        $this->status = self::STATUS_NOT_STARTED;
+    }
 
-        if (! $entryData['task'] instanceof Task) {
-            $entryData['task'] = Task::reconstituteFromArray($entryData['task']);
+    /**
+     * @return TaskListPosition
+     */
+    public function taskListPosition()
+    {
+        return $this->taskListPosition;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isStarted()
+    {
+        return $this->status !== self::STATUS_NOT_STARTED;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isFinished()
+    {
+        return in_array($this->status, [self::STATUS_FAILED, self::STATUS_DONE]);
+    }
+
+    /**
+     * @return bool
+     */
+    public function isRunning()
+    {
+        return $this->isStarted() && ! $this->isFinished();
+    }
+
+    /**
+     * @return bool
+     */
+    public function isFailed()
+    {
+        return $this->isFinished() && $this->status === self::STATUS_FAILED;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isDone()
+    {
+        return $this->isFinished() && ! $this->isFailed();
+    }
+
+    /**
+     * @return \DateTime|null
+     */
+    public function startedOn()
+    {
+        return $this->startedOn;
+    }
+
+    /**
+     * @return \DateTime|null
+     */
+    public function finishedOn()
+    {
+        return $this->finishedOn;
+    }
+
+    /**
+     * @return LogMessage[]
+     */
+    public function messageLog()
+    {
+        return $this->log;
+    }
+
+    /**
+     * @param \DateTime|null $startedOn
+     * @throws \RuntimeException
+     */
+    public function markAsRunning(\DateTime $startedOn = null)
+    {
+        if ($this->isStarted()) {
+            throw new \RuntimeException(sprintf(
+                "TaskListEntry %s cannot be marked as running. It is already started",
+                $this->taskListPosition()->toString()
+            ));
         }
 
-        return new self($entryData['task'], $entryData['status'], $entryData['comments']);
-    }
+        if ($this->isFinished()) {
+            throw new \RuntimeException(sprintf(
+                "TaskListEntry %s cannot be marked as running. It is already finished",
+                $this->taskListPosition()->toString()
+            ));
+        }
+
+        if (is_null($startedOn)) {
+            $startedOn = new \DateTime();
+        }
 
 
-    /**
-     * @param Task $task
-     * @param $status
-     * @param array $comments
-     */
-    private function __construct(Task $task, $status, array $comments)
-    {
-        \Assert\that($status)->inArray(array(self::STATUS_NOT_STARTED, self::STATUS_IN_PROGRESS, self::STATUS_FAILED, self::STATUS_DONE));
-
-        \Assert\that($comments)->all()->string();
-
-        $this->task = $task;
-        $this->status = $status;
-        $this->comment = $comment;
+        $this->startedOn = $startedOn;
+        $this->status = self::STATUS_IN_PROGRESS;
     }
 
     /**
-     * @return array
+     * @param \DateTime $finishedOn
+     * @throws \RuntimeException
      */
-    public function getArrayCopy()
+    public function markAsSuccessfulDone(\DateTime $finishedOn = null)
     {
-        return [
-            'task' => $this->task->getArrayCopy(),
-            'status' => $this->status,
-            'comment' => $this->comment
-        ];
+        if (! $this->isRunning()) {
+            throw new \RuntimeException(sprintf(
+                "TaskListEntry %s cannot be marked as successful done. It is not marked as running",
+                $this->taskListPosition()->toString()
+            ));
+        }
+
+        if (is_null($finishedOn)) {
+            $finishedOn = new \DateTime();
+        }
+
+        $this->finishedOn = $finishedOn;
+
+        $this->status = self::STATUS_DONE;
+    }
+
+    /**
+     * @param \DateTime $finishedOn
+     * @throws \RuntimeException
+     */
+    public function maskAsFailed(\DateTime $finishedOn = null)
+    {
+        if (! $this->isRunning()) {
+            throw new \RuntimeException(sprintf(
+                "TaskListEntry %s cannot be marked as failed. It is not marked as running",
+                $this->taskListPosition()->toString()
+            ));
+        }
+
+        if (is_null($finishedOn)) {
+            $finishedOn = new \DateTime();
+        }
+
+        $this->finishedOn = $finishedOn;
+
+        $this->status = self::STATUS_FAILED;
+    }
+
+    /**
+     * @param LogMessage $message
+     * @throws \InvalidArgumentException
+     */
+    public function logMessage(LogMessage $message)
+    {
+        if (! $this->taskListPosition()->equals($message->getProcessTaskListPosition())) {
+            throw new \InvalidArgumentException(sprintf(
+                "Cannot log message %s. TaskListPosition of message does not match with position of the TaskListEntry: %s != %s",
+                $message->getUuid()->toString(),
+                $message->getProcessTaskListPosition()->toString(),
+                $this->taskListPosition()->toString()
+            ));
+        }
+
+        $this->log[] = $message;
     }
 }
  

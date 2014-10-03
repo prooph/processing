@@ -11,10 +11,10 @@
 
 namespace GingerTest\Message\Service;
 
+use Ginger\Message\LogMessage;
 use Ginger\Message\ProophPlugin\FromGingerMessageTranslator;
 use Ginger\Message\ProophPlugin\ToGingerMessageTranslator;
 use Ginger\Message\WorkflowMessage;
-use Ginger\Processor\Process;
 use Ginger\Processor\ProcessId;
 use Ginger\Processor\Task\TaskListId;
 use Ginger\Processor\Task\TaskListPosition;
@@ -35,7 +35,7 @@ use Prooph\ServiceBus\Router\EventRouter;
  */
 class ServiceBusGingerIntegrationTest extends TestCase
 {
-    private $receivedWorkflowMessage;
+    private $receivedMessage;
 
     /**
      * @var InMemoryMessageDispatcher
@@ -52,7 +52,12 @@ class ServiceBusGingerIntegrationTest extends TestCase
 
         $eventRouter->route('ginger-message-gingertestmockuserdictionary-data-collected')
             ->to(function (WorkflowMessage $workflowMessage) {
-                $this->receivedWorkflowMessage = $workflowMessage;
+                $this->receivedMessage = $workflowMessage;
+            });
+
+        $eventRouter->route('ginger-log-message')
+            ->to(function (LogMessage $logMessage) {
+                $this->receivedMessage = $logMessage;
             });
 
         $eventBus->utilize($eventRouter);
@@ -61,6 +66,7 @@ class ServiceBusGingerIntegrationTest extends TestCase
 
         $eventBus->utilize(new CallbackStrategy());
     }
+
     /**
      * @test
      */
@@ -97,12 +103,40 @@ class ServiceBusGingerIntegrationTest extends TestCase
 
         $eventBus->dispatch($wfMessage);
 
-        $this->assertInstanceOf('Ginger\Message\WorkflowMessage', $this->receivedWorkflowMessage);
-        $this->assertTrue($taskListPosition->equals($this->receivedWorkflowMessage->getProcessTaskListPosition()));
-        $this->assertTrue($wfMessage->getUuid()->equals($this->receivedWorkflowMessage->getUuid()));
-        $this->assertEquals($wfMessage->getPayload()->getData(), $this->receivedWorkflowMessage->getPayload()->getData());
-        $this->assertEquals($wfMessage->getVersion(), $this->receivedWorkflowMessage->getVersion());
-        $this->assertEquals($wfMessage->getCreatedOn()->format('Y-m-d H:i:s'), $this->receivedWorkflowMessage->getCreatedOn()->format('Y-m-d H:i:s'));
+        $this->assertInstanceOf('Ginger\Message\WorkflowMessage', $this->receivedMessage);
+        $this->assertTrue($taskListPosition->equals($this->receivedMessage->getProcessTaskListPosition()));
+        $this->assertTrue($wfMessage->getUuid()->equals($this->receivedMessage->getUuid()));
+        $this->assertEquals($wfMessage->getPayload()->getData(), $this->receivedMessage->getPayload()->getData());
+        $this->assertEquals($wfMessage->getVersion(), $this->receivedMessage->getVersion());
+        $this->assertEquals($wfMessage->getCreatedOn()->format('Y-m-d H:i:s'), $this->receivedMessage->getCreatedOn()->format('Y-m-d H:i:s'));
+    }
+
+    /**
+     * @test
+     */
+    public function it_sends_log_message_via_message_dispatcher_to_a_handler()
+    {
+        $taskListPosition = TaskListPosition::at(TaskListId::linkWith(ProcessId::generate()), 1);
+
+        $logMessage = LogMessage::logWarningMsg("Just a fake warning", $taskListPosition);
+
+        $eventBus = new EventBus();
+
+        $eventRouter = new EventRouter();
+
+        $eventRouter->route($logMessage->getMessageName())->to($this->messageDispatcher);
+
+        $eventBus->utilize($eventRouter);
+
+        $eventBus->utilize(new ForwardToMessageDispatcherStrategy(new FromGingerMessageTranslator()));
+
+        $eventBus->dispatch($logMessage);
+
+        $this->assertInstanceOf('Ginger\Message\LogMessage', $this->receivedMessage);
+        $this->assertTrue($taskListPosition->equals($this->receivedMessage->getProcessTaskListPosition()));
+        $this->assertTrue($logMessage->getUuid()->equals($this->receivedMessage->getUuid()));
+        $this->assertEquals($logMessage->getTechnicalMsg(), $this->receivedMessage->getTechnicalMsg());
+        $this->assertEquals($logMessage->getCreatedOn()->format('Y-m-d H:i:s'), $this->receivedMessage->getCreatedOn()->format('Y-m-d H:i:s'));
     }
 }
  

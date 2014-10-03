@@ -10,6 +10,7 @@
  */
 
 namespace Ginger\Type;
+
 use Ginger\Type\Description\Description;
 
 /**

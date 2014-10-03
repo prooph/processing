@@ -252,5 +252,21 @@ class PayloadTest extends TestCase
 
         $this->assertEquals('Alex', $user->property("name")->value());
     }
+
+    /**
+     * @test
+     */
+    public function it_encodes_and_decodes_payload_with_prototype_to_and_from_json()
+    {
+        $payload = Payload::fromPrototype(UserDictionary::prototype());
+
+        $jsonString = json_encode($payload);
+
+        $jsonDecodedData = json_decode($jsonString, true);
+
+        $decodedPayload = Payload::fromJsonDecodedData($jsonDecodedData);
+
+        $this->assertEquals('GingerTest\Mock\UserDictionary', $decodedPayload->getTypeClass());
+    }
 }
  
