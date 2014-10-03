@@ -12,6 +12,7 @@
 namespace Ginger\Processor\Task;
 
 use Ginger\Message\LogMessage;
+use Prooph\ServiceBus\Message\StandardMessage;
 
 /**
  * Class TaskListEntry
@@ -64,6 +65,51 @@ class TaskListEntry
     public static function newEntryAt(TaskListPosition $taskListPosition, Task $task)
     {
         return new self($taskListPosition, $task);
+    }
+
+    /**
+     * @param array $taskListEntryData
+     * @return TaskListEntry
+     */
+    public static function fromArray(array $taskListEntryData)
+    {
+        \Assert\that($taskListEntryData)
+            ->keyExists('taskListPosition')
+            ->keyExists('taskData')
+            ->keyExists('taskClass')
+            ->keyExists('status')
+            ->keyExists('startedOn')
+            ->keyExists('finishedOn')
+            ->keyExists('log');
+
+        \Assert\that($taskListEntryData['status'])->inArray([
+            self::STATUS_NOT_STARTED,
+            self::STATUS_IN_PROGRESS,
+            self::STATUS_DONE,
+            self::STATUS_FAILED
+        ]);
+
+
+        $taskListPosition = TaskListPosition::fromString($taskListEntryData['taskListPosition']);
+
+        $taskClass = $taskListEntryData['taskClass'];
+
+        $task = $taskClass::reconstituteFromArray($taskListEntryData['taskData']);
+
+        $startedOn = (is_null($taskListEntryData['startedOn']))? null : new \DateTime($taskListEntryData['startedOn']);
+        $finishedOn = (is_null($taskListEntryData['finishedOn']))? null : new \DateTime($taskListEntryData['finishedOn']);
+
+        $instance = new self($taskListPosition, $task);
+
+        $instance->status = $taskListEntryData['status'];
+
+        $instance->startedOn = $startedOn;
+
+        $instance->finishedOn = $finishedOn;
+
+        $instance->setLogFromArray($taskListEntryData['log']);
+
+        return $instance;
     }
 
     /**
@@ -147,6 +193,14 @@ class TaskListEntry
     public function messageLog()
     {
         return $this->log;
+    }
+
+    /**
+     * @return Task
+     */
+    public function task()
+    {
+        return $this->task;
     }
 
     /**
@@ -238,6 +292,48 @@ class TaskListEntry
         }
 
         $this->log[] = $message;
+    }
+
+    /**
+     * @return array
+     */
+    public function getArrayCopy()
+    {
+        return [
+            'taskListPosition' => $this->taskListPosition()->toString(),
+            'taskData' => $this->task()->getArrayCopy(),
+            'taskClass' => get_class($this->task()),
+            'status' => $this->status,
+            'startedOn' => (is_null($this->startedOn))? null : $this->startedOn->format(\DateTime::ISO8601),
+            'finishedOn' => (is_null($this->finishedOn))? null : $this->finishedOn->format(\DateTime::ISO8601),
+            'log' => $this->logToArray()
+        ];
+    }
+
+    /**
+     * @return array
+     */
+    protected function logToArray()
+    {
+        $log = array();
+
+        foreach ($this->log as $message) {
+
+            $sbMessage = $message->toServiceBusMessage();
+
+            $log[] = $sbMessage->toArray();
+        }
+
+        return $log;
+    }
+
+    protected function setLogFromArray(array $log)
+    {
+        foreach ($log as $sbMessageArr) {
+            $sbMessage = StandardMessage::fromArray($sbMessageArr);
+
+            $this->log[] = LogMessage::fromServiceBusMessage($sbMessage);
+        }
     }
 }
  

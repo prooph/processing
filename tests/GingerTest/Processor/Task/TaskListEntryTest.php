@@ -129,6 +129,55 @@ class TaskListEntryTest extends TestCase
     /**
      * @test
      */
+    public function it_can_be_converted_to_array_and_back_after_creation()
+    {
+        $taskListEntry = $this->getTestTaskListEntry();
+
+        $arrCopy = $taskListEntry->getArrayCopy();
+
+        $equalTaskListEntry = TaskListEntry::fromArray($arrCopy);
+
+        $this->assertEqualTaskListEntries($taskListEntry, $equalTaskListEntry);
+    }
+
+    /**
+     * @test
+     */
+    public function it_can_be_converted_to_array_and_back_after_changing_status()
+    {
+        $taskListEntry = $this->getTestTaskListEntry();
+
+        $taskListEntry->markAsRunning();
+
+        $arrCopy = $taskListEntry->getArrayCopy();
+
+        $equalTaskListEntry = TaskListEntry::fromArray($arrCopy);
+
+        $this->assertEqualTaskListEntries($taskListEntry, $equalTaskListEntry);
+    }
+
+    /**
+     * @test
+     */
+    public function it_can_be_converted_to_array_and_back_after_changing_status_and_logging_messages()
+    {
+        $taskListEntry = $this->getTestTaskListEntry();
+
+        $taskListEntry->markAsRunning();
+
+        $taskListEntry->logMessage(LogMessage::logDebugMsg("A debug msg", $taskListEntry->taskListPosition()));
+        $taskListEntry->logMessage(LogMessage::logInfoDataProcessingStarted($taskListEntry->taskListPosition()));
+
+        $arrCopy = $taskListEntry->getArrayCopy();
+
+        $equalTaskListEntry = TaskListEntry::fromArray($arrCopy);
+
+        $this->assertEqualTaskListEntries($taskListEntry, $equalTaskListEntry);
+    }
+
+    /**
+     * @test
+     */
     public function it_is_capable_of_logging_messages()
     {
         $taskListEntry = $this->getTestTaskListEntry();
@@ -160,6 +209,22 @@ class TaskListEntryTest extends TestCase
         $task = CollectData::from('test-crm', UserDictionary::prototype());
 
         return TaskListEntry::newEntryAt($taskListPosition, $task);
+    }
+
+    protected function assertEqualTaskListEntries(TaskListEntry $a, TaskListEntry $b)
+    {
+        $this->assertTrue($a->taskListPosition()->equals($b->taskListPosition()));
+
+        $this->assertTrue($a->task()->equals($b->task()));
+
+        $this->assertEquals($a->isStarted(), $b->isStarted());
+        $this->assertEquals($a->isRunning(), $b->isRunning());
+        $this->assertEquals($a->isDone(), $b->isDone());
+        $this->assertEquals($a->isFailed(), $b->isFailed());
+
+        $this->assertEquals(count($a->messageLog()), count($b->messageLog()));
+
+        $this->assertEquals($a->getArrayCopy()['log'], $b->getArrayCopy()['log']);
     }
 }
  
