@@ -204,7 +204,7 @@ class TaskListEntry
      * @param \DateTime $finishedOn
      * @throws \RuntimeException
      */
-    public function maskAsFailed(\DateTime $finishedOn = null)
+    public function markAsFailed(\DateTime $finishedOn = null)
     {
         if (! $this->isRunning()) {
             throw new \RuntimeException(sprintf(

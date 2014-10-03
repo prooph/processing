@@ -11,9 +11,6 @@
 
 namespace Ginger\Processor\Task;
 
-use Ginger\Processor\ProcessId;
-use Rhumsaa\Uuid\Uuid;
-
 /**
  * Class TaskList
  *
@@ -28,54 +25,112 @@ class TaskList
     private $taskListId;
 
     /**
-     * @var ProcessId
+     * @var TaskListEntry[]
      */
-    private $processId;
+    private $taskListEntries;
 
     /**
-     * @var array
-     */
-    private $tasks;
-
-    /**
-     * @param Task[] $tasks
-     * @param \Ginger\Processor\ProcessId $processId
+     * @param TaskListId $taskListId
+     * @param array $tasks
      * @return TaskList
      */
-    public static function scheduleTasks(array $tasks, ProcessId $processId)
+    public static function scheduleTasks(TaskListId $taskListId, array $tasks)
     {
-        \Assert\that($tasks)->all()->isInstanceOf('Ginger\Processor\Task');
+        \Assert\that($tasks)->all()->isInstanceOf('Ginger\Processor\Task\Task');
+
+        $position = 1;
+
+        $tasks = array_map(function(Task $task) use ($taskListId, &$position) {
+            $taskListPosition = TaskListPosition::at($taskListId, $position++);
+            return TaskListEntry::newEntryAt($taskListPosition, $task);
+        }, $tasks);
+
+        return new self($taskListId, $tasks);
     }
 
     /**
-     * @param Task[] $tasks
+     * @param TaskListId $taskListId
+     * @param TaskListEntry[] $taskListEntries
      */
-    private function __construct(array $tasks)
+    private function __construct(TaskListId $taskListId, array $taskListEntries)
     {
+        \Assert\that($taskListEntries)->all()->isInstanceOf('Ginger\Processor\Task\TaskListEntry');
 
-
-        $this->tasks = $tasks;
+        $this->taskListEntries = $taskListEntries;
+        $this->taskListId = $taskListId;
     }
 
-
-    public function markTaskAsDone(Task $task, $listPosition = null)
+    /**
+     * @return TaskListId
+     */
+    public function taskListId()
     {
-        //WorkflowMessage needs Metadata dictionary
+        return $this->taskListId;
     }
 
-    public function getNextOpenTaskEntry()
+    /**
+     * @param TaskListPosition $taskListPosition
+     * @return TaskListEntry|null
+     */
+    public function getTaskListEntryAtPosition(TaskListPosition $taskListPosition)
     {
+        foreach($this->taskListEntries as $taskListEntry) {
+            if ($taskListEntry->taskListPosition()->equals($taskListPosition)) return $taskListEntry;
+        }
 
+        return null;
     }
 
-    public function getAllOpenTaskEntries()
+    /**
+     * @return TaskListEntry|null
+     */
+    public function getNextNotStartedTaskListEntry()
     {
+        foreach($this->taskListEntries as $taskListEntry) {
+            if (! $taskListEntry->isStarted()) {
+                return $taskListEntry;
+            }
+        }
 
+        return null;
     }
 
-    public function getAllTaskEntries()
+    /**
+     * @return TaskListEntry[]
+     */
+    public function getAllNotStartedTaskListEntries()
     {
+        $openTaskListEntries = array();
 
+        foreach($this->taskListEntries as $taskListEntry) {
+            if (! $taskListEntry->isStarted()) {
+                $openTaskListEntries[] = $taskListEntry;
+            }
+        }
+
+        return $openTaskListEntries;
+    }
+
+    /**
+     * @return TaskListEntry[]
+     */
+    public function getAllTaskListEntries()
+    {
+        return $this->taskListEntries;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isCompleted()
+    {
+        foreach($this->taskListEntries as $taskListEntry) {
+            if (! $taskListEntry->isFinished()) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }
  

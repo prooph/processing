@@ -104,7 +104,7 @@ class TaskListEntryTest extends TestCase
 
         $taskListEntry->markAsRunning();
 
-        $taskListEntry->maskAsFailed();
+        $taskListEntry->markAsFailed();
 
         $this->assertTrue($taskListEntry->isStarted());
         $this->assertTrue($taskListEntry->isFinished());
