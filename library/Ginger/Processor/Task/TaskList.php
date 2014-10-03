@@ -50,6 +50,16 @@ class TaskList
 
     /**
      * @param TaskListId $taskListId
+     * @param array $taskListEntries
+     * @return TaskList
+     */
+    public static function fromTaskListEntries(TaskListId $taskListId, array $taskListEntries)
+    {
+        return new self($taskListId, $taskListEntries);
+    }
+
+    /**
+     * @param TaskListId $taskListId
      * @param TaskListEntry[] $taskListEntries
      */
     private function __construct(TaskListId $taskListId, array $taskListEntries)
@@ -117,6 +127,14 @@ class TaskList
     public function getAllTaskListEntries()
     {
         return $this->taskListEntries;
+    }
+
+    /**
+     * @return array
+     */
+    public function getArrayCopyOfEntries()
+    {
+        return array_map(function(TaskListEntry $taskListEntry) {return $taskListEntry->getArrayCopy();}, $this->taskListEntries);
     }
 
     /**

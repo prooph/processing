@@ -14,6 +14,7 @@ namespace GingerTest\Processor\Task;
 use Ginger\Processor\ProcessId;
 use Ginger\Processor\Task\CollectData;
 use Ginger\Processor\Task\TaskList;
+use Ginger\Processor\Task\TaskListEntry;
 use Ginger\Processor\Task\TaskListId;
 use Ginger\Processor\Task\TaskListPosition;
 use GingerTest\Mock\UserDictionary;
@@ -136,6 +137,28 @@ class TaskListTest extends TestCase
         $task3->markAsFailed();
 
         $this->assertTrue($taskList->isCompleted());
+    }
+
+    /**
+     * @test
+     */
+    public function it_can_convert_task_list_entries_to_array()
+    {
+        $taskList = $this->getTestTaskList();
+
+        $taskListEntryArrs = $taskList->getArrayCopyOfEntries();
+
+        $taskListEntries = [];
+
+        foreach ($taskListEntryArrs as $taskListEntryArr)
+        {
+            $taskListEntries[] = TaskListEntry::fromArray($taskListEntryArr);
+        }
+
+        $taskListCopy = TaskList::fromTaskListEntries($taskList->taskListId(), $taskListEntries);
+
+        $this->assertTrue($taskList->taskListId()->equals($taskListCopy->taskListId()));
+        $this->assertEquals($taskList->getArrayCopyOfEntries(), $taskListCopy->getArrayCopyOfEntries());
     }
 
     /**
