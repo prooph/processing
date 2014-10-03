@@ -12,7 +12,6 @@
 namespace Ginger\Message;
 
 use Ginger\Message\ProophPlugin\ServiceBusTranslatableMessage;
-use Ginger\Processor\ProcessId;
 use Ginger\Processor\Task\TaskListPosition;
 use Prooph\ServiceBus\Message\MessageHeader;
 use Prooph\ServiceBus\Message\MessageInterface;
@@ -28,6 +27,11 @@ use Rhumsaa\Uuid\Uuid;
  */
 final class LogMessage implements MessageNameProvider, ServiceBusTranslatableMessage
 {
+    const LOG_LEVEL_DEBUG = "debug";
+    const LOG_LEVEL_WARNING = "warning";
+    const LOG_LEVEL_INFO = "info";
+    const LOG_LEVEL_ERROR = "error";
+
     /**
      * @var Uuid
      */
@@ -57,6 +61,51 @@ final class LogMessage implements MessageNameProvider, ServiceBusTranslatableMes
      * @var \DateTime
      */
     private $createdOn;
+
+    /**
+     * @param TaskListPosition $taskListPosition
+     * @return LogMessage
+     */
+    public static function logInfoDataProcessingStarted(TaskListPosition $taskListPosition)
+    {
+        return new self($taskListPosition, 'Data processing was started', 202, array('startedOn' => date(\DateTime::ISO8601)));
+    }
+
+    /**
+     * @param \Exception $exception
+     * @param TaskListPosition $taskListPosition
+     * @return LogMessage
+     */
+    public static function logException(\Exception $exception, TaskListPosition $taskListPosition)
+    {
+        $errorCode = $exception->getCode()? : 500;
+
+        if ($errorCode < 400) {
+            $errorCode = 500;
+        }
+
+        return new self($taskListPosition, $exception->getMessage(), $errorCode, array('trace' => $exception->getTraceAsString()));
+    }
+
+    /**
+     * @param string $msg
+     * @param TaskListPosition $taskListPosition
+     * @return LogMessage
+     */
+    public static function logDebugMsg($msg, TaskListPosition $taskListPosition)
+    {
+        return new self($taskListPosition, $msg);
+    }
+
+    /**
+     * @param string $warning
+     * @param TaskListPosition $taskListPosition
+     * @return LogMessage
+     */
+    public static function logWarningMsg($warning, TaskListPosition $taskListPosition)
+    {
+        return new self($taskListPosition, $warning, 100);
+    }
 
     /**
      * @param MessageInterface $aMessage
@@ -139,12 +188,12 @@ final class LogMessage implements MessageNameProvider, ServiceBusTranslatableMes
      */
     public function toServiceBusMessage()
     {
-        $header = MessageHeader::fromArray(array(
+        $header = new MessageHeader(
             $this->getUuid(),
             $this->getCreatedOn(),
             1,
             MessageHeader::TYPE_EVENT
-        ));
+        );
 
         return new StandardMessage(
             $this->getMessageName(),
@@ -204,6 +253,55 @@ final class LogMessage implements MessageNameProvider, ServiceBusTranslatableMes
     public function getCreatedOn()
     {
         return $this->createdOn;
+    }
+
+    /**
+     * @return string
+     */
+    public function getLogLevel()
+    {
+        switch (true) {
+            case $this->msgCode < 100:
+                return self::LOG_LEVEL_DEBUG;
+            case $this->msgCode < 200:
+                return self::LOG_LEVEL_WARNING;
+            case $this->msgCode < 400:
+                return self::LOG_LEVEL_INFO;
+            default:
+                return self::LOG_LEVEL_ERROR;
+        }
+    }
+
+    /**
+     * @return bool
+     */
+    public function isDebug()
+    {
+        return $this->getLogLevel() === self::LOG_LEVEL_DEBUG;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isWarning()
+    {
+        return $this->getLogLevel() === self::LOG_LEVEL_WARNING;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isInfo()
+    {
+        return $this->getLogLevel() === self::LOG_LEVEL_INFO;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isError()
+    {
+        return $this->getLogLevel() === self::LOG_LEVEL_ERROR;
     }
 }
  
