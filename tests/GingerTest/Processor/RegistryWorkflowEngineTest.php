@@ -11,7 +11,7 @@
 
 namespace GingerTest\Processor;
 
-use Ginger\Processor\WorkflowEngine;
+use Ginger\Processor\RegistryWorkflowEngine;
 use GingerTest\TestCase;
 use Prooph\ServiceBus\CommandBus;
 use Prooph\ServiceBus\EventBus;
@@ -85,11 +85,11 @@ class RegistryWorkflowEngineTest extends TestCase
     }
 
     /**
-     * @return WorkflowEngine
+     * @return RegistryWorkflowEngine
      */
     protected function getTestWorkflowEngine()
     {
-        $workflowEngine = new WorkflowEngine();
+        $workflowEngine = new RegistryWorkflowEngine();
 
         $commandBus = new CommandBus();
 
