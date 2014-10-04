@@ -17,12 +17,12 @@ use Prooph\ServiceBus\CommandBus;
 use Prooph\ServiceBus\EventBus;
 
 /**
- * Class WorkflowEngineTest
+ * Class RegistryWorkflowEngineTest
  *
  * @package GingerTest\Processor
  * @author Alexander Miertsch <kontakt@codeliner.ws>
  */
-class WorkflowEngineTest extends TestCase
+class RegistryWorkflowEngineTest extends TestCase
 {
     /**
      * @test
