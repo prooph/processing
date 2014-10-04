@@ -13,8 +13,10 @@ namespace GingerTest\Message;
 
 use Ginger\Message\LogMessage;
 use Ginger\Processor\ProcessId;
+use Ginger\Processor\Task\CollectData;
 use Ginger\Processor\Task\TaskListId;
 use Ginger\Processor\Task\TaskListPosition;
+use GingerTest\Mock\UserDictionary;
 use GingerTest\TestCase;
 
 /**
@@ -119,6 +121,27 @@ class LogMessageTest extends TestCase
         $this->assertEquals(500, $message->getMsgCode());
         $this->assertTrue($taskListPosition->equals($message->getProcessTaskListPosition()));
         $this->assertTrue(isset($message->getMsgParams()['trace']));
+    }
+
+    /**
+     * @test
+     */
+    public function it_logs_no_message_received_for_task_as_error()
+    {
+        $taskListPosition = TaskListPosition::at(TaskListId::linkWith(ProcessId::generate()), 1);
+
+        $task = CollectData::from('crm', UserDictionary::prototype());
+
+        $message = LogMessage::logNoMessageReceivedFor($task, $taskListPosition);
+
+        $this->assertTrue($message->isError());
+        $this->assertEquals(412, $message->getMsgCode());
+        $this->assertTrue($taskListPosition->equals($message->getProcessTaskListPosition()));
+        $this->assertTrue(isset($message->getMsgParams()['task_class']));
+        $this->assertTrue(isset($message->getMsgParams()['task_as_json']));
+
+        $this->assertEquals(get_class($task), $message->getMsgParams()['task_class']);
+        $this->assertEquals(json_encode($task->getArrayCopy()), $message->getMsgParams()['task_as_json']);
     }
 }
  

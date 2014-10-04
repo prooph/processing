@@ -12,6 +12,7 @@
 namespace Ginger\Message;
 
 use Ginger\Message\ProophPlugin\ServiceBusTranslatableMessage;
+use Ginger\Processor\Task\Task;
 use Ginger\Processor\Task\TaskListPosition;
 use Prooph\ServiceBus\Message\MessageHeader;
 use Prooph\ServiceBus\Message\MessageInterface;
@@ -68,7 +69,7 @@ final class LogMessage implements MessageNameProvider, ServiceBusTranslatableMes
      */
     public static function logInfoDataProcessingStarted(TaskListPosition $taskListPosition)
     {
-        return new self($taskListPosition, 'Data processing was started', 202, array('startedOn' => date(\DateTime::ISO8601)));
+        return new self($taskListPosition, 'Data processing was started', 202, array('started_on' => date(\DateTime::ISO8601)));
     }
 
     /**
@@ -85,6 +86,28 @@ final class LogMessage implements MessageNameProvider, ServiceBusTranslatableMes
         }
 
         return new self($taskListPosition, $exception->getMessage(), $errorCode, array('trace' => $exception->getTraceAsString()));
+    }
+
+    /**
+     * @param Task $task
+     * @param TaskListPosition $taskListPosition
+     * @return LogMessage
+     */
+    public static function logNoMessageReceivedFor(Task $task, TaskListPosition $taskListPosition)
+    {
+        return new self(
+            $taskListPosition,
+            sprintf(
+                "Process %s received no message for task %s at position %d",
+                $taskListPosition->taskListId()->processId()->toString(),
+                get_class($task),
+                $taskListPosition->position()
+            ),
+            412,
+            array(
+                'task_class' => get_class($task),
+                'task_as_json' => json_encode($task->getArrayCopy())
+            ));
     }
 
     /**
