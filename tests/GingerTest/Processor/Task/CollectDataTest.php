@@ -16,12 +16,12 @@ use GingerTest\Mock\UserDictionary;
 use GingerTest\TestCase;
 
 /**
- * Class TaskTest
+ * Class CollectDataTest
  *
  * @package GingerTest\Processor\Task
  * @author Alexander Miertsch <kontakt@codeliner.ws>
  */
-class TaskTest extends TestCase
+class CollectDataTest extends TestCase
 {
     /**
      * @test
