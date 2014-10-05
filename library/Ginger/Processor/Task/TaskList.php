@@ -59,6 +59,27 @@ class TaskList
     }
 
     /**
+     * @param array $taskListArr
+     * @return TaskList
+     */
+    public static function fromArray(array $taskListArr)
+    {
+        \Assert\that($taskListArr)->keyExists('taskListId')->keyExists('entries');
+
+        \Assert\that($taskListArr['entries'])->isArray();
+
+        $taskListId = TaskListId::fromString($taskListArr['taskListId']);
+
+        $entries = [];
+
+        foreach ($taskListArr['entries'] as $entryArr) {
+            $entries[] = TaskListEntry::fromArray($entryArr);
+        }
+
+        return self::fromTaskListEntries($taskListId, $entries);
+    }
+
+    /**
      * @param TaskListId $taskListId
      * @param TaskListEntry[] $taskListEntries
      */
@@ -132,6 +153,17 @@ class TaskList
     /**
      * @return array
      */
+    public function getArrayCopy()
+    {
+        return [
+            'taskListId' => $this->taskListId()->toString(),
+            'entries' => $this->getArrayCopyOfEntries()
+        ];
+    }
+
+    /**
+     * @return array
+     */
     public function getArrayCopyOfEntries()
     {
         return array_map(function(TaskListEntry $taskListEntry) {return $taskListEntry->getArrayCopy();}, $this->taskListEntries);
@@ -144,6 +176,24 @@ class TaskList
     {
         foreach($this->taskListEntries as $taskListEntry) {
             if (! $taskListEntry->isFinished()) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isSuccessfulDone()
+    {
+        if (!$this->isCompleted()) {
+            return false;
+        }
+
+        foreach($this->taskListEntries as $taskListEntry) {
+            if ($taskListEntry->isFailed()) {
                 return false;
             }
         }

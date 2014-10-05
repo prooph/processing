@@ -30,6 +30,11 @@ class TestWorkflowMessageHandler implements WorkflowMessageHandler
     protected $lastWorkflowMessage;
 
     /**
+     * @var WorkflowMessage
+     */
+    protected $nextAnswer;
+
+    /**
      * @var CommandBus
      */
     protected $commandBus;
@@ -39,6 +44,11 @@ class TestWorkflowMessageHandler implements WorkflowMessageHandler
      */
     protected $eventBus;
 
+    public function reset()
+    {
+        $this->lastWorkflowMessage = null;
+    }
+
     /**
      * @param WorkflowMessage $aWorkflowMessage
      * @return void
@@ -46,6 +56,17 @@ class TestWorkflowMessageHandler implements WorkflowMessageHandler
     public function handleWorkflowMessage(WorkflowMessage $aWorkflowMessage)
     {
         $this->lastWorkflowMessage = $aWorkflowMessage;
+
+        if ($this->nextAnswer && $this->eventBus)
+        {
+            if (is_null($this->nextAnswer->getProcessTaskListPosition())) {
+                $this->nextAnswer->connectToProcessTask($aWorkflowMessage->getProcessTaskListPosition());
+            }
+
+            $this->eventBus->dispatch($this->nextAnswer);
+
+            $this->nextAnswer = null;
+        }
     }
 
     /**
@@ -76,6 +97,11 @@ class TestWorkflowMessageHandler implements WorkflowMessageHandler
     public function useEventBus(EventBus $eventBus)
     {
         $this->eventBus = $eventBus;
+    }
+
+    public function setNextAnswer(WorkflowMessage $workflowMessage)
+    {
+        $this->nextAnswer = $workflowMessage;
     }
 }
  
