@@ -9,7 +9,7 @@
  * Date: 13.07.14 - 15:40
  */
 
-namespace Ginger\Message\Service;
+namespace Ginger\Message\ProophPlugin;
 
 use Ginger\Message\MessageNameUtils;
 use Ginger\Message\WorkflowMessage;

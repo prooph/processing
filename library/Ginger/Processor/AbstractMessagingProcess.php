@@ -14,6 +14,10 @@ namespace Ginger\Processor;
 use Ginger\Message\LogMessage;
 use Ginger\Message\WorkflowMessage;
 use Ginger\Processor\Task\CollectData;
+use Ginger\Processor\Task\NotifyListeners;
+use Ginger\Processor\Task\ProcessData;
+use Ginger\Processor\Task\RunChildProcess;
+use Ginger\Processor\Task\Task;
 use Ginger\Processor\Task\TaskListPosition;
 use Prooph\ServiceBus\Exception\CommandDispatchException;
 
@@ -25,9 +29,30 @@ use Prooph\ServiceBus\Exception\CommandDispatchException;
  */
 abstract class AbstractMessagingProcess extends Process
 {
+    protected function performTask(Task $task, TaskListPosition $taskListPosition, WorkflowEngine $workflowEngine, WorkflowMessage $previousMessage = null)
+    {
+        if ($task instanceof CollectData) {
+            $this->performCollectData($task, $taskListPosition, $workflowEngine);
+            return;
+        }
+
+        if ($task instanceof ProcessData) {
+            $this->performProcessData($task, $taskListPosition, $previousMessage, $workflowEngine);
+        }
+
+        if ($task instanceof RunChildProcess) {
+            throw new \RuntimeException("RunChildProcess is not yet supported");
+        }
+
+        if ($task instanceof NotifyListeners) {
+            throw new \RuntimeException("NotifyListeners is not yet supported");
+        }
+    }
+
+
     /**
-     * @param Task\CollectData $collectData
-     * @param Task\TaskListPosition $taskListPosition
+     * @param CollectData $collectData
+     * @param TaskListPosition $taskListPosition
      * @param WorkflowEngine $workflowEngine
      */
     protected function performCollectData(CollectData $collectData, TaskListPosition $taskListPosition, WorkflowEngine $workflowEngine)
@@ -41,7 +66,32 @@ abstract class AbstractMessagingProcess extends Process
         } catch (CommandDispatchException $ex) {
             $this->receiveMessage(LogMessage::logException($ex->getPrevious(), $workflowMessage->getProcessTaskListPosition()), $workflowEngine);
         } catch (\Exception $ex) {
+            $this->receiveMessage(LogMessage::logException($ex, $workflowMessage->getProcessTaskListPosition()), $workflowEngine);
+        }
+    }
+
+    /**
+     * @param ProcessData $processData
+     * @param TaskListPosition $taskListPosition
+     * @param WorkflowMessage $previousMessage
+     * @param WorkflowEngine $workflowEngine
+     */
+    protected function performProcessData(ProcessData $processData, TaskListPosition $taskListPosition, WorkflowMessage $previousMessage, WorkflowEngine $workflowEngine)
+    {
+        $workflowMessage = $previousMessage->prepareDataProcessing();
+
+        $workflowMessage->connectToProcessTask($taskListPosition);
+
+        if (! in_array($workflowMessage->getPayload()->getTypeClass(), $processData->allowedTypes())) {
+            $workflowMessage->getPayload()->changeTypeClass($processData->preferredType());
+        }
+
+        try {
+            $workflowEngine->getCommandBusFor($processData->target())->dispatch($workflowMessage);
+        } catch (CommandDispatchException $ex) {
             $this->receiveMessage(LogMessage::logException($ex->getPrevious(), $workflowMessage->getProcessTaskListPosition()), $workflowEngine);
+        } catch (\Exception $ex) {
+            $this->receiveMessage(LogMessage::logException($ex, $workflowMessage->getProcessTaskListPosition()), $workflowEngine);
         }
     }
 }

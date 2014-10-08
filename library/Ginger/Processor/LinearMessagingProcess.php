@@ -11,12 +11,12 @@
 
 namespace Ginger\Processor;
 
+use Ginger\Message\MessageNameUtils;
 use Ginger\Message\WorkflowMessage;
 use Ginger\Message\LogMessage;
 use Ginger\Processor\Task\CollectData;
-use Ginger\Processor\Task\Event\LogMessageReceived;
-use Ginger\Processor\Task\Event\TaskEntryMarkedAsFailed;
 use Ginger\Processor\Task\Event\TaskEntryMarkedAsRunning;
+use Ginger\Processor\Task\RunChildProcess;
 
 /**
  * Class LinearMessagingProcess
@@ -35,31 +35,59 @@ class LinearMessagingProcess extends AbstractMessagingProcess
      */
     public function perform(WorkflowEngine $workflowEngine, WorkflowMessage $workflowMessage = null)
     {
+        if (is_null($workflowMessage)) {
+            $this->startWithoutMessage($workflowEngine);
+            return;
+        }
+
         $taskListEntry = $this->taskList->getNextNotStartedTaskListEntry();
 
         if ($taskListEntry) {
+            $this->recordThat(TaskEntryMarkedAsRunning::at($taskListEntry->taskListPosition()));
 
+            if (! MessageNameUtils::isGingerEvent($workflowMessage->getMessageName())) {
+                $this->receiveMessage(
+                    LogMessage::logWrongMessageReceivedFor(
+                        $taskListEntry->task(),
+                        $taskListEntry->taskListPosition(),
+                        $workflowMessage
+                    )
+                );
+
+                if (! $this->config->booleanValue('stop_on_error')) {
+                    $this->perform($workflowEngine);
+                    return;
+                }
+            }
+
+            $this->performTask($taskListEntry->task(), $taskListEntry->taskListPosition(), $workflowEngine, $workflowMessage);
+            return;
+        }
+    }
+
+    /**
+     * @param WorkflowEngine $workflowEngine
+     */
+    protected function startWithoutMessage(WorkflowEngine $workflowEngine)
+    {
+        $taskListEntry = $this->taskList->getNextNotStartedTaskListEntry();
+
+        if ($taskListEntry) {
             $this->recordThat(TaskEntryMarkedAsRunning::at($taskListEntry->taskListPosition()));
 
             $task = $taskListEntry->task();
 
-            //Start process with a CollectData task if one is set up
-            if (is_null($workflowMessage)) {
-                if (! $task instanceof CollectData) {
-                    $this->receiveMessage(LogMessage::logNoMessageReceivedFor($task, $taskListEntry->taskListPosition()));
+            if (! $task instanceof CollectData && ! $task instanceof RunChildProcess) {
+                $this->receiveMessage(LogMessage::logNoMessageReceivedFor($task, $taskListEntry->taskListPosition()));
 
-                    if (! $this->config->booleanValue('stop_on_error')) {
-                        $this->perform($workflowEngine);
-                        return;
-                    }
+                if (! $this->config->booleanValue('stop_on_error')) {
+                    $this->perform($workflowEngine);
+                    return;
                 }
-
-                $this->performCollectData($task, $taskListEntry->taskListPosition(), $workflowEngine);
-                return;
             }
+
+            $this->performTask($task, $taskListEntry->taskListPosition(), $workflowEngine);
         }
     }
-
-
 }
  

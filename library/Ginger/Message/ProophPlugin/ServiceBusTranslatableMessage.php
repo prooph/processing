@@ -13,6 +13,12 @@ namespace Ginger\Message\ProophPlugin;
 
 use Prooph\ServiceBus\Message\MessageInterface;
 
+/**
+ * Interface ServiceBusTranslatableMessage
+ *
+ * @package Ginger\Message\ProophPlugin
+ * @author Alexander Miertsch <kontakt@codeliner.ws>
+ */
 interface ServiceBusTranslatableMessage
 {
     /**

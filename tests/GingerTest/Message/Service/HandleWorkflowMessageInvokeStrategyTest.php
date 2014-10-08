@@ -11,7 +11,7 @@
 
 namespace GingerTest\Message\Service;
 
-use Ginger\Message\Service\HandleWorkflowMessageInvokeStrategy;
+use Ginger\Message\ProophPlugin\HandleWorkflowMessageInvokeStrategy;
 use Ginger\Message\WorkflowMessage;
 use GingerTest\TestCase;
 use GingerTest\Mock\TestWorkflowMessageHandler;

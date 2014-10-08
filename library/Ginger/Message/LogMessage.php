@@ -105,8 +105,37 @@ final class LogMessage implements MessageNameProvider, ServiceBusTranslatableMes
             ),
             412,
             array(
+                'process_id' => $taskListPosition->taskListId()->processId()->toString(),
+                'task_list_position' => $taskListPosition->position(),
                 'task_class' => get_class($task),
                 'task_as_json' => json_encode($task->getArrayCopy())
+            ));
+    }
+
+    /**
+     * @param Task $task
+     * @param TaskListPosition $taskListPosition
+     * @param WorkflowMessage $workflowMessage
+     * @return LogMessage
+     */
+    public static function logWrongMessageReceivedFor(Task $task, TaskListPosition $taskListPosition, WorkflowMessage $workflowMessage)
+    {
+        return new self(
+            $taskListPosition,
+            sprintf(
+                "Process %s received wrong message with name %s for task %s at position %d",
+                $taskListPosition->taskListId()->processId()->toString(),
+                $workflowMessage->getMessageName(),
+                get_class($task),
+                $taskListPosition->position()
+            ),
+            415,
+            array(
+                'process_id' => $taskListPosition->taskListId()->processId()->toString(),
+                'task_list_position' => $taskListPosition->position(),
+                'task_class' => get_class($task),
+                'task_as_json' => json_encode($task->getArrayCopy()),
+                'message_name' => $workflowMessage->getMessageName(),
             ));
     }
 

@@ -21,13 +21,13 @@ class MessageNameUtils
 {
     const MESSAGE_NAME_PREFIX = "ginger-message-";
 
-    const COLLECT_DATA = "%s%s-collect-data";
+    const COLLECT_DATA = "collect-data";
 
-    const DATA_COLLECTED = "%s%s-data-collected";
+    const DATA_COLLECTED = "data-collected";
 
-    const PROCESS_DATA = "%s%s-process-data";
+    const PROCESS_DATA = "process-data";
 
-    const DATA_PROCESSED = "%s%s-data-processed";
+    const DATA_PROCESSED = "data-processed";
 
     const LOG_MESSAGE_NAME = "ginger-log-message";
 
@@ -44,7 +44,7 @@ class MessageNameUtils
     public static function getCollectDataCommandName($typeClassOfData)
     {
         return sprintf(
-            self::COLLECT_DATA,
+            '%s%s-' . self::COLLECT_DATA,
             self::MESSAGE_NAME_PREFIX,
             self::normalize($typeClassOfData)
         );
@@ -57,7 +57,7 @@ class MessageNameUtils
     public static function getProcessDataCommandName($typeClassOfData)
     {
         return sprintf(
-            self::PROCESS_DATA,
+            '%s%s-' . self::PROCESS_DATA,
             self::MESSAGE_NAME_PREFIX,
             self::normalize($typeClassOfData)
         );
@@ -70,7 +70,7 @@ class MessageNameUtils
     public static function getDataCollectedEventName($typeClassOfData)
     {
         return sprintf(
-            self::DATA_COLLECTED,
+            '%s%s-' . self::DATA_COLLECTED,
             self::MESSAGE_NAME_PREFIX,
             self::normalize($typeClassOfData)
         );
@@ -83,7 +83,7 @@ class MessageNameUtils
     public static function getDataProcessedEventName($typeClassOfData)
     {
         return sprintf(
-            self::DATA_PROCESSED,
+            '%s%s-' . self::DATA_PROCESSED,
             self::MESSAGE_NAME_PREFIX,
             self::normalize($typeClassOfData)
         );
@@ -163,6 +163,15 @@ class MessageNameUtils
         }
 
         return false;
+    }
+
+    public static function getMessageSuffix($aMessageName)
+    {
+        preg_match(static::MESSAGE_PARTS_PATTERN, $aMessageName, $match);
+
+        if (isset($match['message'])) {
+            return $match['message'];
+        }
     }
 
     /**

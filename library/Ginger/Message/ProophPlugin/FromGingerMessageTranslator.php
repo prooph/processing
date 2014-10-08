@@ -11,11 +11,8 @@
 
 namespace Ginger\Message\ProophPlugin;
 
-use Ginger\Message\MessageNameUtils;
 use Ginger\Message\WorkflowMessage;
-use Prooph\ServiceBus\Message\MessageHeader;
 use Prooph\ServiceBus\Message\MessageInterface;
-use Prooph\ServiceBus\Message\StandardMessage;
 use Prooph\ServiceBus\Message\ToMessageTranslatorInterface;
 
 /**

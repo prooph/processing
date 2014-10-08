@@ -12,12 +12,12 @@
 namespace GingerTest\Processor;
 
 use Ginger\Message\MessageNameUtils;
-use Ginger\Message\Service\HandleWorkflowMessageInvokeStrategy;
+use Ginger\Message\ProophPlugin\HandleWorkflowMessageInvokeStrategy;
 use Ginger\Message\WorkflowMessage;
-use Ginger\Message\WorkflowMessageHandler;
 use Ginger\Processor\LinearMessagingProcess;
 use Ginger\Processor\RegistryWorkflowEngine;
 use Ginger\Processor\Task\CollectData;
+use Ginger\Processor\Task\ProcessData;
 use GingerTest\Mock\TestWorkflowMessageHandler;
 use GingerTest\Mock\UserDictionary;
 use GingerTest\TestCase;
@@ -67,7 +67,7 @@ class LinearMessagingProcessTest extends TestCase
 
         $this->workflowEngine = new RegistryWorkflowEngine();
 
-        $this->workflowEngine->registerCommandBus($commandBus, ['test-case']);
+        $this->workflowEngine->registerCommandBus($commandBus, ['test-case', 'test-target']);
     }
 
     /**
@@ -112,7 +112,7 @@ class LinearMessagingProcessTest extends TestCase
 
         $answer = $wfm->answerWith(UserDictionary::fromNativeValue([
             'id' => 1,
-            'name' => 'Alex',
+            'name' => 'John Doe',
             'address' => [
                 'street' => 'Main Street',
                 'streetNumber' => 10,
@@ -159,6 +159,99 @@ class LinearMessagingProcessTest extends TestCase
         $this->assertTrue($process->isFinished());
 
         $this->assertFalse($process->isSuccessfulDone());
+    }
+
+    /**
+     * @test
+     */
+    public function it_performs_next_task_after_receiving_answer_for_previous_task()
+    {
+        $task1 = CollectData::from('test-case', UserDictionary::prototype());
+
+        $task2 = ProcessData::address('test-target', ['GingerTest\Mock\UserDictionary']);
+
+        $process = LinearMessagingProcess::setUp([$task1, $task2]);
+
+        $wfm = WorkflowMessage::collectDataOf(UserDictionary::prototype());
+
+        $answer1 = $wfm->answerWith(UserDictionary::fromNativeValue([
+            'id' => 1,
+            'name' => 'John Doe',
+            'address' => [
+                'street' => 'Main Street',
+                'streetNumber' => 10,
+                'zip' => '12345',
+                'city' => 'Test City'
+            ]
+        ]));
+
+        $this->workflowMessageHandler->setNextAnswer($answer1);
+
+        //Fake follow up task execution
+        $processDataMessage = $answer1->prepareDataProcessing();
+
+        $this->commandRouter->route($processDataMessage->getMessageName())->to($this->workflowMessageHandler);
+
+        $answer2 = $processDataMessage->answerWithDataProcessingCompleted();
+
+        $eventBus = new EventBus();
+
+        $eventRouter = new EventRouter([
+            $answer1->getMessageName() => [
+                function (WorkflowMessage $answer) use ($process, $answer2) {
+                    $this->workflowMessageHandler->setNextAnswer($answer2);
+                    $process->receiveMessage($answer, $this->workflowEngine);
+                }
+            ],
+            $answer2->getMessageName() => [
+                function (WorkflowMessage $answer) use ($process) {
+                    $process->receiveMessage($answer, $this->workflowEngine);
+                }
+            ]
+        ]);
+
+        $eventBus->utilize($eventRouter)->utilize(new CallbackStrategy());
+
+        $this->workflowMessageHandler->useEventBus($eventBus);
+
+        $process->perform($this->workflowEngine);
+
+        $this->assertTrue($process->isFinished());
+
+        $this->assertTrue($process->isSuccessfulDone());
+    }
+
+    /**
+     * @test
+     */
+    public function it_changes_type_class_if_target_does_not_allow_the_source_type()
+    {
+        $task = ProcessData::address('test-target', ['GingerTest\Mock\TargetUserDictionary']);
+
+        $process = LinearMessagingProcess::setUp([$task]);
+
+        $wfm = WorkflowMessage::collectDataOf(UserDictionary::prototype());
+
+        $answer = $wfm->answerWith(UserDictionary::fromNativeValue([
+            'id' => 1,
+            'name' => 'John Doe',
+            'address' => [
+                'street' => 'Main Street',
+                'streetNumber' => 10,
+                'zip' => '12345',
+                'city' => 'Test City'
+            ]
+        ]));
+
+        $processDataMessage = $answer->prepareDataProcessing();
+
+        $this->commandRouter->route($processDataMessage->getMessageName())->to($this->workflowMessageHandler);
+
+        $process->perform($this->workflowEngine, $answer);
+
+        $receivedMessage = $this->workflowMessageHandler->lastWorkflowMessage();
+
+        $this->assertEquals('GingerTest\Mock\TargetUserDictionary', $receivedMessage->getPayload()->getTypeClass());
     }
 }
  

@@ -222,16 +222,6 @@ class WorkflowMessage implements MessageNameProvider, ServiceBusTranslatableMess
      */
     public function connectToProcessTask(TaskListPosition $taskListPosition)
     {
-        if (! is_null($this->processTaskListPosition)) {
-            throw new \RuntimeException(sprintf(
-                "Connecting WorkflowMessage %s (%s) to process %s is not possible cause it is already connected to process %s",
-                $this->getMessageName(),
-                $this->uuid->toString(),
-                $taskListPosition->toString(),
-                $this->processTaskListPosition->toString()
-            ));
-        }
-
         $this->processTaskListPosition = $taskListPosition;
     }
 

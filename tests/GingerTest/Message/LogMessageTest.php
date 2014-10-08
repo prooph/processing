@@ -12,6 +12,7 @@
 namespace GingerTest\Message;
 
 use Ginger\Message\LogMessage;
+use Ginger\Message\WorkflowMessage;
 use Ginger\Processor\ProcessId;
 use Ginger\Processor\Task\CollectData;
 use Ginger\Processor\Task\TaskListId;
@@ -139,9 +140,42 @@ class LogMessageTest extends TestCase
         $this->assertTrue($taskListPosition->equals($message->getProcessTaskListPosition()));
         $this->assertTrue(isset($message->getMsgParams()['task_class']));
         $this->assertTrue(isset($message->getMsgParams()['task_as_json']));
+        $this->assertTrue(isset($message->getMsgParams()['task_list_position']));
+        $this->assertTrue(isset($message->getMsgParams()['process_id']));
 
+        $this->assertEquals($taskListPosition->taskListId()->processId()->toString(), $message->getMsgParams()['process_id']);
+        $this->assertEquals($taskListPosition->position(), $message->getMsgParams()['task_list_position']);
         $this->assertEquals(get_class($task), $message->getMsgParams()['task_class']);
         $this->assertEquals(json_encode($task->getArrayCopy()), $message->getMsgParams()['task_as_json']);
+    }
+
+    /**
+     * @test
+     */
+    public function it_logs_wrong_message_received_for_task_as_error()
+    {
+        $taskListPosition = TaskListPosition::at(TaskListId::linkWith(ProcessId::generate()), 1);
+
+        $task = CollectData::from('crm', UserDictionary::prototype());
+
+        $wfMessage = WorkflowMessage::collectDataOf(UserDictionary::prototype());
+
+        $logMessage = LogMessage::logWrongMessageReceivedFor($task, $taskListPosition, $wfMessage);
+
+        $this->assertTrue($logMessage->isError());
+        $this->assertEquals(415, $logMessage->getMsgCode());
+        $this->assertTrue($taskListPosition->equals($logMessage->getProcessTaskListPosition()));
+        $this->assertTrue(isset($logMessage->getMsgParams()['task_class']));
+        $this->assertTrue(isset($logMessage->getMsgParams()['task_as_json']));
+        $this->assertTrue(isset($logMessage->getMsgParams()['task_list_position']));
+        $this->assertTrue(isset($logMessage->getMsgParams()['process_id']));
+        $this->assertTrue(isset($logMessage->getMsgParams()['message_name']));
+
+        $this->assertEquals($taskListPosition->taskListId()->processId()->toString(), $logMessage->getMsgParams()['process_id']);
+        $this->assertEquals($taskListPosition->position(), $logMessage->getMsgParams()['task_list_position']);
+        $this->assertEquals(get_class($task), $logMessage->getMsgParams()['task_class']);
+        $this->assertEquals(json_encode($task->getArrayCopy()), $logMessage->getMsgParams()['task_as_json']);
+        $this->assertEquals($wfMessage->getMessageName(), $logMessage->getMsgParams()['message_name']);
     }
 }
  
