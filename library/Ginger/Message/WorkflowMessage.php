@@ -274,6 +274,20 @@ class WorkflowMessage implements MessageNameProvider, ServiceBusTranslatableMess
     }
 
     /**
+     * @param $newGingerType
+     */
+    public function changeGingerType($newGingerType)
+    {
+        \Assert\that($newGingerType)->string()->implementsInterface('Ginger\Type\Type');
+
+        $oldGingerType = MessageNameUtils::getTypePartOfMessageName($this->messageName);
+
+        $this->messageName = str_replace($oldGingerType, MessageNameUtils::normalize($newGingerType), $this->messageName);
+
+        $this->getPayload()->changeTypeClass($newGingerType);
+    }
+
+    /**
      * @throws \RuntimeException
      * @return MessageInterface
      */

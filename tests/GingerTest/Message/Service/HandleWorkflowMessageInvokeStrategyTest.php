@@ -30,16 +30,6 @@ use Prooph\ServiceBus\Router\EventRouter;
 class HandleWorkflowMessageInvokeStrategyTest extends TestCase
 {
     /**
-     * @var TestWorkflowMessageHandler
-     */
-    private $testWorkflowMessageHandler;
-
-    protected function setUp()
-    {
-        $this->testWorkflowMessageHandler = new TestWorkflowMessageHandler();
-    }
-
-    /**
      * @test
      */
     public function it_invokes_ginger_command_on_workflow_message_handler()
@@ -50,7 +40,7 @@ class HandleWorkflowMessageInvokeStrategyTest extends TestCase
 
         $commandRouter = new CommandRouter();
 
-        $commandRouter->route($wfCommand->getMessageName())->to($this->testWorkflowMessageHandler);
+        $commandRouter->route($wfCommand->getMessageName())->to($this->workflowMessageHandler);
 
         $commandBus->utilize($commandRouter);
 
@@ -58,7 +48,7 @@ class HandleWorkflowMessageInvokeStrategyTest extends TestCase
 
         $commandBus->dispatch($wfCommand);
 
-        $this->assertSame($wfCommand, $this->testWorkflowMessageHandler->lastWorkflowMessage());
+        $this->assertSame($wfCommand, $this->workflowMessageHandler->lastWorkflowMessage());
     }
 
     /**
@@ -85,7 +75,7 @@ class HandleWorkflowMessageInvokeStrategyTest extends TestCase
 
         $eventRouter = new EventRouter();
 
-        $eventRouter->route($wfEvent->getMessageName())->to($this->testWorkflowMessageHandler);
+        $eventRouter->route($wfEvent->getMessageName())->to($this->workflowMessageHandler);
 
         $eventBus->utilize($eventRouter);
 
@@ -93,7 +83,7 @@ class HandleWorkflowMessageInvokeStrategyTest extends TestCase
 
         $eventBus->dispatch($wfEvent);
 
-        $this->assertSame($wfEvent, $this->testWorkflowMessageHandler->lastWorkflowMessage());
+        $this->assertSame($wfEvent, $this->workflowMessageHandler->lastWorkflowMessage());
     }
 }
  

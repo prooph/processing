@@ -83,7 +83,7 @@ abstract class AbstractMessagingProcess extends Process
         $workflowMessage->connectToProcessTask($taskListPosition);
 
         if (! in_array($workflowMessage->getPayload()->getTypeClass(), $processData->allowedTypes())) {
-            $workflowMessage->getPayload()->changeTypeClass($processData->preferredType());
+            $workflowMessage->changeGingerType($processData->preferredType());
         }
 
         try {

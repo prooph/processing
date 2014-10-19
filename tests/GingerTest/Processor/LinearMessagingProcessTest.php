@@ -11,20 +11,16 @@
 
 namespace GingerTest\Processor;
 
+
 use Ginger\Message\MessageNameUtils;
-use Ginger\Message\ProophPlugin\HandleWorkflowMessageInvokeStrategy;
 use Ginger\Message\WorkflowMessage;
 use Ginger\Processor\LinearMessagingProcess;
-use Ginger\Processor\RegistryWorkflowEngine;
 use Ginger\Processor\Task\CollectData;
 use Ginger\Processor\Task\ProcessData;
-use GingerTest\Mock\TestWorkflowMessageHandler;
 use GingerTest\Mock\UserDictionary;
 use GingerTest\TestCase;
-use Prooph\ServiceBus\CommandBus;
 use Prooph\ServiceBus\EventBus;
 use Prooph\ServiceBus\InvokeStrategy\CallbackStrategy;
-use Prooph\ServiceBus\Router\CommandRouter;
 use Prooph\ServiceBus\Router\EventRouter;
 
 /**
@@ -35,41 +31,6 @@ use Prooph\ServiceBus\Router\EventRouter;
  */
 class LinearMessagingProcessTest extends TestCase
 {
-    /**
-     * @var RegistryWorkflowEngine
-     */
-    private $workflowEngine;
-
-    /**
-     * @var TestWorkflowMessageHandler
-     */
-    private $workflowMessageHandler;
-
-    /**
-     * @var CommandRouter
-     */
-    private $commandRouter;
-
-    protected function setUp()
-    {
-        $this->workflowMessageHandler = new TestWorkflowMessageHandler();
-
-        $commandBus = new CommandBus();
-
-        $this->commandRouter = new CommandRouter();
-
-        $this->commandRouter->route(MessageNameUtils::getCollectDataCommandName('GingerTest\Mock\UserDictionary'))
-            ->to($this->workflowMessageHandler);
-
-        $commandBus->utilize($this->commandRouter);
-
-        $commandBus->utilize(new HandleWorkflowMessageInvokeStrategy());
-
-        $this->workflowEngine = new RegistryWorkflowEngine();
-
-        $this->workflowEngine->registerCommandBus($commandBus, ['test-case', 'test-target']);
-    }
-
     /**
      * @test
      */
@@ -243,9 +204,9 @@ class LinearMessagingProcessTest extends TestCase
             ]
         ]));
 
-        $processDataMessage = $answer->prepareDataProcessing();
-
-        $this->commandRouter->route($processDataMessage->getMessageName())->to($this->workflowMessageHandler);
+        $this->commandRouter->route(
+            MessageNameUtils::getProcessDataCommandName('GingerTest\Mock\TargetUserDictionary')
+        )->to($this->workflowMessageHandler);
 
         $process->perform($this->workflowEngine, $answer);
 
