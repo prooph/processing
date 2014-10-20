@@ -214,5 +214,35 @@ class WorkflowMessageTest extends TestCase
         $this->assertTrue($wfMessage->getProcessTaskListPosition()->equals($wfCommand->getProcessTaskListPosition()));
         $this->assertTrue($wfCommand->getProcessTaskListPosition()->equals($wfAnswer->getProcessTaskListPosition()));
     }
+
+    /**
+     * @test
+     */
+    public function it_changes_ginger_type_in_message_name_and_payload()
+    {
+        $userData = array(
+            'id' => 1,
+            'name' => 'Alex',
+            'address' => array(
+                'street' => 'Main Street',
+                'streetNumber' => 10,
+                'zip' => '12345',
+                'city' => 'Test City'
+            )
+        );
+
+        $user = UserDictionary::fromNativeValue($userData);
+
+        $wfMessage = WorkflowMessage::newDataCollected($user);
+
+        $wfMessage->changeGingerType('GingerTest\Mock\TargetUserDictionary');
+
+        $this->assertEquals(
+            MessageNameUtils::MESSAGE_NAME_PREFIX . 'gingertestmocktargetuserdictionary-data-collected',
+            $wfMessage->getMessageName()
+        );
+
+        $this->assertEquals('GingerTest\Mock\TargetUserDictionary', $wfMessage->getPayload()->getTypeClass());
+    }
 }
  

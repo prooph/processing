@@ -44,6 +44,8 @@ class ServiceBusGingerIntegrationTest extends TestCase
 
     protected function setUp()
     {
+        parent::setUp();
+
         $eventBus = new EventBus();
 
         $this->messageDispatcher = new InMemoryMessageDispatcher(new CommandBus(), $eventBus);
@@ -72,20 +74,7 @@ class ServiceBusGingerIntegrationTest extends TestCase
      */
     public function it_sends_workflow_message_via_message_dispatcher_to_a_handler()
     {
-        $userData = array(
-            'id' => 1,
-            'name' => 'Alex',
-            'address' => array(
-                'street' => 'Main Street',
-                'streetNumber' => 10,
-                'zip' => '12345',
-                'city' => 'Test City'
-            )
-        );
-
-        $user = UserDictionary::fromNativeValue($userData);
-
-        $wfMessage = WorkflowMessage::newDataCollected($user);
+        $wfMessage = $this->getUserDataCollectedTestMessage();
 
         $taskListPosition = TaskListPosition::at(TaskListId::linkWith(ProcessId::generate()), 1);
 

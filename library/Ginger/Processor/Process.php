@@ -199,6 +199,14 @@ abstract class Process extends AggregateRoot
     }
 
     /**
+     * @return ArrayReader
+     */
+    public function config()
+    {
+        return $this->config;
+    }
+
+    /**
      * @param TaskListPosition $taskListPosition
      * @throws \RuntimeException
      */
