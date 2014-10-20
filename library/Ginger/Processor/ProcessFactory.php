@@ -50,7 +50,7 @@ class ProcessFactory
         }
 
         throw new \InvalidArgumentException(sprintf(
-            "Create process from message failed due to unknown message: %s",
+            "Derive process from message failed due to unknown message: %s",
             $message->getMessageName()
         ));
     }

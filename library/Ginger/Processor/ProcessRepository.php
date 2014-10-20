@@ -11,11 +11,11 @@
 
 namespace Ginger\Processor;
 
+use Prooph\EventSourcing\EventStoreIntegration\AggregateTranslator;
 use Prooph\EventStore\Aggregate\AggregateRepository;
-use Prooph\EventStore\Aggregate\AggregateTranslatorInterface;
 use Prooph\EventStore\Aggregate\AggregateType;
 use Prooph\EventStore\EventStore;
-use Prooph\EventStore\Stream\StreamStrategyInterface;
+use Prooph\EventStore\Stream\MappedSuperclassStreamStrategy;
 
 /**
  * Class ProcessRepository
@@ -27,17 +27,16 @@ class ProcessRepository extends AggregateRepository
 {
     /**
      * @param EventStore $eventStore
-     * @param AggregateTranslatorInterface $aggregateTranslator
-     * @param StreamStrategyInterface $streamStrategy
      */
     public function __construct(
-        EventStore $eventStore,
-        AggregateTranslatorInterface $aggregateTranslator,
-        StreamStrategyInterface $streamStrategy
+        EventStore $eventStore
     )
     {
-        parent::__construct($eventStore, $aggregateTranslator, $streamStrategy);
-        $this->aggregateType = new AggregateType('Ginger\Processor\Process');
+        parent::__construct(
+            $eventStore,
+            new AggregateTranslator(),
+            new MappedSuperclassStreamStrategy($eventStore, new AggregateType('Ginger\Processor\Process'))
+        );
     }
 
     /**
@@ -50,10 +49,11 @@ class ProcessRepository extends AggregateRepository
 
     /**
      * @param ProcessId $processId
+     * @return Process
      */
-    public function getProcess(ProcessId $processId)
+    public function get(ProcessId $processId)
     {
-        $this->getAggregateRoot();
+        return $this->getAggregateRoot(new AggregateType('Ginger\Processor\Process'), $processId->toString());
     }
 }
  

@@ -19,11 +19,13 @@ namespace Ginger\Processor;
  */
 class Definition 
 {
-    const PROCESS_LINEAR_MESSAGING  = "linear_messaging";
+    const DEFAULT_WORKFLOW_PROCESSOR = "ginger_default_workflow_processor";
 
-    const TASK_COLLECT_DATA         = "collect_data";
-    const TASK_PROCESS_DATA         = "process_data";
+    const PROCESS_LINEAR_MESSAGING   = "linear_messaging";
 
-    const CONFIG_STOP_ON_ERROR      = "stop_on_error";
+    const TASK_COLLECT_DATA          = "collect_data";
+    const TASK_PROCESS_DATA          = "process_data";
+
+    const CONFIG_STOP_ON_ERROR       = "stop_on_error";
 }
  

@@ -14,14 +14,34 @@ namespace GingerTest;
 use Ginger\Message\MessageNameUtils;
 use Ginger\Message\ProophPlugin\HandleWorkflowMessageInvokeStrategy;
 use Ginger\Message\WorkflowMessage;
+use Ginger\Processor\Definition;
+use Ginger\Processor\ProcessFactory;
+use Ginger\Processor\ProcessRepository;
 use Ginger\Processor\RegistryWorkflowEngine;
+use Ginger\Processor\WorkflowProcessor;
 use GingerTest\Mock\TestWorkflowMessageHandler;
 use GingerTest\Mock\UserDictionary;
+use Prooph\EventStore\Adapter\InMemoryAdapter;
+use Prooph\EventStore\Configuration\Configuration;
+use Prooph\EventStore\EventStore;
+use Prooph\EventStore\PersistenceEvent\PostCommitEvent;
+use Prooph\EventStore\Stream\AggregateStreamStrategy;
+use Prooph\EventStore\Stream\Stream;
+use Prooph\EventStore\Stream\StreamName;
 use Prooph\ServiceBus\CommandBus;
 use Prooph\ServiceBus\Router\CommandRouter;
 
 /**
  * Class TestCase
+ *
+ * This is the base class for all GingerTests. It provides a lot of test objects which are used in the various
+ * test cases. It also defines test workflow scenarios and set up the involved components to support them.
+ *
+ * 1. Scenario:
+ *   - Start new LinearMessagingProcess when GingerTest\Mock\UserDictionary was collected from test-case source.
+ *     - Use TestCase::getUserDataCollectedTestMessage method to get a ready to use WorkflowMessage
+ *   - Send a ProcessData message to a TestWorkflowMessageHandler
+ *     - GingerType changes to GingerTest\Mock\TargetUserDictionary
  *
  * @package GingerTest
  * @author Alexander Miertsch <kontakt@codeliner.ws>
@@ -43,6 +63,26 @@ class TestCase extends \PHPUnit_Framework_TestCase
      */
     protected $commandRouter;
 
+    /**
+     * @var WorkflowProcessor
+     */
+    private $workflowProcessor;
+
+    /**
+     * @var EventStore
+     */
+    private $eventStore;
+
+    /**
+     * @var ProcessRepository
+     */
+    private $processRepository;
+
+    /**
+     * @var PostCommitEvent
+     */
+    protected $lastPostCommitEvent;
+
     protected function setUp()
     {
         $this->workflowMessageHandler = new TestWorkflowMessageHandler();
@@ -52,6 +92,9 @@ class TestCase extends \PHPUnit_Framework_TestCase
         $this->commandRouter = new CommandRouter();
 
         $this->commandRouter->route(MessageNameUtils::getCollectDataCommandName('GingerTest\Mock\UserDictionary'))
+            ->to($this->workflowMessageHandler);
+
+        $this->commandRouter->route(MessageNameUtils::getProcessDataCommandName('GingerTest\Mock\TargetUserDictionary'))
             ->to($this->workflowMessageHandler);
 
         $commandBus->utilize($this->commandRouter);
@@ -66,6 +109,11 @@ class TestCase extends \PHPUnit_Framework_TestCase
     protected function tearDown()
     {
         $this->workflowMessageHandler->reset();
+
+        $this->eventStore = null;
+        $this->processRepository = null;
+        $this->workflowProcessor = null;
+        $this->lastPostCommitEvent = null;
     }
 
     /**
@@ -87,6 +135,89 @@ class TestCase extends \PHPUnit_Framework_TestCase
         $user = UserDictionary::fromNativeValue($userData);
 
         return WorkflowMessage::newDataCollected($user);
+    }
+
+    /**
+     * @return WorkflowProcessor
+     */
+    protected function getTestWorkflowProcessor()
+    {
+        if (is_null($this->workflowProcessor)) {
+            $this->workflowProcessor = new WorkflowProcessor(
+                $this->getTestEventStore(),
+                $this->getTestProcessRepository(),
+                $this->workflowEngine,
+                $this->getTestProcessFactory()
+            );
+        }
+
+        return $this->workflowProcessor;
+    }
+
+    /**
+     * @return EventStore
+     */
+    protected function getTestEventStore()
+    {
+        if (is_null($this->eventStore)) {
+            $inMemoryAdapter = new InMemoryAdapter();
+
+            $config = new Configuration();
+
+            $config->setAdapter($inMemoryAdapter);
+
+            $this->eventStore = new EventStore($config);
+
+            $this->eventStore->getPersistenceEvents()->attach("commit.post", function(PostCommitEvent $postCommitEvent) {
+                $this->lastPostCommitEvent = $postCommitEvent;
+            });
+        }
+
+        return $this->eventStore;
+    }
+
+    /**
+     * @return ProcessRepository
+     */
+    protected function getTestProcessRepository()
+    {
+        if (is_null($this->processRepository)) {
+            $this->processRepository = new ProcessRepository($this->getTestEventStore());
+        }
+
+        $this->getTestEventStore()->beginTransaction();
+
+        $this->getTestEventStore()->create(new Stream(new StreamName('Ginger\Processor\Process'), []));
+
+        $this->getTestEventStore()->commit();
+
+        return $this->processRepository;
+    }
+
+    /**
+     * @return ProcessFactory
+     */
+    private function getTestProcessFactory()
+    {
+        $processDefinitionS1 = [
+            "process_type" => Definition::PROCESS_LINEAR_MESSAGING,
+            "tasks" => [
+                [
+                    "task_type"      => Definition::TASK_PROCESS_DATA,
+                    "target"         => 'test-target',
+                    "allowed_types"  => ['GingerTest\Mock\TargetUserDictionary']
+                ]
+            ]
+        ];
+
+        $wfMessage = $this->getUserDataCollectedTestMessage();
+
+        return new ProcessFactory(
+            [
+                //Scenario 1 definition
+                $wfMessage->getMessageName() => $processDefinitionS1
+            ]
+        );
     }
 }
  

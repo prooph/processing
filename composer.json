@@ -27,8 +27,13 @@
     },
     "autoload": {
         "psr-0": {
-            "Ginger\\": "library/",
-            "GingerTest\\": "tests/"
+            "Ginger\\": "library/"
+        }
+    },
+    "autoload-dev": {
+        "psr-0": {
+            "GingerTest\\": "tests/",
+            "GingerExample\\": "examples/"
         }
     },
     "replace": {
