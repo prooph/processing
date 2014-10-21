@@ -118,8 +118,6 @@ class WorkflowProcessor
             $this->processRepository->add($process);
 
             $this->commitTransaction();
-
-            $this->checkMessageQueue();
         } catch (\Exception $ex) {
             $this->rollbackTransaction();
 
