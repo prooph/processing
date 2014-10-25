@@ -15,8 +15,11 @@ namespace GingerTest\Processor;
 use Ginger\Message\MessageNameUtils;
 use Ginger\Message\WorkflowMessage;
 use Ginger\Processor\LinearMessagingProcess;
+use Ginger\Processor\ProcessId;
 use Ginger\Processor\Task\CollectData;
 use Ginger\Processor\Task\ProcessData;
+use Ginger\Processor\Task\TaskListId;
+use Ginger\Processor\Task\TaskListPosition;
 use GingerTest\Mock\UserDictionary;
 use GingerTest\TestCase;
 use Prooph\ServiceBus\EventBus;
@@ -148,8 +151,19 @@ class LinearMessagingProcessTest extends TestCase
 
         $this->workflowMessageHandler->setNextAnswer($answer1);
 
+        $taskListPosition = TaskListPosition::at(TaskListId::linkWith(ProcessId::generate()), 2);
+
         //Fake follow up task execution
-        $processDataMessage = $answer1->prepareDataProcessing();
+        $processDataMessage = $answer1->prepareDataProcessing($taskListPosition);
+
+        //Remove TaskListPosition again
+        $ref = new \ReflectionClass($processDataMessage);
+
+        $taskListPositionProp = $ref->getProperty('processTaskListPosition');
+
+        $taskListPositionProp->setAccessible(true);
+
+        $taskListPositionProp->setValue($processDataMessage, null);
 
         $this->commandRouter->route($processDataMessage->getMessageName())->to($this->workflowMessageHandler);
 

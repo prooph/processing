@@ -153,9 +153,9 @@ class WorkflowMessageTest extends TestCase
 
         $wfMessage = WorkflowMessage::newDataCollected($user);
 
-        $wfMessage->connectToProcessTask(TaskListPosition::at(TaskListId::linkWith(ProcessId::generate()), 1));
+        $taskListPosition = TaskListPosition::at(TaskListId::linkWith(ProcessId::generate()), 1);
 
-        $wfCommand = $wfMessage->prepareDataProcessing();
+        $wfCommand = $wfMessage->prepareDataProcessing($taskListPosition);
 
         $this->assertEquals(
             MessageNameUtils::MESSAGE_NAME_PREFIX . 'gingertestmockuserdictionary-process-data',
@@ -169,7 +169,7 @@ class WorkflowMessageTest extends TestCase
         $this->assertEquals(1, $wfMessage->getVersion());
         $this->assertEquals(2, $wfCommand->getVersion());
 
-        $this->assertTrue($wfMessage->getProcessTaskListPosition()->equals($wfCommand->getProcessTaskListPosition()));
+        $this->assertTrue($taskListPosition->equals($wfCommand->getProcessTaskListPosition()));
     }
 
     /**
@@ -192,9 +192,9 @@ class WorkflowMessageTest extends TestCase
 
         $wfMessage = WorkflowMessage::newDataCollected($user);
 
-        $wfMessage->connectToProcessTask(TaskListPosition::at(TaskListId::linkWith(ProcessId::generate()), 1));
+        $taskListPosition = TaskListPosition::at(TaskListId::linkWith(ProcessId::generate()), 1);
 
-        $wfCommand = $wfMessage->prepareDataProcessing();
+        $wfCommand = $wfMessage->prepareDataProcessing($taskListPosition);
 
         $wfAnswer = $wfCommand->answerWithDataProcessingCompleted();
 
@@ -211,7 +211,7 @@ class WorkflowMessageTest extends TestCase
         $this->assertEquals(2, $wfCommand->getVersion());
         $this->assertEquals(3, $wfAnswer->getVersion());
 
-        $this->assertTrue($wfMessage->getProcessTaskListPosition()->equals($wfCommand->getProcessTaskListPosition()));
+        $this->assertTrue($taskListPosition->equals($wfCommand->getProcessTaskListPosition()));
         $this->assertTrue($wfCommand->getProcessTaskListPosition()->equals($wfAnswer->getProcessTaskListPosition()));
     }
 

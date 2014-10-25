@@ -183,7 +183,23 @@ class WorkflowProcessor
         }
 
         if ($process->isChildProcess() && $process->isFinished()) {
-            $this->continueParentProcessOf($process, $lastAnswer);
+            if ($process->isSuccessfulDone()) {
+                $this->continueParentProcessOf($process, $lastAnswer);
+            } else {
+                if (! $lastAnswer instanceof LogMessage) {
+                    $lastAnswer = LogMessage::logErrorMsg(
+                        "Child process failed but last message was not a LogMessage",
+                        $process->parentTaskListPosition()
+                    );
+                }
+
+                if (! $lastAnswer->isError()) {
+                    $lastAnswer = LogMessage::logErrorMsg($lastAnswer->getTechnicalMsg(), $lastAnswer->getProcessTaskListPosition());
+                }
+
+                $this->informParentProcessAboutFailedChildProcess($process, $lastAnswer);
+            }
+
         }
     }
 
@@ -208,7 +224,41 @@ class WorkflowProcessor
         $this->beginTransaction();
 
         try {
-            $lastAnswerReceivedForChild->connectToProcessTask($childProcess->parentTaskListPosition());
+
+            $lastAnswerReceivedForChild = $lastAnswerReceivedForChild->reconnectToProcessTask($childProcess->parentTaskListPosition());
+            $parentProcess->receiveMessage($lastAnswerReceivedForChild, $this->workflowEngine);
+
+            $this->commitTransaction();
+        } catch (\Exception $ex) {
+            $this->rollbackTransaction();
+
+            throw $ex;
+        }
+    }
+
+    /**
+     * @param Process $childProcess
+     * @param LogMessage $lastAnswerReceivedForChild
+     * @throws \RuntimeException
+     * @throws \Exception
+     */
+    private function informParentProcessAboutFailedChildProcess(Process $childProcess, LogMessage $lastAnswerReceivedForChild)
+    {
+        $parentProcess = $this->processRepository->get($childProcess->parentTaskListPosition()->taskListId()->processId());
+
+        if (is_null($parentProcess)) {
+            throw new \RuntimeException(sprintf(
+                "Child process %s contains unknown parent processId. A process with id %s cannot be found!",
+                $childProcess->processId()->toString(),
+                $childProcess->parentTaskListPosition()->taskListId()->processId()->toString()
+            ));
+        }
+
+        $this->beginTransaction();
+
+        try {
+
+            $lastAnswerReceivedForChild = $lastAnswerReceivedForChild->reconnectToProcessTask($childProcess->parentTaskListPosition());
             $parentProcess->receiveMessage($lastAnswerReceivedForChild, $this->workflowEngine);
 
             $this->commitTransaction();

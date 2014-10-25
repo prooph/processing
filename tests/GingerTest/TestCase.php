@@ -85,6 +85,8 @@ class TestCase extends \PHPUnit_Framework_TestCase
      */
     protected $lastPostCommitEvent;
 
+    protected $eventNameLog = array();
+
     protected function setUp()
     {
         $this->workflowMessageHandler = new TestWorkflowMessageHandler();
@@ -121,6 +123,7 @@ class TestCase extends \PHPUnit_Framework_TestCase
         $this->processRepository = null;
         $this->workflowProcessor = null;
         $this->lastPostCommitEvent = null;
+        $this->eventNameLog = [];
     }
 
     /**
@@ -179,6 +182,10 @@ class TestCase extends \PHPUnit_Framework_TestCase
 
             $this->eventStore->getPersistenceEvents()->attach("commit.post", function(PostCommitEvent $postCommitEvent) {
                 $this->lastPostCommitEvent = $postCommitEvent;
+
+                foreach ($postCommitEvent->getRecordedEvents() as $event) {
+                    $this->eventNameLog[] = $event->eventName()->toString();
+                }
             });
         }
 

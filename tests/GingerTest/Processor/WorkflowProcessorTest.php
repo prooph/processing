@@ -12,8 +12,11 @@
 namespace GingerTest\Processor;
 
 use Ginger\Message\LogMessage;
+use Ginger\Processor\ProcessId;
 use Ginger\Processor\ProophPlugin\WorkflowEventRouter;
 use Ginger\Processor\ProophPlugin\WorkflowProcessorInvokeStrategy;
+use Ginger\Processor\Task\TaskListId;
+use Ginger\Processor\Task\TaskListPosition;
 use GingerTest\TestCase;
 use Prooph\ServiceBus\EventBus;
 
@@ -138,7 +141,19 @@ class WorkflowProcessorTest extends TestCase
 
         $this->workflowMessageHandler->useEventBus($eventBus);
 
-        $this->workflowMessageHandler->setNextAnswer($wfMessage->prepareDataProcessing()->answerWithDataProcessingCompleted());
+        $nextAnswer = $wfMessage->prepareDataProcessing(
+            TaskListPosition::at(TaskListId::linkWith(ProcessId::generate()), 1)
+        )->answerWithDataProcessingCompleted();
+
+        $ref = new \ReflectionClass($nextAnswer);
+
+        $refProp = $ref->getProperty('processTaskListPosition');
+
+        $refProp->setAccessible(true);
+
+        $refProp->setValue($nextAnswer, null);
+
+        $this->workflowMessageHandler->setNextAnswer($nextAnswer);
 
         //Without queueing incoming messages an exception will be thrown, cause the WorkflowMessageHandler answers
         //during active transaction and the WorkflowProcessor would try to load the not yet persisted process.
@@ -184,17 +199,55 @@ class WorkflowProcessorTest extends TestCase
 
         $this->assertNotNull($this->lastPostCommitEvent);
 
-        $recordedEvents = $this->lastPostCommitEvent->getRecordedEvents();
+        $expectedEventNames = [
+            'Ginger\Processor\Event\ProcessSetUp',
+            'Ginger\Processor\Task\Event\TaskEntryMarkedAsRunning',
+            'Ginger\Processor\Event\ProcessSetUp',
+            'Ginger\Processor\Task\Event\TaskEntryMarkedAsRunning',
+            'Ginger\Processor\Task\Event\TaskEntryMarkedAsDone',
+            'Ginger\Processor\Task\Event\TaskEntryMarkedAsDone'
+        ];
 
-        $eventNames = [];
+        $this->assertEquals($expectedEventNames, $this->eventNameLog);
+    }
 
-        foreach($recordedEvents as $recordedEvent) {
-            $eventNames[] = $recordedEvent->eventName()->toString();
-        }
+    /**
+     * @test
+     */
+    public function it_marks_task_of_parent_process_as_failed_when_child_process_is_finished_with_error()
+    {
+        $wfMessage = $this->getUserDataCollectedTestMessage();
 
-        $expectedEventNames = ['Ginger\Processor\Task\Event\TaskEntryMarkedAsDone'];
+        /**
+         * Change type to scenario 2 type, so that @see \GingerTest\TestCase::getTestProcessFactory
+         * set up the right process
+         */
+        $wfMessage->changeGingerType('GingerTest\Mock\UserDictionaryS2');
 
-        $this->assertEquals($expectedEventNames, $eventNames);
+        $this->getTestWorkflowProcessor()->receiveMessage($wfMessage);
+
+        $receivedMessage = $this->workflowMessageHandler->lastWorkflowMessage();
+
+        $this->assertNotNull($receivedMessage);
+
+        $error = LogMessage::logErrorMsg("Simulated error", $receivedMessage->getProcessTaskListPosition());
+
+        $this->getTestWorkflowProcessor()->receiveMessage($error);
+
+        $this->assertNotNull($this->lastPostCommitEvent);
+
+        $expectedEventNames = [
+            'Ginger\Processor\Event\ProcessSetUp',
+            'Ginger\Processor\Task\Event\TaskEntryMarkedAsRunning',
+            'Ginger\Processor\Event\ProcessSetUp',
+            'Ginger\Processor\Task\Event\TaskEntryMarkedAsRunning',
+            'Ginger\Processor\Task\Event\LogMessageReceived',
+            'Ginger\Processor\Task\Event\TaskEntryMarkedAsFailed',
+            'Ginger\Processor\Task\Event\LogMessageReceived',
+            'Ginger\Processor\Task\Event\TaskEntryMarkedAsFailed'
+        ];
+
+        $this->assertEquals($expectedEventNames, $this->eventNameLog);
     }
 }
  

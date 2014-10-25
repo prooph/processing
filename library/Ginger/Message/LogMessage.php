@@ -11,6 +11,7 @@
 
 namespace Ginger\Message;
 
+use Assert\Assertion;
 use Ginger\Message\ProophPlugin\ServiceBusTranslatableMessage;
 use Ginger\Processor\Task\Task;
 use Ginger\Processor\Task\TaskListPosition;
@@ -86,6 +87,16 @@ final class LogMessage implements MessageNameProvider, ServiceBusTranslatableMes
         }
 
         return new self($taskListPosition, $exception->getMessage(), $errorCode, array('trace' => $exception->getTraceAsString()));
+    }
+
+    /**
+     * @param string $msg
+     * @param TaskListPosition $taskListPosition
+     * @return LogMessage
+     */
+    public static function logErrorMsg($msg, TaskListPosition $taskListPosition)
+    {
+        return new self($taskListPosition, (string)$msg, 500);
     }
 
     /**
@@ -256,6 +267,22 @@ final class LogMessage implements MessageNameProvider, ServiceBusTranslatableMes
                 'msgParams' => $this->getMsgParams(),
                  'msgCode' => $this->getMsgCode()
             ]
+        );
+    }
+
+    /**
+     * @param TaskListPosition $taskListPosition
+     * @return \Ginger\Message\LogMessage
+     */
+    public function reconnectToProcessTask(TaskListPosition $taskListPosition)
+    {
+        return new self(
+            $taskListPosition,
+            $this->getTechnicalMsg(),
+            $this->getMsgCode(),
+            $this->getMsgParams(),
+            null,
+            $this->getCreatedOn()
         );
     }
 
