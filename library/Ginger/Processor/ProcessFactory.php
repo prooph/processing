@@ -15,7 +15,9 @@ use Assert\Assertion;
 use Ginger\Message\WorkflowMessage;
 use Ginger\Processor\Task\CollectData;
 use Ginger\Processor\Task\ProcessData;
+use Ginger\Processor\Task\RunChildProcess;
 use Ginger\Processor\Task\Task;
+use Ginger\Processor\Task\TaskListPosition;
 
 /**
  * Class ProcessFactory
@@ -57,10 +59,11 @@ class ProcessFactory
 
     /**
      * @param array $processDefinition
+     * @param TaskListPosition|null $parentTaskListPosition
      * @throws \InvalidArgumentException If process definition is incomplete or invalid
      * @return Process
      */
-    public function createProcessFromDefinition(array $processDefinition)
+    public function createProcessFromDefinition(array $processDefinition, TaskListPosition $parentTaskListPosition = null)
     {
         Assertion::keyExists($processDefinition, "process_type");
         Assertion::keyExists($processDefinition, "tasks");
@@ -78,7 +81,9 @@ class ProcessFactory
 
         switch($processDefinition["process_type"]) {
             case Definition::PROCESS_LINEAR_MESSAGING:
-                return LinearMessagingProcess::setUp($tasks, $processConfig);
+                return (is_null($parentTaskListPosition))?
+                    LinearMessagingProcess::setUp($tasks, $processConfig)
+                    : LinearMessagingProcess::setUpAsChildProcess($parentTaskListPosition, $tasks, $processConfig);
             default:
                 throw new \InvalidArgumentException(sprintf(
                     "Unsupported process_type given: %s",
@@ -101,6 +106,8 @@ class ProcessFactory
                 return $this->createCollectDataTaskFromDefinition($taskDefinition);
             case Definition::TASK_PROCESS_DATA:
                 return $this->createProcessDataTaskFromDefinition($taskDefinition);
+            case Definition::TASK_RUN_CHILD_PROCESS:
+                return $this->createRunChildProcessTaskFromDefinition($taskDefinition);
             default:
                 throw new \InvalidArgumentException(sprintf(
                     "Unsupported task_type given: %s",
@@ -143,6 +150,18 @@ class ProcessFactory
         $preferredType = (isset($taskDefinition["preferred_type"]))? $taskDefinition["preferred_type"] : null;
 
         return ProcessData::address($taskDefinition["target"], $taskDefinition["allowed_types"], $preferredType);
+    }
+
+    /**
+     * @param array $taskDefinition
+     * @return RunChildProcess
+     */
+    private function createRunChildProcessTaskFromDefinition(array $taskDefinition)
+    {
+        Assertion::keyExists($taskDefinition, "process_definition");
+        Assertion::isArray($taskDefinition["process_definition"]);
+
+        return RunChildProcess::setUp($taskDefinition["process_definition"]);
     }
 }
  

@@ -13,6 +13,7 @@ namespace Ginger\Processor;
 
 use Ginger\Message\LogMessage;
 use Ginger\Message\WorkflowMessage;
+use Ginger\Processor\Command\StartChildProcess;
 use Ginger\Processor\Task\TaskListPosition;
 use Prooph\EventStore\EventStore;
 
@@ -93,6 +94,8 @@ class WorkflowProcessor
             }
         } elseif ($message instanceof LogMessage) {
             $this->continueProcessAt($message->getProcessTaskListPosition(), $message);
+        } elseif ($message instanceof StartChildProcess) {
+            $this->startChildProcess($message);
         } else {
             throw new \RuntimeException(sprintf(
                 "Unknown message type received: %s",
@@ -126,6 +129,29 @@ class WorkflowProcessor
     }
 
     /**
+     * @param StartChildProcess $command
+     * @throws \Exception
+     */
+    private function startChildProcess(StartChildProcess $command)
+    {
+        $childProcess = $this->processFactory->createProcessFromDefinition($command->childProcessDefinition(), $command->parentTaskListPosition());
+
+        $this->beginTransaction();
+
+        try {
+            $childProcess->perform($this->workflowEngine, $command->previousWorkflowMessage());
+
+            $this->processRepository->add($childProcess);
+
+            $this->commitTransaction();
+        } catch (\Exception $ex) {
+            $this->rollbackTransaction();
+
+            throw $ex;
+        }
+    }
+
+    /**
      * @param TaskListPosition $taskListPosition
      * @param WorkflowMessage|LogMessage $lastAnswer
      * @throws \RuntimeException If process cannot be found
@@ -148,6 +174,42 @@ class WorkflowProcessor
 
         try {
             $process->receiveMessage($lastAnswer, $this->workflowEngine);
+
+            $this->commitTransaction();
+        } catch (\Exception $ex) {
+            $this->rollbackTransaction();
+
+            throw $ex;
+        }
+
+        if ($process->isChildProcess() && $process->isFinished()) {
+            $this->continueParentProcessOf($process, $lastAnswer);
+        }
+    }
+
+    /**
+     * @param Process $childProcess
+     * @param WorkflowMessage $lastAnswerReceivedForChild
+     * @throws \RuntimeException
+     * @throws \Exception
+     */
+    private function continueParentProcessOf(Process $childProcess, WorkflowMessage $lastAnswerReceivedForChild)
+    {
+        $parentProcess = $this->processRepository->get($childProcess->parentTaskListPosition()->taskListId()->processId());
+
+        if (is_null($parentProcess)) {
+            throw new \RuntimeException(sprintf(
+                "Child process %s contains unknown parent processId. A process with id %s cannot be found!",
+                $childProcess->processId()->toString(),
+                $childProcess->parentTaskListPosition()->taskListId()->processId()->toString()
+            ));
+        }
+
+        $this->beginTransaction();
+
+        try {
+            $lastAnswerReceivedForChild->connectToProcessTask($childProcess->parentTaskListPosition());
+            $parentProcess->receiveMessage($lastAnswerReceivedForChild, $this->workflowEngine);
 
             $this->commitTransaction();
         } catch (\Exception $ex) {

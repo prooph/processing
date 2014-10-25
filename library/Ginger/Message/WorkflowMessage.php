@@ -274,7 +274,7 @@ class WorkflowMessage implements MessageNameProvider, ServiceBusTranslatableMess
     }
 
     /**
-     * @param $newGingerType
+     * @param string $newGingerType
      */
     public function changeGingerType($newGingerType)
     {

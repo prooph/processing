@@ -54,12 +54,12 @@ class ProcessData implements Task
     public static function reconstituteFromArray(array $taskData)
     {
         \Assert\that($taskData)->keyExists('target')
-            ->keyExists('allowedTypes')
-            ->keyExists('preferredType');
+            ->keyExists('allowed_types')
+            ->keyExists('preferred_type');
 
-        \Assert\that($taskData['allowedTypes'])->isArray();
+        \Assert\that($taskData['allowed_types'])->isArray();
 
-        return new self($taskData['target'], $taskData['allowedTypes'], $taskData['preferredType']);
+        return new self($taskData['target'], $taskData['allowed_types'], $taskData['preferred_type']);
     }
 
     private function __construct($target, array $allowedTypes, $preferredType = null)
@@ -82,8 +82,8 @@ class ProcessData implements Task
     {
         return [
             'target' => $this->target,
-            'allowedTypes' => $this->allowedTypes,
-            'preferredType' => $this->preferredType
+            'allowed_types' => $this->allowedTypes,
+            'preferred_type' => $this->preferredType
         ];
     }
 

@@ -20,11 +20,13 @@ use Ginger\Processor\Task\Event\LogMessageReceived;
 use Ginger\Processor\Task\Event\TaskEntryMarkedAsDone;
 use Ginger\Processor\Task\Event\TaskEntryMarkedAsFailed;
 use Ginger\Processor\Task\Event\TaskEntryMarkedAsRunning;
+use Ginger\Processor\Task\RunChildProcess;
 use Ginger\Processor\Task\Task;
 use Ginger\Processor\Task\TaskList;
 use Ginger\Processor\Task\TaskListId;
 use Ginger\Processor\Task\TaskListPosition;
 use Prooph\EventSourcing\AggregateRoot;
+use Prooph\ServiceBus\Exception\CommandDispatchException;
 use Prooph\ServiceBus\Message\StandardMessage;
 
 /**
@@ -43,9 +45,9 @@ abstract class Process extends AggregateRoot
     protected $processId;
 
     /**
-     * @var ProcessId
+     * @var TaskListPosition
      */
-    protected $parentProcessId;
+    protected $parentTaskListPosition;
 
     /**
      * @var ArrayReader
@@ -101,13 +103,13 @@ abstract class Process extends AggregateRoot
     }
 
     /**
-     * @param ProcessId $parentProcessId
+     * @param TaskListPosition $parentTaskListPosition
      * @param Task[] $tasks
      * @param array $config
      *
      * @return static
      */
-    public static function setUpAsChildProcess(ProcessId $parentProcessId, array $tasks, array $config = array())
+    public static function setUpAsChildProcess(TaskListPosition $parentTaskListPosition, array $tasks, array $config = array())
     {
         /** @var $instance Process */
         $instance = new static();
@@ -118,7 +120,7 @@ abstract class Process extends AggregateRoot
 
         $taskList = TaskList::scheduleTasks(TaskListId::linkWith($processId), $tasks);
 
-        $instance->recordThat(ProcessSetUp::asChildProcess($processId, $parentProcessId, $taskList, $config));
+        $instance->recordThat(ProcessSetUp::asChildProcess($processId, $parentTaskListPosition, $taskList, $config));
 
         return $instance;
     }
@@ -187,15 +189,15 @@ abstract class Process extends AggregateRoot
      */
     public function isChildProcess()
     {
-        return ! is_null($this->parentProcessId);
+        return ! is_null($this->parentTaskListPosition);
     }
 
     /**
-     * @return null|ProcessId
+     * @return null|TaskListPosition
      */
-    public function parentProcessId()
+    public function parentTaskListPosition()
     {
-        return $this->parentProcessId;
+        return $this->parentTaskListPosition;
     }
 
     /**
@@ -204,6 +206,30 @@ abstract class Process extends AggregateRoot
     public function config()
     {
         return $this->config;
+    }
+
+    /**
+     * @param RunChildProcess $task
+     * @param TaskListPosition $taskListPosition
+     * @param WorkflowEngine $workflowEngine
+     * @param WorkflowMessage $previousMessage
+     */
+    protected function performRunChildProcess(
+        RunChildProcess $task,
+        TaskListPosition $taskListPosition,
+        WorkflowEngine $workflowEngine,
+        WorkflowMessage $previousMessage = null)
+    {
+        try {
+            $startChildProcessCommand = $task->generateStartCommandForChildProcess($taskListPosition, $previousMessage);
+
+            $workflowEngine->getCommandBusFor(Definition::WORKFLOW_PROCESSOR)->dispatch($startChildProcessCommand);
+
+        } catch (CommandDispatchException $ex) {
+            $this->receiveMessage(LogMessage::logException($ex->getPrevious(), $taskListPosition), $workflowEngine);
+        } catch (\Exception $ex) {
+            $this->receiveMessage(LogMessage::logException($ex, $taskListPosition), $workflowEngine);
+        }
     }
 
     /**
@@ -228,7 +254,7 @@ abstract class Process extends AggregateRoot
     protected function whenProcessSetUp(ProcessSetUp $event)
     {
         $this->processId = $event->processId();
-        $this->parentProcessId = $event->parentProcessId();
+        $this->parentTaskListPosition = $event->parentTaskListPosition();
         $this->config = new ArrayReader($event->config());
         $this->taskList = TaskList::fromArray($event->taskList());
     }

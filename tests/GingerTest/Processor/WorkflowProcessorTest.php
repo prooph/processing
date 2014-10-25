@@ -158,5 +158,43 @@ class WorkflowProcessorTest extends TestCase
 
         $this->assertEquals($expectedEventNames, $eventNames);
     }
+
+    /**
+     * @test
+     */
+    public function it_continues_parent_process_when_child_process_is_finished()
+    {
+        $wfMessage = $this->getUserDataCollectedTestMessage();
+
+        /**
+         * Change type to scenario 2 type, so that @see \GingerTest\TestCase::getTestProcessFactory
+         * set up the right process
+         */
+        $wfMessage->changeGingerType('GingerTest\Mock\UserDictionaryS2');
+
+        $this->getTestWorkflowProcessor()->receiveMessage($wfMessage);
+
+        $receivedMessage = $this->workflowMessageHandler->lastWorkflowMessage();
+
+        $this->assertNotNull($receivedMessage);
+
+        $answer = $receivedMessage->answerWithDataProcessingCompleted();
+
+        $this->getTestWorkflowProcessor()->receiveMessage($answer);
+
+        $this->assertNotNull($this->lastPostCommitEvent);
+
+        $recordedEvents = $this->lastPostCommitEvent->getRecordedEvents();
+
+        $eventNames = [];
+
+        foreach($recordedEvents as $recordedEvent) {
+            $eventNames[] = $recordedEvent->eventName()->toString();
+        }
+
+        $expectedEventNames = ['Ginger\Processor\Task\Event\TaskEntryMarkedAsDone'];
+
+        $this->assertEquals($expectedEventNames, $eventNames);
+    }
 }
  

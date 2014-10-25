@@ -41,7 +41,7 @@ abstract class AbstractMessagingProcess extends Process
         }
 
         if ($task instanceof RunChildProcess) {
-            throw new \RuntimeException("RunChildProcess is not yet supported");
+            $this->performRunChildProcess($task, $taskListPosition, $workflowEngine, $previousMessage);
         }
 
         if ($task instanceof NotifyListeners) {

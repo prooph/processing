@@ -10,15 +10,38 @@
  */
 
 namespace Ginger\Processor\Task;
+use Assert\Assertion;
+use Ginger\Message\WorkflowMessage;
+use Ginger\Processor\Command\StartChildProcess;
+use Ginger\Processor\Process;
 
 /**
  * Class RunChildProcess
+ *
+ * This task provides information that a sub process should be used to perform the next step.
+ * The parent process should use RunChildProcess::getStartCommandForChildProcess and send this command to
+ * the WorkflowProcessor. The WorkflowProcessor creates the child process from given information and performs it.
  *
  * @package Ginger\Processor\Task
  * @author Alexander Miertsch <kontakt@codeliner.ws>
  */
 class RunChildProcess implements Task
 {
+    /**
+     * @var array
+     */
+    private $processDefinition;
+
+    /**
+     * @param array $processDefinition
+     * @return RunChildProcess
+     */
+    public static function setUp(array $processDefinition)
+    {
+        Assertion::keyExists($processDefinition, "process_type");
+
+        return new self($processDefinition);
+    }
 
     /**
      * @param array $taskData
@@ -26,7 +49,17 @@ class RunChildProcess implements Task
      */
     public static function reconstituteFromArray(array $taskData)
     {
-        // TODO: Implement reconstituteFromArray() method.
+        Assertion::keyExists($taskData, 'process_definition');
+
+        return new self($taskData['process_definition']);
+    }
+
+    /**
+     * @param array $processDefinition
+     */
+    private function __construct(array $processDefinition)
+    {
+        $this->processDefinition = $processDefinition;
     }
 
     /**
@@ -34,7 +67,19 @@ class RunChildProcess implements Task
      */
     public function getArrayCopy()
     {
-        // TODO: Implement getArrayCopy() method.
+        return [
+            'process_definition' => $this->processDefinition
+        ];
+    }
+
+    /**
+     * @param TaskListPosition $parentTaskListPosition
+     * @param WorkflowMessage|null $previousMessage
+     * @return StartChildProcess
+     */
+    public function generateStartCommandForChildProcess(TaskListPosition $parentTaskListPosition, WorkflowMessage $previousMessage = null)
+    {
+        return StartChildProcess::at($parentTaskListPosition, $this->processDefinition, $previousMessage);
     }
 
     /**
@@ -43,7 +88,9 @@ class RunChildProcess implements Task
      */
     public function equals(Task $task)
     {
-        // TODO: Implement equals() method.
+        if (! $task instanceof RunChildProcess) return false;
+
+        return $this->getArrayCopy() === $task->getArrayCopy();
     }
 }
  
