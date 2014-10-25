@@ -14,9 +14,11 @@ namespace GingerTest;
 use Ginger\Message\MessageNameUtils;
 use Ginger\Message\ProophPlugin\HandleWorkflowMessageInvokeStrategy;
 use Ginger\Message\WorkflowMessage;
+use Ginger\Processor\Command\StartChildProcess;
 use Ginger\Processor\Definition;
 use Ginger\Processor\ProcessFactory;
 use Ginger\Processor\ProcessRepository;
+use Ginger\Processor\ProophPlugin\WorkflowProcessorInvokeStrategy;
 use Ginger\Processor\RegistryWorkflowEngine;
 use Ginger\Processor\WorkflowProcessor;
 use GingerTest\Mock\TestWorkflowMessageHandler;
@@ -83,6 +85,8 @@ class TestCase extends \PHPUnit_Framework_TestCase
      */
     protected $lastPostCommitEvent;
 
+    protected $eventNameLog = array();
+
     protected function setUp()
     {
         $this->workflowMessageHandler = new TestWorkflowMessageHandler();
@@ -94,6 +98,9 @@ class TestCase extends \PHPUnit_Framework_TestCase
         $this->commandRouter->route(MessageNameUtils::getCollectDataCommandName('GingerTest\Mock\UserDictionary'))
             ->to($this->workflowMessageHandler);
 
+        $this->commandRouter->route(MessageNameUtils::getCollectDataCommandName('GingerTest\Mock\UserDictionaryS2'))
+            ->to($this->workflowMessageHandler);
+
         $this->commandRouter->route(MessageNameUtils::getProcessDataCommandName('GingerTest\Mock\TargetUserDictionary'))
             ->to($this->workflowMessageHandler);
 
@@ -101,9 +108,11 @@ class TestCase extends \PHPUnit_Framework_TestCase
 
         $commandBus->utilize(new HandleWorkflowMessageInvokeStrategy());
 
+        $commandBus->utilize(new WorkflowProcessorInvokeStrategy());
+
         $this->workflowEngine = new RegistryWorkflowEngine();
 
-        $this->workflowEngine->registerCommandBus($commandBus, ['test-case', 'test-target']);
+        $this->workflowEngine->registerCommandBus($commandBus, ['test-case', 'test-target', Definition::WORKFLOW_PROCESSOR]);
     }
 
     protected function tearDown()
@@ -114,6 +123,7 @@ class TestCase extends \PHPUnit_Framework_TestCase
         $this->processRepository = null;
         $this->workflowProcessor = null;
         $this->lastPostCommitEvent = null;
+        $this->eventNameLog = [];
     }
 
     /**
@@ -149,6 +159,8 @@ class TestCase extends \PHPUnit_Framework_TestCase
                 $this->workflowEngine,
                 $this->getTestProcessFactory()
             );
+
+            $this->commandRouter->route(StartChildProcess::MSG_NAME)->to($this->workflowProcessor);
         }
 
         return $this->workflowProcessor;
@@ -170,6 +182,10 @@ class TestCase extends \PHPUnit_Framework_TestCase
 
             $this->eventStore->getPersistenceEvents()->attach("commit.post", function(PostCommitEvent $postCommitEvent) {
                 $this->lastPostCommitEvent = $postCommitEvent;
+
+                foreach ($postCommitEvent->getRecordedEvents() as $event) {
+                    $this->eventNameLog[] = $event->eventName()->toString();
+                }
             });
         }
 
@@ -210,12 +226,37 @@ class TestCase extends \PHPUnit_Framework_TestCase
             ]
         ];
 
+        $processDefinitionS2 = [
+            "process_type" => Definition::PROCESS_LINEAR_MESSAGING,
+            "tasks" => [
+                [
+                    "task_type"          => Definition::TASK_RUN_CHILD_PROCESS,
+                    "process_definition" => [
+                        "process_type" => Definition::PROCESS_LINEAR_MESSAGING,
+                        "tasks" => [
+                            [
+                                "task_type"      => Definition::TASK_PROCESS_DATA,
+                                "target"         => 'test-target',
+                                "allowed_types"  => ['GingerTest\Mock\TargetUserDictionary']
+                            ]
+                        ]
+                    ]
+                ]
+            ]
+        ];
+
         $wfMessage = $this->getUserDataCollectedTestMessage();
+
+        $scenario2Message = clone $wfMessage;
+
+        $scenario2Message->changeGingerType('GingerTest\Mock\UserDictionaryS2');
 
         return new ProcessFactory(
             [
                 //Scenario 1 definition
-                $wfMessage->getMessageName() => $processDefinitionS1
+                $wfMessage->getMessageName() => $processDefinitionS1,
+                //Scenario 2 definition
+                $scenario2Message->getMessageName() => $processDefinitionS2
             ]
         );
     }

@@ -73,7 +73,7 @@ function set_up_workflow_environment() {
         $processFactory
     );
 
-    $eventBus = $workflowEngine->getEventBusFor(\Ginger\Processor\Definition::DEFAULT_WORKFLOW_PROCESSOR);
+    $eventBus = $workflowEngine->getEventBusFor(\Ginger\Processor\Definition::WORKFLOW_PROCESSOR);
 
     $eventBus->utilize(new \Ginger\Processor\ProophPlugin\WorkflowEventRouter($workflowProcessor));
 
@@ -147,7 +147,7 @@ function _set_up_workflow_engine() {
 
     $workflowEngine->registerCommandBus($commandBus, ['target-file-writer']);
 
-    $workflowEngine->registerEventBus($eventBus, [\Ginger\Processor\Definition::DEFAULT_WORKFLOW_PROCESSOR]);
+    $workflowEngine->registerEventBus($eventBus, [\Ginger\Processor\Definition::WORKFLOW_PROCESSOR]);
 
     return $workflowEngine;
 }

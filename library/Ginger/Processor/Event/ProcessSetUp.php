@@ -13,6 +13,7 @@ namespace Ginger\Processor\Event;
 
 use Ginger\Processor\ProcessId;
 use Ginger\Processor\Task\TaskList;
+use Ginger\Processor\Task\TaskListPosition;
 use Prooph\EventSourcing\AggregateChanged;
 
 /**
@@ -29,9 +30,9 @@ class ProcessSetUp extends AggregateChanged
     private $processId;
 
     /**
-     * @var ProcessId
+     * @var TaskListPosition
      */
-    private $parentProcessId;
+    private $parentTaskListPosition;
 
     /**
      * @param ProcessId $processId
@@ -45,8 +46,8 @@ class ProcessSetUp extends AggregateChanged
             $processId->toString(),
             [
                 'config' => $config,
-                'parentProcessId' => null,
-                'taskList' => $taskList->getArrayCopy()
+                'parent_task_list_Position' => null,
+                'task_list' => $taskList->getArrayCopy()
             ]
         );
 
@@ -57,25 +58,25 @@ class ProcessSetUp extends AggregateChanged
 
     /**
      * @param ProcessId $processId
-     * @param ProcessId $parentProcessId
+     * @param TaskListPosition $parentTaskListPosition
      * @param TaskList $taskList
      * @param array $config
      * @return static
      */
-    public static function asChildProcess(ProcessId $processId, ProcessId $parentProcessId, TaskList $taskList, array $config)
+    public static function asChildProcess(ProcessId $processId, TaskListPosition $parentTaskListPosition, TaskList $taskList, array $config)
     {
         $instance = self::occur(
             $processId->toString(),
             [
                 'config' => $config,
-                'parentProcessId' => $parentProcessId->toString(),
-                'taskList' => $taskList->getArrayCopy()
+                'parent_task_list_Position' => $parentTaskListPosition->toString(),
+                'task_list' => $taskList->getArrayCopy()
             ]
         );
 
         $instance->processId = $processId;
 
-        $instance->parentProcessId = $parentProcessId;
+        $instance->parentTaskListPosition = $parentTaskListPosition;
 
         return $instance;
     }
@@ -93,15 +94,15 @@ class ProcessSetUp extends AggregateChanged
     }
 
     /**
-     * @return ProcessId|null
+     * @return TaskListPosition|null
      */
-    public function parentProcessId()
+    public function parentTaskListPosition()
     {
-        if (is_null($this->parentProcessId) && ! is_null($this->payload['parentProcessId'])) {
-            $this->parentProcessId = ProcessId::fromString($this->payload['parentProcessId']);
+        if (is_null($this->parentTaskListPosition) && ! is_null($this->payload['parent_task_list_Position'])) {
+            $this->parentTaskListPosition = TaskListPosition::fromString($this->payload['parent_task_list_Position']);
         }
 
-        return $this->parentProcessId;
+        return $this->parentTaskListPosition;
     }
 
     /**
@@ -117,7 +118,7 @@ class ProcessSetUp extends AggregateChanged
      */
     public function taskList()
     {
-        return $this->payload['taskList'];
+        return $this->payload['task_list'];
     }
 }
  

@@ -187,16 +187,17 @@ class WorkflowMessage implements MessageNameProvider, ServiceBusTranslatableMess
     /**
      * Transforms current message to a process data command
      *
+     * @param \Ginger\Processor\Task\TaskListPosition $newTaskListPosition
      * @return WorkflowMessage
      */
-    public function prepareDataProcessing()
+    public function prepareDataProcessing(TaskListPosition $newTaskListPosition)
     {
         $type = MessageNameUtils::getTypePartOfMessageName($this->messageName);
 
         return new self(
             $this->payload,
             MessageNameUtils::getProcessDataCommandName($type),
-            $this->processTaskListPosition,
+            $newTaskListPosition,
             $this->version + 1
         );
     }
@@ -222,7 +223,32 @@ class WorkflowMessage implements MessageNameProvider, ServiceBusTranslatableMess
      */
     public function connectToProcessTask(TaskListPosition $taskListPosition)
     {
+        if (! is_null($this->processTaskListPosition)) {
+            throw new \RuntimeException(
+                sprintf(
+                    "WorkflowMessage %s (%s) is already connected to a process task",
+                    $this->getMessageName(),
+                    $this->getUuid()->toString()
+                )
+            );
+        }
+
         $this->processTaskListPosition = $taskListPosition;
+    }
+
+    /**
+     * @param TaskListPosition $taskListPosition
+     * @return \Ginger\Message\LogMessage
+     */
+    public function reconnectToProcessTask(TaskListPosition $taskListPosition)
+    {
+        return new self(
+            $this->payload,
+            $this->getMessageName(),
+            $taskListPosition,
+            $this->version,
+            $this->getCreatedOn()
+        );
     }
 
     /**
@@ -274,7 +300,7 @@ class WorkflowMessage implements MessageNameProvider, ServiceBusTranslatableMess
     }
 
     /**
-     * @param $newGingerType
+     * @param string $newGingerType
      */
     public function changeGingerType($newGingerType)
     {

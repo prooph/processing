@@ -41,7 +41,7 @@ abstract class AbstractMessagingProcess extends Process
         }
 
         if ($task instanceof RunChildProcess) {
-            throw new \RuntimeException("RunChildProcess is not yet supported");
+            $this->performRunChildProcess($task, $taskListPosition, $workflowEngine, $previousMessage);
         }
 
         if ($task instanceof NotifyListeners) {
@@ -78,9 +78,7 @@ abstract class AbstractMessagingProcess extends Process
      */
     protected function performProcessData(ProcessData $processData, TaskListPosition $taskListPosition, WorkflowMessage $previousMessage, WorkflowEngine $workflowEngine)
     {
-        $workflowMessage = $previousMessage->prepareDataProcessing();
-
-        $workflowMessage->connectToProcessTask($taskListPosition);
+        $workflowMessage = $previousMessage->prepareDataProcessing($taskListPosition);
 
         if (! in_array($workflowMessage->getPayload()->getTypeClass(), $processData->allowedTypes())) {
             $workflowMessage->changeGingerType($processData->preferredType());
