@@ -13,11 +13,11 @@ namespace Ginger\Processor\Task\Event;
 
 use Ginger\Message\LogMessage;
 
-class LogMessageReceived extends TaskEntryChangedEvent
+class LogMessageReceived extends TaskEntryChanged
 {
     public static function record(LogMessage $logMessage)
     {
-        return self::occur($logMessage->getProcessTaskListPosition(), array(
+        return self::at($logMessage->getProcessTaskListPosition(), array(
             'message' => $logMessage->toServiceBusMessage()->toArray()
         ));
     }

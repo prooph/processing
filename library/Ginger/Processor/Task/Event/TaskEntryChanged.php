@@ -14,11 +14,17 @@ namespace Ginger\Processor\Task\Event;
 use Ginger\Processor\Task\TaskListPosition;
 use Prooph\EventSourcing\AggregateChanged;
 
-class TaskEntryChangedEvent extends AggregateChanged
+/**
+ * Class TaskEntryChanged
+ *
+ * @package Ginger\Processor\Task\Event
+ * @author Alexander Miertsch <kontakt@codeliner.ws>
+ */
+class TaskEntryChanged extends AggregateChanged
 {
     protected $taskListPosition;
 
-    public static function occur(TaskListPosition $taskListPosition, array $payload = array())
+    public static function at(TaskListPosition $taskListPosition, array $payload = array())
     {
         $payload['taskListPosition'] = $taskListPosition->toString();
 

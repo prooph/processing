@@ -11,19 +11,13 @@
 
 namespace Ginger\Processor\Task\Event;
 
-use Ginger\Processor\Task\TaskListPosition;
-
 /**
  * Class TaskEntryMarkedAsFailed
  *
  * @package Ginger\Processor\Task\Event
  * @author Alexander Miertsch <kontakt@codeliner.ws>
  */
-class TaskEntryMarkedAsFailed extends TaskEntryChangedEvent
+class TaskEntryMarkedAsFailed extends TaskEntryChanged
 {
-    public static function at(TaskListPosition $taskListPosition)
-    {
-        return self::occur($taskListPosition);
-    }
 }
  

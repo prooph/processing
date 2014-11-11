@@ -11,13 +11,7 @@
 
 namespace Ginger\Processor\Task\Event;
 
-use Ginger\Processor\Task\TaskListPosition;
-
-class TaskEntryMarkedAsRunning extends TaskEntryChangedEvent
+class TaskEntryMarkedAsRunning extends TaskEntryChanged
 {
-    public static function at(TaskListPosition $taskListPosition)
-    {
-        return self::occur($taskListPosition);
-    }
 }
  
