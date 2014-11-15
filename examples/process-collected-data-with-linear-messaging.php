@@ -75,7 +75,7 @@ function set_up_workflow_environment() {
 
     $eventBus = $workflowEngine->getEventBusFor(\Ginger\Processor\Definition::WORKFLOW_PROCESSOR);
 
-    $eventBus->utilize(new \Ginger\Processor\ProophPlugin\WorkflowEventRouter($workflowProcessor));
+    $eventBus->utilize(new \Ginger\Processor\ProophPlugin\SingleTargetMessageRouter($workflowProcessor));
 
     $eventBus->utilize(new \Ginger\Processor\ProophPlugin\WorkflowProcessorInvokeStrategy());
 
