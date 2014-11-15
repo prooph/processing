@@ -13,7 +13,7 @@ namespace GingerTest\Processor;
 
 use Ginger\Message\LogMessage;
 use Ginger\Processor\ProcessId;
-use Ginger\Processor\ProophPlugin\WorkflowEventRouter;
+use Ginger\Processor\ProophPlugin\SingleTargetMessageRouter;
 use Ginger\Processor\ProophPlugin\WorkflowProcessorInvokeStrategy;
 use Ginger\Processor\Task\TaskListId;
 use Ginger\Processor\Task\TaskListPosition;
@@ -104,7 +104,7 @@ class WorkflowProcessorTest extends TestCase
         //Set up EventBus
         $eventBus = new EventBus();
 
-        $eventBus->utilize(new WorkflowEventRouter($this->getTestWorkflowProcessor()));
+        $eventBus->utilize(new SingleTargetMessageRouter($this->getTestWorkflowProcessor()));
 
         $eventBus->utilize(new WorkflowProcessorInvokeStrategy());
 
@@ -135,7 +135,7 @@ class WorkflowProcessorTest extends TestCase
 
         $eventBus = new EventBus();
 
-        $eventBus->utilize(new WorkflowEventRouter($this->getTestWorkflowProcessor()));
+        $eventBus->utilize(new SingleTargetMessageRouter($this->getTestWorkflowProcessor()));
 
         $eventBus->utilize(new WorkflowProcessorInvokeStrategy());
 
