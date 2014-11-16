@@ -55,5 +55,21 @@ class SimpleEnvPlugin implements Plugin
     {
         return $this->registered;
     }
+
+    /**
+     * @return string
+     */
+    public function getSupportedTypesComposerPackage()
+    {
+        return "";
+    }
+
+    /**
+     * @return array
+     */
+    public function getSupportedMessagesByTypeMap()
+    {
+        return [];
+    }
 }
  
