@@ -1,0 +1,33 @@
+{
+    "name": "gingerframework/ginger-environment",
+    "description": "Provides base classes for ginger environment set up",
+    "license": "BSD-3-Clause",
+    "keywords": [
+        "GingerWF",
+        "environment"
+    ],
+    "autoload": {
+        "psr-0": {
+            "Ginger\\Environment\\": ""
+        }
+    },
+    "target-dir": "Ginger/Environment",
+    "require": {
+        "php": ">=5.4.8",
+        "gingerframework/ginger-type" : "self.version",
+        "gingerframework/ginger-message" : "self.version",
+        "gingerframework/ginger-processor" : "self.version",
+        "gingerframework/ginger-plugin" : "self.version",
+        "beberlei/assert": "~2.0",
+        "prooph/service-bus" : "~1.0",
+        "prooph/event-store" : "~1.0",
+        "prooph/event-sourcing" : "~1.0",
+        "prooph/prooph-event-store-module" : "~1.0",
+        "prooph/prooph-service-bus-module" : "~1.0",
+        "codeliner/array-reader": "~1.1",
+        "zendframework/zend-stdlib" : "~2.3",
+        "zendframework/zend-servicemanager" : "~2.3",
+        "zendframework/zend-eventmanager" : "~2.3",
+        "rhumsaa/uuid" : "~2.7"
+    }
+}

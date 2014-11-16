@@ -112,7 +112,7 @@ class TestCase extends \PHPUnit_Framework_TestCase
 
         $this->workflowEngine = new RegistryWorkflowEngine();
 
-        $this->workflowEngine->registerCommandBus($commandBus, ['test-case', 'test-target', Definition::WORKFLOW_PROCESSOR]);
+        $this->workflowEngine->registerCommandBus($commandBus, ['test-case', 'test-target', Definition::SERVICE_WORKFLOW_PROCESSOR]);
     }
 
     protected function tearDown()

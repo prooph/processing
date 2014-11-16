@@ -88,6 +88,11 @@ class TestWorkflowMessageHandler implements WorkflowMessageHandler
         $this->commandBus = $commandBus;
     }
 
+    public function getCommandBus()
+    {
+        return $this->commandBus;
+    }
+
     /**
      * Register event bus that can be used to send events to the workflow processor
      *
@@ -97,6 +102,11 @@ class TestWorkflowMessageHandler implements WorkflowMessageHandler
     public function useEventBus(EventBus $eventBus)
     {
         $this->eventBus = $eventBus;
+    }
+
+    public function getEventBus()
+    {
+        return $this->eventBus;
     }
 
     public function setNextAnswer(WorkflowMessage $workflowMessage)

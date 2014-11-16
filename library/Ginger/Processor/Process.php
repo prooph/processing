@@ -223,7 +223,7 @@ abstract class Process extends AggregateRoot
         try {
             $startChildProcessCommand = $task->generateStartCommandForChildProcess($taskListPosition, $previousMessage);
 
-            $workflowEngine->getCommandBusFor(Definition::WORKFLOW_PROCESSOR)->dispatch($startChildProcessCommand);
+            $workflowEngine->getCommandBusFor(Definition::SERVICE_WORKFLOW_PROCESSOR)->dispatch($startChildProcessCommand);
 
         } catch (CommandDispatchException $ex) {
             $this->receiveMessage(LogMessage::logException($ex->getPrevious(), $taskListPosition), $workflowEngine);

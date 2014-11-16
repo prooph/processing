@@ -13,6 +13,7 @@ namespace Ginger\Processor;
 
 use Prooph\ServiceBus\CommandBus;
 use Prooph\ServiceBus\EventBus;
+use Zend\EventManager\ListenerAggregateInterface;
 
 /**
  * Class WorkflowEngine
@@ -38,5 +39,17 @@ interface WorkflowEngine
      * @throws \RuntimeException
      */
     public function getEventBusFor($target);
+
+    /**
+     * @param ListenerAggregateInterface $plugin
+     * @return void
+     */
+    public function attachPluginToAllCommandBuses(ListenerAggregateInterface $plugin);
+
+    /**
+     * @param ListenerAggregateInterface $plugin
+     * @return void
+     */
+    public function attachPluginToAllEventBuses(ListenerAggregateInterface $plugin);
 }
  

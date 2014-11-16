@@ -43,7 +43,7 @@ class ProcessFactoryTest extends TestCase
                     "ginger_type" => 'GingerTest\Mock\UserDictionary'
                 ]
             ],
-            "config" => [Definition::CONFIG_STOP_ON_ERROR => true],
+            "config" => [Definition::PROCESS_CONFIG_STOP_ON_ERROR => true],
         ];
 
         $processFactory = new ProcessFactory();
@@ -62,7 +62,7 @@ class ProcessFactoryTest extends TestCase
 
         $this->assertEquals('GingerTest\Mock\UserDictionary', $collectDataMessage->getPayload()->getTypeClass());
 
-        $this->assertTrue($process->config()->booleanValue(Definition::CONFIG_STOP_ON_ERROR));
+        $this->assertTrue($process->config()->booleanValue(Definition::PROCESS_CONFIG_STOP_ON_ERROR));
     }
 
     /**
@@ -79,7 +79,7 @@ class ProcessFactoryTest extends TestCase
                     "ginger_type" => 'GingerTest\Mock\UserDictionary'
                 ]
             ],
-            "config" => [Definition::CONFIG_STOP_ON_ERROR => true],
+            "config" => [Definition::PROCESS_CONFIG_STOP_ON_ERROR => true],
         ];
 
         $parentTaskListPosition = TaskListPosition::at(TaskListId::linkWith(ProcessId::generate()), 1);
@@ -150,7 +150,7 @@ class ProcessFactoryTest extends TestCase
                     "ginger_type" => 'GingerTest\Mock\UserDictionary'
                 ]
             ],
-            "config" => [Definition::CONFIG_STOP_ON_ERROR => true],
+            "config" => [Definition::PROCESS_CONFIG_STOP_ON_ERROR => true],
         ];
 
         $runChildProcessTaskDefinition = [
@@ -174,7 +174,7 @@ class ProcessFactoryTest extends TestCase
             $startChildProcess = $command;
         });
 
-        $this->workflowEngine->getCommandBusFor(Definition::WORKFLOW_PROCESSOR)->utilize(new CallbackStrategy());
+        $this->workflowEngine->getCommandBusFor(Definition::SERVICE_WORKFLOW_PROCESSOR)->utilize(new CallbackStrategy());
 
         $parentProcess->perform($this->workflowEngine);
 

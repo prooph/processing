@@ -19,7 +19,10 @@ namespace Ginger\Processor;
  */
 class Definition 
 {
-    const WORKFLOW_PROCESSOR = "ginger_default_workflow_processor";
+    const SERVICE_ENVIRONMENT          = "ginger.env";
+    const SERVICE_WORKFLOW_PROCESSOR   = "ginger.workflow_processor";
+    const SERVICE_PROCESS_FACTORY      = "ginger.process_factory";
+    const SERVICE_PROCESS_REPOSITORY   = "ginger.process_repository";
 
     const PROCESS_LINEAR_MESSAGING   = "linear_messaging";
 
@@ -27,6 +30,9 @@ class Definition
     const TASK_PROCESS_DATA          = "process_data";
     const TASK_RUN_CHILD_PROCESS     = "run_child_process";
 
-    const CONFIG_STOP_ON_ERROR       = "stop_on_error";
+    const PROCESS_CONFIG_STOP_ON_ERROR  = "stop_on_error";
+
+    const ENV_CONFIG_TYPE_COMMAND_BUS = "command_bus";
+    const ENV_CONFIG_TYPE_EVENT_BUS   = "event_bus";
 }
  
