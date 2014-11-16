@@ -17,6 +17,8 @@ use Ginger\Environment\Environment;
 use Ginger\Message\ProophPlugin\FromGingerMessageTranslator;
 use Ginger\Message\ProophPlugin\HandleWorkflowMessageInvokeStrategy;
 use Ginger\Message\ProophPlugin\ToGingerMessageTranslator;
+use Ginger\Processor\Definition;
+use Ginger\Processor\ProophPlugin\SingleTargetMessageRouter;
 use Ginger\Processor\ProophPlugin\WorkflowEventRouter;
 use Ginger\Processor\ProophPlugin\WorkflowProcessorInvokeStrategy;
 use Prooph\ServiceBus\CommandBus;
@@ -53,22 +55,22 @@ class AbstractServiceBusFactory implements AbstractFactoryInterface
      */
     public function canCreateServiceWithName(ServiceLocatorInterface $serviceLocator, $name, $requestedName)
     {
-        if (! preg_match('/^ginger\.(command|event)_bus\..+/', $requestedName)) return false;
+        return (preg_match('/^ginger\.(command|event)_bus\..+/', $requestedName))? true : false;
     }
 
     /**
      * Create service with name
      *
      * @param ServiceLocatorInterface $serviceLocator
-     * @param $name
-     * @param $requestedName
-     * @throws \RuntimeException
+     * @param string $name
+     * @param string $requestedName
+     * @throws \LogicException
      * @return mixed
      */
     public function createServiceWithName(ServiceLocatorInterface $serviceLocator, $name, $requestedName)
     {
         /** @var $env Environment */
-        $env = $serviceLocator->get('ginger.env');
+        $env = $serviceLocator->get(Definition::SERVICE_ENVIRONMENT);
 
         $nameParts = explode('.', $requestedName);
 
@@ -81,7 +83,7 @@ class AbstractServiceBusFactory implements AbstractFactoryInterface
 
         $target = implode('.', $nameParts);
 
-        $busConfig = $this->getBusConfigFor($env, $target);
+        $busConfig = $this->getBusConfigFor($env, $target, $busType);
 
         $bus = ($busType === "command_bus")? new CommandBus() : new EventBus();
 
@@ -95,15 +97,12 @@ class AbstractServiceBusFactory implements AbstractFactoryInterface
 
         $bus->utilize(new Zf2ServiceLocatorProxy($serviceLocator));
 
-        if ($workflowEventRouterConfig = $busConfig->arrayValue('workflow_event_router', null)) {
-            if (! isset($workflowEventRouterConfig['target']) || ! is_string($workflowEventRouterConfig['target'])) {
-                throw new \RuntimeException(sprintf(
-                    "Missing target alias in WorkflowEventRouter config for service bus %s",
-                    $requestedName
-                ));
-            }
+        $messageHandler = $busConfig->stringValue('message_handler');
 
-            $bus->utilize(new WorkflowEventRouter($workflowEventRouterConfig['target']));
+        if (! empty($messageHandler)) {
+            $bus->utilize(new SingleTargetMessageRouter($messageHandler));
+        } else {
+            throw new \LogicException("Missing a message handler for the bus " . $requestedName);
         }
 
         foreach ($busConfig->arrayValue('utils') as $utilAlias) {
@@ -163,12 +162,18 @@ class AbstractServiceBusFactory implements AbstractFactoryInterface
     /**
      * @param Environment $env
      * @param string $target
+     * @param string $busType
      * @return \Codeliner\ArrayReader\ArrayReader
      */
-    private function getBusConfigFor(Environment $env, $target)
+    private function getBusConfigFor(Environment $env, $target, $busType)
     {
-        foreach ($env->getConfig()->arrayValue('ginger.buses') as $busConfig) {
-            if (is_array($busConfig) && array_key_exists('targets', $busConfig) && is_array($busConfig['targets'])) {
+        foreach ($env->getConfig()->arrayValue('buses') as $busConfig) {
+            if (is_array($busConfig)
+                && array_key_exists('targets', $busConfig)
+                && is_array($busConfig['targets'])
+                && array_key_exists('type', $busConfig)) {
+
+                if (!$busConfig['type'] === $busType) continue;
 
                 if (in_array($target, $busConfig['targets'])) {
                     return new ArrayReader($busConfig);

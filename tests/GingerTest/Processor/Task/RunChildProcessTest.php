@@ -43,7 +43,7 @@ class RunChildProcessTest extends TestCase
                     "ginger_type" => 'GingerTest\Mock\UserDictionary'
                 ]
             ],
-            "config" => [Definition::CONFIG_STOP_ON_ERROR => true],
+            "config" => [Definition::PROCESS_CONFIG_STOP_ON_ERROR => true],
         ];
 
         $task = RunChildProcess::setUp($childProcessDefinition);
@@ -71,7 +71,7 @@ class RunChildProcessTest extends TestCase
                     "ginger_type" => 'GingerTest\Mock\UserDictionary'
                 ]
             ],
-            "config" => [Definition::CONFIG_STOP_ON_ERROR => true],
+            "config" => [Definition::PROCESS_CONFIG_STOP_ON_ERROR => true],
         ];
 
         $task = RunChildProcess::setUp($childProcessDefinition);

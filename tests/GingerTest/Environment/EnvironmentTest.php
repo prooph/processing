@@ -14,6 +14,7 @@ namespace GingerTest\Environment;
 use Ginger\Environment\Environment;
 use Ginger\Processor\Definition;
 use GingerTest\Mock\SimpleEnvPlugin;
+use GingerTest\Mock\TestWorkflowMessageHandler;
 use GingerTest\TestCase;
 use Prooph\EventStore\Configuration\Configuration;
 use Prooph\EventStore\EventStore;
@@ -109,6 +110,40 @@ class EnvironmentTest extends TestCase
     /**
      * @test
      */
+    public function it_adds_workflow_services_to_service_manager()
+    {
+        $services = new ServiceManager();
+
+        $env = Environment::setUp($services);
+
+        $this->assertTrue($env->services()->has(Definition::SERVICE_ENVIRONMENT));
+        $this->assertTrue($env->services()->has(Definition::SERVICE_WORKFLOW_PROCESSOR));
+        $this->assertTrue($env->services()->has(Definition::SERVICE_PROCESS_FACTORY));
+        $this->assertTrue($env->services()->has(Definition::SERVICE_PROCESS_REPOSITORY));
+        $this->assertTrue($env->services()->has('configuration'));
+        $this->assertTrue($env->services()->has('config'));
+    }
+
+    /**
+     * @test
+     */
+    public function it_merges_global_config_with_default_env_config()
+    {
+        $services = new ServiceManager();
+
+        $services->setService('configuration', ["global_config_key" => "value"]);
+
+        $env = Environment::setUp($services);
+
+        $config = $env->services()->get('configuration');
+
+        $this->assertTrue(isset($config["global_config_key"]));
+        $this->assertTrue(isset($config["ginger"]));
+    }
+
+    /**
+     * @test
+     */
     public function it_can_be_set_up_with_a_process_definition()
     {
         $processDefinition = [
@@ -133,9 +168,55 @@ class EnvironmentTest extends TestCase
             ]
         ]);
 
-        $process = $env->services()->get('ginger.process_factory')->deriveProcessFromMessage($wfMessage);
+        $process = $env->services()->get(Definition::SERVICE_PROCESS_FACTORY)->deriveProcessFromMessage($wfMessage);
 
         $this->assertInstanceOf('Ginger\Processor\LinearMessagingProcess', $process);
+    }
+
+    /**
+     * @test
+     */
+    public function it_adds_a_workflow_processor_buses_provider_to_services_so_every_workflow_message_handler_gets_the_buses_injected()
+    {
+        $env = Environment::setUp();
+
+        $env->services()->setInvokableClass('test_workflow_message_handler', 'GingerTest\Mock\TestWorkflowMessageHandler');
+
+        /** @var $messageHandler TestWorkflowMessageHandler */
+        $messageHandler = $env->services()->get('test_workflow_message_handler');
+
+        $this->assertInstanceOf('Prooph\ServiceBus\CommandBus', $messageHandler->getCommandBus());
+        $this->assertInstanceOf('Prooph\ServiceBus\EventBus', $messageHandler->getEventBus());
+    }
+
+    /**
+     * @test
+     */
+    public function it_returns_a_ready_to_use_process_factory()
+    {
+        $env = Environment::setUp();
+
+        $this->assertInstanceOf('Ginger\Processor\ProcessFactory', $env->getProcessFactory());
+    }
+
+    /**
+     * @test
+     */
+    public function it_returns_a_ready_to_use_process_repository()
+    {
+        $env = Environment::setUp();
+
+        $this->assertInstanceOf('Ginger\Processor\ProcessRepository', $env->getProcessRepository());
+    }
+
+    /**
+     * @test
+     */
+    public function it_returns_a_ready_to_use_workflow_processor()
+    {
+        $env = Environment::setUp();
+
+        $this->assertInstanceOf('Ginger\Processor\WorkflowProcessor', $env->getWorkflowProcessor());
     }
 }
  

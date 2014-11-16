@@ -11,9 +11,12 @@
 
 namespace Ginger\Environment;
 
+use Codeliner\ArrayReader\ArrayReader;
+use Ginger\Processor\Definition;
 use Ginger\Processor\WorkflowEngine;
 use Prooph\ServiceBus\CommandBus;
 use Prooph\ServiceBus\EventBus;
+use Zend\EventManager\ListenerAggregateInterface;
 use Zend\ServiceManager\ServiceManager;
 
 /**
@@ -71,6 +74,46 @@ class ServicesAwareWorkflowEngine implements WorkflowEngine
         ));
 
         return $eventBus;
+    }
+
+    /**
+     * @param ListenerAggregateInterface $plugin
+     * @return void
+     */
+    public function attachPluginToAllCommandBuses(ListenerAggregateInterface $plugin)
+    {
+        /** @var $env Environment */
+        $env = $this->services->get(Definition::SERVICE_ENVIRONMENT);
+
+        foreach ($env->getConfig()->arrayValue('buses') as $busConfig) {
+            $busConfig = new ArrayReader($busConfig);
+
+            if ($busConfig->stringValue('type') === Definition::ENV_CONFIG_TYPE_COMMAND_BUS) {
+                foreach ($busConfig->arrayValue('targets') as $target) {
+                    $this->getCommandBusFor($target)->utilize($plugin);
+                }
+            }
+        }
+    }
+
+    /**
+     * @param ListenerAggregateInterface $plugin
+     * @return void
+     */
+    public function attachPluginToAllEventBuses(ListenerAggregateInterface $plugin)
+    {
+        /** @var $env Environment */
+        $env = $this->services->get(Definition::SERVICE_ENVIRONMENT);
+
+        foreach ($env->getConfig()->arrayValue('buses') as $busConfig) {
+            $busConfig = new ArrayReader($busConfig);
+
+            if ($busConfig->stringValue('type') === Definition::ENV_CONFIG_TYPE_EVENT_BUS) {
+                foreach ($busConfig->arrayValue('targets') as $target) {
+                    $this->getEventBusFor($target)->utilize($plugin);
+                }
+            }
+        }
     }
 }
  

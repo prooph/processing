@@ -12,6 +12,12 @@
 namespace Ginger\Environment;
 
 use Codeliner\ArrayReader\ArrayReader;
+use Ginger\Processor\Definition;
+use Ginger\Processor\ProcessFactory;
+use Ginger\Processor\ProcessRepository;
+use Ginger\Processor\WorkflowEngine;
+use Ginger\Processor\WorkflowProcessor;
+use GingerTest\Environment\Initializer\WorkflowProcessorBusesProvider;
 use Prooph\EventStore\EventStore;
 use Zend\ServiceManager\Config;
 use Zend\ServiceManager\ServiceManager;
@@ -39,8 +45,9 @@ class Environment
     private static $defaultServicesConfig = [
         'factories' => [
             //Ginger specific services
-            'ginger.process_repository' => 'Ginger\Environment\Factory\ProcessRepositoryFactory',
-            'ginger.process_factory'    => 'Ginger\Environment\Factory\ProcessFactoryFactory',
+            Definition::SERVICE_WORKFLOW_PROCESSOR       => 'Ginger\Environment\Factory\WorkflowProcessorFactory',
+            Definition::SERVICE_PROCESS_FACTORY          => 'Ginger\Environment\Factory\ProcessFactoryFactory',
+            Definition::SERVICE_PROCESS_REPOSITORY       => 'Ginger\Environment\Factory\ProcessRepositoryFactory',
 
             //ProophEventStore section
             'prooph.event_store' => 'ProophEventStoreModule\Factory\EventStoreFactory',
@@ -50,7 +57,9 @@ class Environment
         ],
         'abstract_factories' => [
             //ProophEventStore section
-            'ProophEventStoreModule\Factory\AbstractRepositoryFactory'
+            'ProophEventStoreModule\Factory\AbstractRepositoryFactory',
+            //ProophServiceBus section
+            'Ginger\Environment\Factory\AbstractServiceBusFactory'
         ],
     ];
 
@@ -58,10 +67,34 @@ class Environment
         //Ginger specific env config
         'ginger' => [
             'plugins' => [
-                //Plugins can either be objects or aliases
+                //Plugins can either be objects or aliases resolvable by the ServiceManager
             ],
             'processes' => [
                 //Process definitions @see @TODO add link to documentation
+            ],
+            'buses' => [
+                //You can provide different configurations for buses responsible for different targets
+                'workflow_processor_command_bus' => [
+                    'type' => Definition::ENV_CONFIG_TYPE_COMMAND_BUS, //Defines the type of the bus either command_bus or event_bus
+                    'targets' => [
+                        //List of targets for which the bus is responsible for
+                        Definition::SERVICE_WORKFLOW_PROCESSOR
+                    ],
+                    'message_handler' => Definition::SERVICE_WORKFLOW_PROCESSOR, //Set the alias of the responsible message handler for all messages dispatched with this bus
+                                                                                       //If the target is located on the same node this will be the same alias as for the target itself
+                                                                                       //If the target is located on a remote node this will be an alias for a message dispatcher
+                    'utils' => [
+                        //List of additional bus plugins, can be aliases resolvable by the ServiceManager
+                    ]
+                ],
+                'workflow_processor_event_bus' => [
+                    'type' => Definition::ENV_CONFIG_TYPE_EVENT_BUS,
+                    'targets' => [
+                        Definition::SERVICE_WORKFLOW_PROCESSOR
+                    ],
+                    'message_handler' => Definition::SERVICE_WORKFLOW_PROCESSOR,
+                    'utils' => []
+                ]
             ]
         ],
         //Global env config
@@ -77,7 +110,7 @@ class Environment
                 //'My\Aggregate' => 'my_aggregate_stream'
             ],
             'features' => [
-                //List of feature aliases
+                //List of event store features,must be aliases resolvable by Prooph\EventStore\Feature\FeatureManager
             ],
             'feature_manager' => [
                 //Services config for Prooph\EventStore\Feature\FeatureManager
@@ -96,6 +129,11 @@ class Environment
     private $config;
 
     /**
+     * @var WorkflowEngine
+     */
+    private $workflowEngine;
+
+    /**
      * @param null|array|ServiceManager $configurationOrServices
      * @throws \RuntimeException
      * @throws \InvalidArgumentException
@@ -110,10 +148,21 @@ class Environment
         }
 
         if ($configurationOrServices instanceof ServiceManager) {
-            $env = new self($configurationOrServices);
-        }
 
-        if (is_array($configurationOrServices))  {
+            if (! $configurationOrServices->has(Definition::SERVICE_WORKFLOW_PROCESSOR)) {
+                $servicesConfig = new Config(self::$defaultServicesConfig);
+
+                $servicesConfig->configureServiceManager($configurationOrServices);
+            }
+
+            $env = new self($configurationOrServices);
+
+            if ($env->services()->has('configuration')) {
+                $configurationOrServices = $env->services()->get('configuration');
+            } else {
+                $configurationOrServices = [];
+            }
+        } elseif (is_array($configurationOrServices))  {
 
             $servicesConfig = [];
 
@@ -124,20 +173,28 @@ class Environment
 
             $servicesConfig = new Config(ArrayUtils::merge(self::$defaultServicesConfig, $servicesConfig));
 
-            $services = new ServiceManager($servicesConfig);
-
-            $envConfig = ArrayUtils::merge(self::$defaultEnvConfig, $configurationOrServices);
-
-            $services->setService('configuration', $envConfig);
-
-            $services->setAlias('config', 'configuration');
-
-            $env = new self($services);
+            $env = new self(new ServiceManager($servicesConfig));
         }
 
         if (is_null($env)) throw new \InvalidArgumentException("Ginger set up requires either a config array or a ready to use Zend\\ServiceManager");
 
-        $env->services()->setService('ginger.env', $env);
+        $envConfig = ArrayUtils::merge(self::$defaultEnvConfig, $configurationOrServices);
+
+        $orgAllowOverride = $env->services()->getAllowOverride();
+
+        $env->services()->setAllowOverride(true);
+
+        $env->services()->setService('configuration', $envConfig);
+
+        $env->services()->setAlias('config', 'configuration');
+
+        $env->services()->setService(Definition::SERVICE_ENVIRONMENT, $env);
+
+        $env->services()->setAllowOverride($orgAllowOverride);
+
+        $env->workflowEngine = new ServicesAwareWorkflowEngine($env->services());
+
+        $env->services()->addInitializer(new WorkflowProcessorBusesProvider());
 
         foreach ($env->getConfig()->arrayValue('plugins') as $plugin) {
             if (! $plugin instanceof Plugin && ! is_string($plugin)) {
@@ -248,6 +305,38 @@ class Environment
     public function getEventStore()
     {
         return $this->services->get('prooph.event_store');
+    }
+
+    /**
+     * @return WorkflowEngine
+     */
+    public function getWorkflowEngine()
+    {
+        return $this->workflowEngine;
+    }
+
+    /**
+     * @return WorkflowProcessor
+     */
+    public function getWorkflowProcessor()
+    {
+        return $this->services()->get(Definition::SERVICE_WORKFLOW_PROCESSOR);
+    }
+
+    /**
+     * @return ProcessFactory
+     */
+    public function getProcessFactory()
+    {
+        return $this->services()->get(Definition::SERVICE_PROCESS_FACTORY);
+    }
+
+    /**
+     * @return ProcessRepository
+     */
+    public function getProcessRepository()
+    {
+        return $this->services()->get(Definition::SERVICE_PROCESS_REPOSITORY);
     }
 
     /**

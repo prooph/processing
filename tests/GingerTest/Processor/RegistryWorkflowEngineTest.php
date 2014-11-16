@@ -11,7 +11,9 @@
 
 namespace GingerTest\Processor;
 
+use Ginger\Processor\Definition;
 use Ginger\Processor\RegistryWorkflowEngine;
+use GingerTest\Mock\SimpleBusPlugin;
 use GingerTest\TestCase;
 use Prooph\ServiceBus\CommandBus;
 use Prooph\ServiceBus\EventBus;
@@ -82,6 +84,42 @@ class RegistryWorkflowEngineTest extends TestCase
         $this->setExpectedException('\RuntimeException');
 
         $this->getTestWorkflowEngine()->getEventBusFor('unknown');
+    }
+
+    /**
+     * @test
+     */
+    public function it_attaches_plugin_to_registered_command_buses()
+    {
+        $workflowEngine = $this->getTestWorkflowEngine();
+
+        $commandBus = new CommandBus();
+
+        $workflowEngine->registerCommandBus($commandBus, [Definition::SERVICE_WORKFLOW_PROCESSOR]);
+
+        $plugin = new SimpleBusPlugin();
+
+        $workflowEngine->attachPluginToAllCommandBuses($plugin);
+
+        $this->assertEquals(2, $plugin->getAttachCount());
+    }
+
+    /**
+     * @test
+     */
+    public function it_attaches_plugin_to_registered_event_buses()
+    {
+        $workflowEngine = $this->getTestWorkflowEngine();
+
+        $eventBus = new EventBus();
+
+        $workflowEngine->registerEventBus($eventBus, [Definition::SERVICE_WORKFLOW_PROCESSOR]);
+
+        $plugin = new SimpleBusPlugin();
+
+        $workflowEngine->attachPluginToAllEventBuses($plugin);
+
+        $this->assertEquals(2, $plugin->getAttachCount());
     }
 
     /**

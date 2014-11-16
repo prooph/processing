@@ -54,7 +54,7 @@ class LinearMessagingProcess extends AbstractMessagingProcess
                     )
                 );
 
-                if (! $this->config->booleanValue(Definition::CONFIG_STOP_ON_ERROR)) {
+                if (! $this->config->booleanValue(Definition::PROCESS_CONFIG_STOP_ON_ERROR)) {
                     $this->perform($workflowEngine);
                     return;
                 }

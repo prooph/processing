@@ -13,6 +13,7 @@ namespace Ginger\Processor;
 
 use Prooph\ServiceBus\CommandBus;
 use Prooph\ServiceBus\EventBus;
+use Zend\EventManager\ListenerAggregateInterface;
 
 /**
  * Class RegistryWorkflowEngine
@@ -28,6 +29,10 @@ class RegistryWorkflowEngine implements WorkflowEngine
 
     private $eventBusMap = array();
 
+    private $commandBusList = array();
+
+    private $eventBusList = array();
+
     /**
      * @param CommandBus $commandBus
      * @param array $targets
@@ -36,6 +41,18 @@ class RegistryWorkflowEngine implements WorkflowEngine
     public function registerCommandBus(CommandBus $commandBus, array $targets)
     {
         \Assert\that($targets)->all()->notEmpty()->string();
+
+        $registered = false;
+
+        foreach($this->commandBusList as $registeredCommandBus) {
+            if ($registeredCommandBus === $commandBus) {
+                $registered = true;
+                break;
+            }
+        }
+
+        if (!$registered)
+            $this->commandBusList[] = $commandBus;
 
         foreach ($targets as $target) {
             if (isset($this->commandBusMap[$target])) {
@@ -57,6 +74,18 @@ class RegistryWorkflowEngine implements WorkflowEngine
     public function registerEventBus(EventBus $eventBus, array $targets)
     {
         \Assert\that($targets)->all()->notEmpty()->string();
+
+        $registered = false;
+
+        foreach($this->eventBusList as $registeredEventBus) {
+            if ($registeredEventBus === $eventBus) {
+                $registered = true;
+                break;
+            }
+        }
+
+        if (!$registered)
+            $this->eventBusList[] = $eventBus;
 
         foreach ($targets as $target) {
             if (isset($this->eventBusMap[$target])) {
@@ -106,6 +135,24 @@ class RegistryWorkflowEngine implements WorkflowEngine
         }
 
         return $this->eventBusMap[$target];
+    }
+
+    /**
+     * @param ListenerAggregateInterface $plugin
+     * @return void
+     */
+    public function attachPluginToAllCommandBuses(ListenerAggregateInterface $plugin)
+    {
+        foreach ($this->commandBusList as $commandBus) $commandBus->utilize($plugin);
+    }
+
+    /**
+     * @param ListenerAggregateInterface $plugin
+     * @return void
+     */
+    public function attachPluginToAllEventBuses(ListenerAggregateInterface $plugin)
+    {
+        foreach ($this->eventBusList as $eventBus) $eventBus->utilize($plugin);
     }
 }
  
