@@ -11,6 +11,7 @@
 
 namespace GingerExample\Plugin;
 
+use Ginger\Environment\Connector;
 use Ginger\Environment\Environment;
 use Ginger\Environment\Plugin;
 use Ginger\Message\LogMessage;
@@ -25,7 +26,7 @@ use Prooph\ServiceBus\EventBus;
  * @package GingerExample\Plugin
  * @author Alexander Miertsch <kontakt@codeliner.ws>
  */
-class UserDataWriter implements WorkflowMessageHandler, Plugin
+class UserDataWriter implements WorkflowMessageHandler, Connector
 {
     /**
      * @var CommandBus
