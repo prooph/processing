@@ -10,7 +10,7 @@
  * Date: 16.11.14 - 23:00
  */
 
-$tryPaths = ['/../vendor/autoload.php', '/../../../../vendor/autoload.php'];
+$tryPaths = ['/../vendor/autoload.php', '/../../../../vendor/autoload.php', '/../../vendor/autoload.php'];
 
 foreach ($tryPaths as $path) {
     if (file_exists(__DIR__ . $path)) {

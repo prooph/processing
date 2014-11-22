@@ -97,7 +97,7 @@ class AbstractServiceBusFactory implements AbstractFactoryInterface
 
         $bus->utilize(new Zf2ServiceLocatorProxy($serviceLocator));
 
-        $messageHandler = $busConfig->stringValue('message_handler');
+        $messageHandler = $busConfig->stringValue('message_handler', $target);
 
         if (! empty($messageHandler)) {
             $bus->utilize(new SingleTargetMessageRouter($messageHandler));

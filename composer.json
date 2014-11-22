@@ -44,5 +44,5 @@
         "gingerframework/ginger-type": "self.version",
         "gingerframework/ginger-message": "self.version"
     },
-    "bin": ["library/Ginger/Console/bin/ginger"]
+    "bin": ["./library/Ginger/Console/bin/ginger"]
 }
