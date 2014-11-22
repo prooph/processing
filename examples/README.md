@@ -5,7 +5,7 @@ Ginger Workflow Framework ships with some examples showing you simplified workfl
 
 # Example 1 - Write collected data to a file
 
-To get started you can have a look at [process-collected-data-with-linear-messaging.php](process-collected-data-with-linear-messaging.php).
+To get started you can have a look at [example1-script.php](example1-script.php).
 The annotated source code introduces the main components of the Ginger Workflow Framework.
 Of course you can also run the example. Simply open a console and navigate to the examples dir of the package then
 fire up `php example1-script.php`. Please make sure that the script has read and write access
