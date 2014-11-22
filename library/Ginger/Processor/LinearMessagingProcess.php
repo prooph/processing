@@ -17,6 +17,7 @@ use Ginger\Message\LogMessage;
 use Ginger\Processor\Task\CollectData;
 use Ginger\Processor\Task\Event\TaskEntryMarkedAsRunning;
 use Ginger\Processor\Task\RunChildProcess;
+use Ginger\Processor\Task\Task;
 
 /**
  * Class LinearMessagingProcess
@@ -45,20 +46,24 @@ class LinearMessagingProcess extends AbstractMessagingProcess
         if ($taskListEntry) {
             $this->recordThat(TaskEntryMarkedAsRunning::at($taskListEntry->taskListPosition()));
 
-            if (! MessageNameUtils::isGingerEvent($workflowMessage->getMessageName())) {
+            if (! $this->isCorrectMessageFor($taskListEntry->task(), $workflowMessage)) {
                 $this->receiveMessage(
                     LogMessage::logWrongMessageReceivedFor(
                         $taskListEntry->task(),
                         $taskListEntry->taskListPosition(),
                         $workflowMessage
-                    )
+                    ),
+                    $workflowEngine
                 );
 
                 if (! $this->config->booleanValue(Definition::PROCESS_CONFIG_STOP_ON_ERROR)) {
                     $this->perform($workflowEngine);
-                    return;
                 }
+
+                return;
             }
+
+
 
             $this->performTask($taskListEntry->task(), $taskListEntry->taskListPosition(), $workflowEngine, $workflowMessage);
             return;
@@ -78,7 +83,7 @@ class LinearMessagingProcess extends AbstractMessagingProcess
             $task = $taskListEntry->task();
 
             if (! $task instanceof CollectData && ! $task instanceof RunChildProcess) {
-                $this->receiveMessage(LogMessage::logNoMessageReceivedFor($task, $taskListEntry->taskListPosition()));
+                $this->receiveMessage(LogMessage::logNoMessageReceivedFor($task, $taskListEntry->taskListPosition()), $workflowEngine);
 
                 if (! $this->config->booleanValue('stop_on_error')) {
                     $this->perform($workflowEngine);
@@ -88,6 +93,25 @@ class LinearMessagingProcess extends AbstractMessagingProcess
 
             $this->performTask($task, $taskListEntry->taskListPosition(), $workflowEngine);
         }
+    }
+
+    /**
+     * @param Task $task
+     * @param WorkflowMessage $message
+     * @return bool
+     */
+    private function isCorrectMessageFor(Task $task, WorkflowMessage $message)
+    {
+        if (MessageNameUtils::isGingerCommand($message->getMessageName())) {
+
+            if (! $task instanceof CollectData
+                || $message->getMessageName() !== MessageNameUtils::getCollectDataCommandName($task->prototype()->of())) {
+
+                return false;
+            }
+        }
+
+        return true;
     }
 }
  

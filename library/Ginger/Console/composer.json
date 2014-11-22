@@ -1,0 +1,24 @@
+{
+    "name": "gingerframework/ginger-console",
+    "description": "Provides base classes for using ginger on console",
+    "license": "BSD-3-Clause",
+    "keywords": [
+        "GingerWF",
+        "console"
+    ],
+    "autoload": {
+        "psr-0": {
+            "Ginger\\Console\\": ""
+        }
+    },
+    "target-dir": "Ginger/Console",
+    "require": {
+        "php": ">=5.4.8",
+        "gingerframework/ginger-message" : "self.version",
+        "gingerframework/ginger-environment" : "self.version",
+        "beberlei/assert": "~2.0",
+        "zfcampus/zf-console" : "~1.0",
+        "zendframework/zend-stdlib" : "~2.3"
+    },
+    "bin": ["bin/ginger"]
+}
