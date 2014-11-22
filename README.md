@@ -35,6 +35,9 @@ open source systems. So stay tuned!
 No and yes. As you can see under the releases tab we don't reached a stable version yet and therefor currently don't support
 semantic versioning. But if you want to use it in production you can send us an email at contact[at]prooph.de and we'll find a way.
 
+# Examples
+
+Please see [examples doc](examples/README.md) to get started with Ginger.
 
 # Components
 
