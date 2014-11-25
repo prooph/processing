@@ -9,7 +9,7 @@
  * Date: 16.11.14 - 19:53
  */
 
-namespace GingerTest\Environment\Initializer;
+namespace Ginger\Environment\Initializer;
 
 use Ginger\Message\WorkflowMessageHandler;
 use Ginger\Processor\Definition;

@@ -17,7 +17,7 @@ use Ginger\Processor\ProcessFactory;
 use Ginger\Processor\ProcessRepository;
 use Ginger\Processor\WorkflowEngine;
 use Ginger\Processor\WorkflowProcessor;
-use GingerTest\Environment\Initializer\WorkflowProcessorBusesProvider;
+use Ginger\Environment\Initializer\WorkflowProcessorBusesProvider;
 use Prooph\EventStore\EventStore;
 use Zend\ServiceManager\Config;
 use Zend\ServiceManager\ServiceManager;
