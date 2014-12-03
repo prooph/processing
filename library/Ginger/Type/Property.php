@@ -10,6 +10,7 @@
  */
 namespace Ginger\Type;
 use Codeliner\Comparison\EqualsBuilder;
+use Ginger\Type\Exception\InvalidTypeException;
 
 /**
  * Class Property
@@ -40,12 +41,15 @@ class Property
     protected $value;
 
     /**
-     * @param string     $name
-     * @param Type       $type
+     * @param string $name
+     * @param Type $type
+     * @throws \InvalidArgumentException
      */
     public function __construct($name, Type $type)
     {
-        \Assert\that($name)->notEmpty()->string();
+        if (! is_string($name) || empty($name)) {
+            throw new \InvalidArgumentException("Name of a property must be a non empty string");
+        }
 
         $this->name  = $name;
         $this->type  = $type;
@@ -99,10 +103,7 @@ class Property
      */
     public function sameAs(Property $other)
     {
-        return EqualsBuilder::create()
-            ->append($this->type()->sameAs($other->type()))
-            ->append($this->name(), $other->name())
-            ->equals();
+        return $this->type()->sameAs($other->type()) && $this->name() === $other->name();
     }
 }
  

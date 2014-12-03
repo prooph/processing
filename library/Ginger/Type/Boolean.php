@@ -13,6 +13,7 @@ namespace Ginger\Type;
 
 use Ginger\Type\Description\Description;
 use Ginger\Type\Description\NativeType;
+use Ginger\Type\Exception\InvalidTypeException;
 
 class Boolean extends SingleValue
 {
@@ -32,11 +33,14 @@ class Boolean extends SingleValue
      * Performs assertions and sets the internal value property on success
      *
      * @param mixed $value
+     * @throws Exception\InvalidTypeException
      * @return void
      */
     protected function setValue($value)
     {
-        \Assert\that($value)->boolean();
+        if (! is_bool($value)) {
+            throw InvalidTypeException::fromMessageAndPrototype("Value must be a boolean", static::prototype());
+        }
 
         $this->value = $value;
     }

@@ -13,6 +13,7 @@ namespace Ginger\Type;
 
 use Ginger\Type\Description\Description;
 use Ginger\Type\Description\NativeType;
+use Ginger\Type\Exception\InvalidTypeException;
 
 /**
  * Class Integer
@@ -51,7 +52,9 @@ class Integer extends SingleValue
      */
     protected function setValue($value)
     {
-        \Assert\that($value)->integer();
+        if (!is_int($value)) {
+            throw InvalidTypeException::fromMessageAndPrototype("Value must be an integer", static::prototype());
+        }
         $this->value = $value;
     }
 }

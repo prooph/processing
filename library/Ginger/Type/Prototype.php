@@ -11,6 +11,7 @@
 
 namespace Ginger\Type;
 
+use Assert\Assertion;
 use Ginger\Type\Description\Description;
 
 /**
@@ -43,8 +44,8 @@ class Prototype
      */
     public function __construct($relatedTypeClass, Description $descriptionOfType, array $propertiesOfType)
     {
-        \Assert\that($relatedTypeClass)->implementsInterface('Ginger\Type\Type');
-        \Assert\that($propertiesOfType)->all()->isInstanceOf('Ginger\Type\PrototypeProperty');
+        Assertion::implementsInterface($relatedTypeClass, 'Ginger\Type\Type');
+        foreach($propertiesOfType as $propertyOfType) Assertion::isInstanceOf($propertyOfType, 'Ginger\Type\PrototypeProperty');
 
         $this->relatedTypeClass = $relatedTypeClass;
         $this->descriptionOfType = $descriptionOfType;

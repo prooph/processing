@@ -39,6 +39,10 @@ abstract class SingleValue implements Type
      */
     public static function prototype()
     {
+        $implementer = get_called_class();
+
+        if (PrototypeRegistry::hasPrototype($implementer)) return PrototypeRegistry::getPrototype($implementer);
+
         return new Prototype(get_called_class(), static::buildDescription(), array());
     }
 

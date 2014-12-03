@@ -44,8 +44,12 @@ abstract class AbstractCollection implements CollectionType
      */
     public static function prototype()
     {
+        $implementer = get_called_class();
+
+        if (PrototypeRegistry::hasPrototype($implementer)) return PrototypeRegistry::getPrototype($implementer);
+
         return new Prototype(
-            get_called_class(),
+            $implementer,
             static::buildDescription(),
             array(
                 'item' => new PrototypeProperty('item', static::itemPrototype())
@@ -79,10 +83,8 @@ abstract class AbstractCollection implements CollectionType
      */
     public static function fromNativeValue($value)
     {
-        try{
-            \Assert\that($value)->isArray();
-        } catch (\InvalidArgumentException $ex) {
-            throw InvalidTypeException::fromInvalidArgumentExceptionAndPrototype($ex, static::prototype());
+        if (! is_array($value)) {
+            throw InvalidTypeException::fromMessageAndPrototype("Value must be an array", static::prototype());
         }
 
         return new static($value);
