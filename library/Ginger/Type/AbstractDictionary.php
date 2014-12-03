@@ -11,6 +11,7 @@
 
 namespace Ginger\Type;
 
+use Assert\Assertion;
 use Codeliner\Comparison\EqualsBuilder;
 use Ginger\Type\Description\Description;
 use Ginger\Type\Exception\InvalidTypeException;
@@ -39,6 +40,10 @@ abstract class AbstractDictionary implements DictionaryType
      */
     public static function prototype()
     {
+        $implementer = get_called_class();
+
+        if (PrototypeRegistry::hasPrototype($implementer)) return PrototypeRegistry::getPrototype($implementer);
+
         $propertyPrototypes = static::getPropertyPrototypes();
 
         $propertyMap = array();
@@ -48,7 +53,7 @@ abstract class AbstractDictionary implements DictionaryType
         }
 
         return new Prototype(
-            get_called_class(),
+            $implementer,
             static::buildDescription(),
             $propertyMap
         );
@@ -84,10 +89,17 @@ abstract class AbstractDictionary implements DictionaryType
     {
         $propertyNames = array_keys(static::getPropertyPrototypes());
 
+        if (! is_array($value)) {
+            throw InvalidTypeException::fromMessageAndPrototype("Value must be an array", static::prototype());
+        }
+
+        $valueKeys = array_keys($value);
+
         try{
-            \Assert\that($value)->isArray();
-            \Assert\that(array_keys($value))->all()->inArray($propertyNames);
-            \Assert\that($propertyNames)->all()->inArray(array_keys($value));
+            if ($valueKeys != $propertyNames) {
+                \Assert\that(array_keys($value))->all()->inArray($propertyNames);
+                \Assert\that($propertyNames)->all()->inArray(array_keys($value));
+            }
 
             return new static($value);
         } catch (\InvalidArgumentException $ex) {
@@ -134,7 +146,7 @@ abstract class AbstractDictionary implements DictionaryType
                     $propertyTypeOrNativeValue = $propertyTypeClass::fromNativeValue($propertyTypeOrNativeValue);
                 }
 
-                \Assert\that($propertyTypeOrNativeValue)->isInstanceOf($propertyTypeClass);
+                Assertion::isInstanceOf($propertyTypeOrNativeValue, $propertyTypeClass);
 
                 $properties[$propertyName] = new Property($propertyName, $propertyTypeOrNativeValue);
 

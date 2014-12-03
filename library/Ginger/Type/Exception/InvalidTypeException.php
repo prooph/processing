@@ -23,7 +23,7 @@ class InvalidTypeException extends \InvalidArgumentException
     /**
      * @param \InvalidArgumentException $exception
      * @param \Ginger\Type\Prototype $prototype
-     * @return InvalidTypeException
+     * @return static
      */
     public static function fromInvalidArgumentExceptionAndPrototype(\InvalidArgumentException $exception, Prototype $prototype)
     {
@@ -31,6 +31,18 @@ class InvalidTypeException extends \InvalidArgumentException
 
         $invalidTypeException->relatedPrototypeOfType = $prototype;
 
+        return $invalidTypeException;
+    }
+
+    /**
+     * @param string $message
+     * @param Prototype $prototype
+     * @return static
+     */
+    public static function fromMessageAndPrototype($message, Prototype $prototype)
+    {
+        $invalidTypeException = new static('[' . $prototype->of() . ']: ' . $message);
+        $invalidTypeException->relatedPrototypeOfType = $prototype;
         return $invalidTypeException;
     }
 

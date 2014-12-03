@@ -30,12 +30,15 @@ class PrototypeProperty
     protected $typePrototype;
 
     /**
-     * @param string  $propertyName
+     * @param string $propertyName
      * @param Prototype $typePrototype
+     * @throws \InvalidArgumentException
      */
     public function __construct($propertyName, Prototype $typePrototype)
     {
-        \Assert\that($propertyName)->notEmpty()->string();
+        if (! is_string($propertyName) || empty($propertyName)) {
+            throw new \InvalidArgumentException("Name of a property must be a non empty string");
+        }
 
         $this->propertyName = $propertyName;
         $this->typePrototype = $typePrototype;

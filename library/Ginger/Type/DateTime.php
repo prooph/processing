@@ -11,6 +11,7 @@
 
 namespace Ginger\Type;
 
+use Assert\Assertion;
 use Ginger\Type\Description\Description;
 use Ginger\Type\Description\NativeType;
 
@@ -38,7 +39,7 @@ class DateTime extends SingleValue
      */
     protected function setValue($value)
     {
-        \Assert\that($value)->isInstanceOf('\DateTime');
+        Assertion::isInstanceOf($value, '\DateTime');
 
         $this->value = clone $value;
     }

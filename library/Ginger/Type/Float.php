@@ -13,6 +13,7 @@ namespace Ginger\Type;
 
 use Ginger\Type\Description\Description;
 use Ginger\Type\Description\NativeType;
+use Ginger\Type\Exception\InvalidTypeException;
 
 /**
  * Class Float
@@ -38,11 +39,14 @@ class Float extends SingleValue
      * Performs assertions and sets the internal value property on success
      *
      * @param mixed $value
+     * @throws Exception\InvalidTypeException
      * @return void
      */
     protected function setValue($value)
     {
-        \Assert\that($value)->float();
+        if (!is_float($value)) {
+            throw InvalidTypeException::fromMessageAndPrototype("Value must be a float", static::prototype());
+        }
 
         $this->value = $value;
     }
