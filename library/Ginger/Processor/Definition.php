@@ -19,6 +19,7 @@ namespace Ginger\Processor;
  */
 class Definition 
 {
+    const DEFAULT_NODE_NAME            = "localhost";
     const SERVICE_ENVIRONMENT          = "ginger.env";
     const SERVICE_WORKFLOW_PROCESSOR   = "ginger.workflow_processor";
     const SERVICE_PROCESS_FACTORY      = "ginger.process_factory";

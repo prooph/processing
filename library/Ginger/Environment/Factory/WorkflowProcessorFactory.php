@@ -37,6 +37,7 @@ class WorkflowProcessorFactory implements FactoryInterface
         $env = $serviceLocator->get(Definition::SERVICE_ENVIRONMENT);
 
         return new WorkflowProcessor(
+            $env->getNodeName(),
             $env->getEventStore(),
             $env->getProcessRepository(),
             $env->getWorkflowEngine(),

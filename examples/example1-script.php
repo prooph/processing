@@ -100,8 +100,13 @@ function set_up_workflow_environment() {
      * help of an EventStore and a ProcessRepository.
      * New processes are derived from a ProcessFactory which is capable of parsing process definitions and set up
      * processes with a TaskList.
+     * The node name provided as first argument identifies the system which runs the processor. For local processing
+     * it is enough to use the default node name defined in the definition class but when working with
+     * many ginger nodes you should give each node a unique name and configure the workflow engine to
+     * provide the correct bus for each node.
      */
     $workflowProcessor = new \Ginger\Processor\WorkflowProcessor(
+        \Ginger\Processor\NodeName::defaultName(),
         $eventStore,
         $processRepository,
         $workflowEngine,

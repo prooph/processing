@@ -12,8 +12,6 @@
 namespace Ginger\Processor\Command;
 
 use Ginger\Message\WorkflowMessage;
-use Ginger\Processor\Process;
-use Ginger\Processor\ProcessId;
 use Ginger\Processor\Task\TaskListPosition;
 use Prooph\ServiceBus\Command;
 use Prooph\ServiceBus\Message\StandardMessage;
@@ -31,15 +29,22 @@ class StartSubProcess extends Command
     /**
      * @param TaskListPosition $parentTaskListPosition
      * @param array $processDefinition
+     * @param bool $syncLogMessages
      * @param WorkflowMessage $previousMessage
+     * @throws \InvalidArgumentException
      * @return StartSubProcess
      */
-    public static function at(TaskListPosition $parentTaskListPosition, array $processDefinition, WorkflowMessage $previousMessage = null)
+    public static function at(TaskListPosition $parentTaskListPosition, array $processDefinition, $syncLogMessages, WorkflowMessage $previousMessage = null)
     {
+        if (! is_bool($syncLogMessages)) {
+            throw new \InvalidArgumentException("Argument syncLogMessages must be of type boolean");
+        }
+
         $previousMessageArrayOrNull = (is_null($previousMessage))? null : $previousMessage->toServiceBusMessage()->toArray();
 
         $payload = [
             'parent_task_list_position' => $parentTaskListPosition->toString(),
+            'sync_log_messages' => $syncLogMessages,
             'sub_process_definition' => $processDefinition,
             'previous_message' => $previousMessageArrayOrNull
         ];
@@ -53,6 +58,14 @@ class StartSubProcess extends Command
     public function parentTaskListPosition()
     {
         return TaskListPosition::fromString($this->payload['parent_task_list_position']);
+    }
+
+    /**
+     * @return bool
+     */
+    public function syncLogMessages()
+    {
+        return (bool)$this->payload['sync_log_messages'];
     }
 
     /**

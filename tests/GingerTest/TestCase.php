@@ -11,13 +11,19 @@
 
 namespace GingerTest;
 
+use Ginger\Message\LogMessage;
 use Ginger\Message\MessageNameUtils;
+use Ginger\Message\ProophPlugin\FromGingerMessageTranslator;
 use Ginger\Message\ProophPlugin\HandleWorkflowMessageInvokeStrategy;
+use Ginger\Message\ProophPlugin\ToGingerMessageTranslator;
 use Ginger\Message\WorkflowMessage;
 use Ginger\Processor\Command\StartSubProcess;
 use Ginger\Processor\Definition;
+use Ginger\Processor\Event\SubProcessFinished;
+use Ginger\Processor\NodeName;
 use Ginger\Processor\ProcessFactory;
 use Ginger\Processor\ProcessRepository;
+use Ginger\Processor\ProophPlugin\SingleTargetMessageRouter;
 use Ginger\Processor\ProophPlugin\WorkflowProcessorInvokeStrategy;
 use Ginger\Processor\RegistryWorkflowEngine;
 use Ginger\Processor\WorkflowProcessor;
@@ -31,7 +37,13 @@ use Prooph\EventStore\Stream\AggregateStreamStrategy;
 use Prooph\EventStore\Stream\Stream;
 use Prooph\EventStore\Stream\StreamName;
 use Prooph\ServiceBus\CommandBus;
+use Prooph\ServiceBus\EventBus;
+use Prooph\ServiceBus\InvokeStrategy\ForwardToMessageDispatcherStrategy;
+use Prooph\ServiceBus\Message\FromMessageTranslator;
+use Prooph\ServiceBus\Message\InMemoryMessageDispatcher;
+use Prooph\ServiceBus\Message\ToMessageTranslator;
 use Prooph\ServiceBus\Router\CommandRouter;
+use Prooph\ServiceBus\Router\EventRouter;
 
 /**
  * Class TestCase
@@ -56,9 +68,19 @@ class TestCase extends \PHPUnit_Framework_TestCase
     protected $workflowEngine;
 
     /**
+     * @var RegistryWorkflowEngine
+     */
+    protected $otherMachineWorkflowEngine;
+
+    /**
      * @var TestWorkflowMessageHandler
      */
     protected $workflowMessageHandler;
+
+    /**
+     * @var TestWorkflowMessageHandler
+     */
+    protected $otherMachineWorkflowMessageHandler;
 
     /**
      * @var CommandRouter
@@ -66,9 +88,19 @@ class TestCase extends \PHPUnit_Framework_TestCase
     protected $commandRouter;
 
     /**
+     * @var CommandRouter
+     */
+    protected $otherMachineCommandRouter;
+
+    /**
      * @var WorkflowProcessor
      */
     private $workflowProcessor;
+
+    /**
+     * @var WorkflowProcessor
+     */
+    private $otherMachineWorkflowProcessor;
 
     /**
      * @var EventStore
@@ -76,43 +108,127 @@ class TestCase extends \PHPUnit_Framework_TestCase
     private $eventStore;
 
     /**
+     * @var EventStore
+     */
+    private $otherMachineEventStore;
+
+    /**
      * @var ProcessRepository
      */
     private $processRepository;
+
+    /**
+     * @var ProcessRepository
+     */
+    private $otherMachineProcessRepository;
+
+    /**
+     * @var InMemoryMessageDispatcher
+     */
+    private $otherMachineMessageDispatcher;
 
     /**
      * @var PostCommitEvent
      */
     protected $lastPostCommitEvent;
 
+    /**
+     * @var PostCommitEvent
+     */
+    protected $otherMachineLastPostCommitEvent;
+
     protected $eventNameLog = array();
+
+    protected $otherMachineEventNameLog = array();
 
     protected function setUp()
     {
         $this->workflowMessageHandler = new TestWorkflowMessageHandler();
 
-        $commandBus = new CommandBus();
+        $localCommandBus = new CommandBus();
 
         $this->commandRouter = new CommandRouter();
 
         $this->commandRouter->route(MessageNameUtils::getCollectDataCommandName('GingerTest\Mock\UserDictionary'))
             ->to($this->workflowMessageHandler);
 
-        $this->commandRouter->route(MessageNameUtils::getCollectDataCommandName('GingerTest\Mock\UserDictionaryS2'))
-            ->to($this->workflowMessageHandler);
-
         $this->commandRouter->route(MessageNameUtils::getProcessDataCommandName('GingerTest\Mock\TargetUserDictionary'))
             ->to($this->workflowMessageHandler);
 
-        $commandBus->utilize($this->commandRouter);
+        $localCommandBus->utilize($this->commandRouter);
+
+        $localCommandBus->utilize(new HandleWorkflowMessageInvokeStrategy());
+
+        $localCommandBus->utilize(new WorkflowProcessorInvokeStrategy());
+
+        $this->workflowEngine = new RegistryWorkflowEngine();
+
+        $this->workflowEngine->registerCommandBus($localCommandBus, ['test-case', 'test-target', Definition::DEFAULT_NODE_NAME]);
+    }
+
+    protected function setUpOtherMachine()
+    {
+        $this->otherMachineWorkflowMessageHandler = new TestWorkflowMessageHandler();
+
+        $commandBus = new CommandBus();
+
+        $this->otherMachineCommandRouter = new CommandRouter();
+
+        $this->otherMachineCommandRouter->route(MessageNameUtils::getCollectDataCommandName('GingerTest\Mock\UserDictionaryS2'))
+            ->to($this->otherMachineWorkflowMessageHandler);
+
+        $this->otherMachineCommandRouter->route(MessageNameUtils::getProcessDataCommandName('GingerTest\Mock\TargetUserDictionary'))
+            ->to($this->otherMachineWorkflowMessageHandler);
+
+        $commandBus->utilize($this->otherMachineCommandRouter);
 
         $commandBus->utilize(new HandleWorkflowMessageInvokeStrategy());
 
         $commandBus->utilize(new WorkflowProcessorInvokeStrategy());
 
-        $this->workflowEngine = new RegistryWorkflowEngine();
+        $commandBus->utilize(new ToGingerMessageTranslator());
 
-        $this->workflowEngine->registerCommandBus($commandBus, ['test-case', 'test-target', Definition::SERVICE_WORKFLOW_PROCESSOR]);
+        $this->otherMachineWorkflowEngine = new RegistryWorkflowEngine();
+
+        $this->otherMachineWorkflowEngine->registerCommandBus($commandBus, ['test-case', 'test-target', 'other_machine']);
+
+        //Add second command bus to local workflow engine to forward StartSubProcess command to message dispatcher
+        $this->otherMachineMessageDispatcher = new InMemoryMessageDispatcher($commandBus, new EventBus());
+
+        $parentNodeCommandBus = new CommandBus();
+
+        $parentCommandRouter = new CommandRouter();
+
+        $parentCommandRouter->route(StartSubProcess::MSG_NAME)->to($this->otherMachineMessageDispatcher);
+
+        $parentNodeCommandBus->utilize($parentCommandRouter);
+
+        $parentNodeCommandBus->utilize(new ForwardToMessageDispatcherStrategy(new ToMessageTranslator()));
+
+        $this->workflowEngine->registerCommandBus($parentNodeCommandBus, ['other_machine']);
+
+        $this->getOtherMachineWorkflowProcessor();
+
+        //Add event buses to handle SubProcessFinished event
+        $parentNodeEventBus = new EventBus();
+
+        $parentNodeEventRouter = new EventRouter();
+
+        $parentNodeEventBus->utilize(new SingleTargetMessageRouter($this->getTestWorkflowProcessor()));
+
+        $parentNodeEventBus->utilize(new ToGingerMessageTranslator());
+
+        $parentNodeEventBus->utilize(new WorkflowProcessorInvokeStrategy());
+
+        $otherMachineEventBus = new EventBus();
+
+        $toParentNodeMessageDispatcher = new InMemoryMessageDispatcher(new CommandBus(), $parentNodeEventBus);
+
+        $otherMachineEventBus->utilize(new SingleTargetMessageRouter($toParentNodeMessageDispatcher));
+
+        $otherMachineEventBus->utilize(new ForwardToMessageDispatcherStrategy(new FromGingerMessageTranslator()));
+
+        $this->otherMachineWorkflowEngine->registerEventBus($otherMachineEventBus, [Definition::DEFAULT_NODE_NAME]);
     }
 
     protected function tearDown()
@@ -124,6 +240,14 @@ class TestCase extends \PHPUnit_Framework_TestCase
         $this->workflowProcessor = null;
         $this->lastPostCommitEvent = null;
         $this->eventNameLog = [];
+
+        if (! is_null($this->otherMachineEventStore)) {
+            $this->otherMachineWorkflowMessageHandler->reset();
+            $this->otherMachineEventStore = null;
+            $this->otherMachineWorkflowProcessor = null;
+            $this->otherMachineLastPostCommitEvent = null;
+            $this->otherMachineEventNameLog = [];
+        }
     }
 
     /**
@@ -154,16 +278,34 @@ class TestCase extends \PHPUnit_Framework_TestCase
     {
         if (is_null($this->workflowProcessor)) {
             $this->workflowProcessor = new WorkflowProcessor(
+                NodeName::defaultName(),
                 $this->getTestEventStore(),
                 $this->getTestProcessRepository(),
                 $this->workflowEngine,
                 $this->getTestProcessFactory()
             );
-
-            $this->commandRouter->route(StartSubProcess::MSG_NAME)->to($this->workflowProcessor);
         }
 
         return $this->workflowProcessor;
+    }
+
+    /**
+     * @return WorkflowProcessor
+     */
+    protected function getOtherMachineWorkflowProcessor()
+    {
+        if (is_null($this->otherMachineWorkflowProcessor)) {
+            $this->otherMachineWorkflowProcessor = new WorkflowProcessor(
+                NodeName::fromString('other_machine'),
+                $this->getOtherMachineEventStore(),
+                $this->getOtherMachineProcessRepository(),
+                $this->otherMachineWorkflowEngine,
+                $this->getTestProcessFactory()
+            );
+            $this->otherMachineCommandRouter->route(StartSubProcess::MSG_NAME)->to($this->otherMachineWorkflowProcessor);
+        }
+
+        return $this->otherMachineWorkflowProcessor;
     }
 
     /**
@@ -193,21 +335,65 @@ class TestCase extends \PHPUnit_Framework_TestCase
     }
 
     /**
+     * @return EventStore
+     */
+    protected function getOtherMachineEventStore()
+    {
+        if (is_null($this->otherMachineEventStore)) {
+            $inMemoryAdapter = new InMemoryAdapter();
+
+            $config = new Configuration();
+
+            $config->setAdapter($inMemoryAdapter);
+
+            $this->otherMachineEventStore = new EventStore($config);
+
+            $this->otherMachineEventStore->getPersistenceEvents()->attach("commit.post", function(PostCommitEvent $postCommitEvent) {
+                $this->otherMachineLastPostCommitEvent = $postCommitEvent;
+
+                foreach ($postCommitEvent->getRecordedEvents() as $event) {
+                    $this->otherMachineEventNameLog[] = $event->eventName()->toString();
+                }
+            });
+        }
+
+        return $this->otherMachineEventStore;
+    }
+
+    /**
      * @return ProcessRepository
      */
     protected function getTestProcessRepository()
     {
         if (is_null($this->processRepository)) {
             $this->processRepository = new ProcessRepository($this->getTestEventStore());
+
+            $this->getTestEventStore()->beginTransaction();
+
+            $this->getTestEventStore()->create(new Stream(new StreamName('Ginger\Processor\Process'), []));
+
+            $this->getTestEventStore()->commit();
         }
 
-        $this->getTestEventStore()->beginTransaction();
-
-        $this->getTestEventStore()->create(new Stream(new StreamName('Ginger\Processor\Process'), []));
-
-        $this->getTestEventStore()->commit();
-
         return $this->processRepository;
+    }
+
+    /**
+     * @return ProcessRepository
+     */
+    protected function getOtherMachineProcessRepository()
+    {
+        if (is_null($this->otherMachineProcessRepository)) {
+            $this->otherMachineProcessRepository = new ProcessRepository($this->getOtherMachineEventStore());
+
+            $this->getOtherMachineEventStore()->beginTransaction();
+
+            $this->getOtherMachineEventStore()->create(new Stream(new StreamName('Ginger\Processor\Process'), []));
+
+            $this->getOtherMachineEventStore()->commit();
+        }
+
+        return $this->otherMachineProcessRepository;
     }
 
     /**
@@ -231,6 +417,7 @@ class TestCase extends \PHPUnit_Framework_TestCase
             "tasks" => [
                 [
                     "task_type"          => Definition::TASK_RUN_SUB_PROCESS,
+                    "target_node_name"   => 'other_machine',
                     "process_definition" => [
                         "process_type" => Definition::PROCESS_LINEAR_MESSAGING,
                         "tasks" => [

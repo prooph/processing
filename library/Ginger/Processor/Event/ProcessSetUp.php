@@ -47,7 +47,8 @@ class ProcessSetUp extends AggregateChanged
             [
                 'config' => $config,
                 'parent_task_list_Position' => null,
-                'task_list' => $taskList->getArrayCopy()
+                'task_list' => $taskList->getArrayCopy(),
+                'sync_log_messages' => false
             ]
         );
 
@@ -61,16 +62,23 @@ class ProcessSetUp extends AggregateChanged
      * @param TaskListPosition $parentTaskListPosition
      * @param TaskList $taskList
      * @param array $config
+     * @param bool $syncLogMessages
+     * @throws \InvalidArgumentException
      * @return static
      */
-    public static function asSubProcess(ProcessId $processId, TaskListPosition $parentTaskListPosition, TaskList $taskList, array $config)
+    public static function asSubProcess(ProcessId $processId, TaskListPosition $parentTaskListPosition, TaskList $taskList, array $config, $syncLogMessages)
     {
+        if (! is_bool($syncLogMessages)) {
+            throw new \InvalidArgumentException("Argument syncLogMessages must be of type boolean");
+        }
+
         $instance = self::occur(
             $processId->toString(),
             [
                 'config' => $config,
                 'parent_task_list_Position' => $parentTaskListPosition->toString(),
-                'task_list' => $taskList->getArrayCopy()
+                'task_list' => $taskList->getArrayCopy(),
+                'sync_log_messages' => $syncLogMessages
             ]
         );
 
@@ -119,6 +127,14 @@ class ProcessSetUp extends AggregateChanged
     public function taskList()
     {
         return $this->payload['task_list'];
+    }
+
+    /**
+     * @return bool
+     */
+    public function syncLogMessages()
+    {
+        return (bool)$this->payload['sync_log_messages'];
     }
 }
  

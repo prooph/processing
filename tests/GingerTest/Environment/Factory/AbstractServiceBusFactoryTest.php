@@ -132,7 +132,7 @@ class AbstractServiceBusFactoryTest extends TestCase
         $env->services()->setService("bus_plugin_1", $plugin1);
         $env->services()->setService("bus_plugin_2", $plugin2);
 
-        $env->services()->get('ginger.command_bus.' . Definition::SERVICE_WORKFLOW_PROCESSOR);
+        $env->services()->get('ginger.command_bus.' . $env->getNodeName()->toString());
 
         $this->assertTrue($plugin1->isRegistered());
         $this->assertTrue($plugin2->isRegistered());

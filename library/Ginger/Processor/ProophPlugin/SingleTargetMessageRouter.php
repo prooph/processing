@@ -85,11 +85,7 @@ class SingleTargetMessageRouter extends AbstractListenerAggregate
      */
     public function onRouteCommand(CommandDispatch $dispatch)
     {
-        $message = $dispatch->getCommand();
-
-        if ($message instanceof WorkflowMessage || $message instanceof StartSubProcess) {
-            $dispatch->setCommandHandler($this->targetHandler);
-        }
+        $dispatch->setCommandHandler($this->targetHandler);
     }
 
     /**
@@ -97,11 +93,7 @@ class SingleTargetMessageRouter extends AbstractListenerAggregate
      */
     public function onRouteEvent(EventDispatch $dispatch)
     {
-        $message = $dispatch->getEvent();
-
-        if ($message instanceof WorkflowMessage || $message instanceof LogMessage) {
-            $dispatch->setEventListeners([$this->targetHandler]);
-        }
+        $dispatch->setEventListeners([$this->targetHandler]);
     }
 }
  

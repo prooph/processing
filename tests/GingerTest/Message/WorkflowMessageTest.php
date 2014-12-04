@@ -13,6 +13,7 @@ namespace GingerTest\Message;
 
 use Ginger\Message\MessageNameUtils;
 use Ginger\Message\WorkflowMessage;
+use Ginger\Processor\NodeName;
 use Ginger\Processor\ProcessId;
 use Ginger\Processor\Task\TaskListId;
 use Ginger\Processor\Task\TaskListPosition;
@@ -82,7 +83,7 @@ class WorkflowMessageTest extends TestCase
     {
         $wfMessage = WorkflowMessage::collectDataOf(UserDictionary::prototype());
 
-        $wfMessage->connectToProcessTask(TaskListPosition::at(TaskListId::linkWith(ProcessId::generate()), 1));
+        $wfMessage->connectToProcessTask(TaskListPosition::at(TaskListId::linkWith(NodeName::defaultName(), ProcessId::generate()), 1));
 
         $userData = array(
             'id' => 1,
@@ -153,7 +154,7 @@ class WorkflowMessageTest extends TestCase
 
         $wfMessage = WorkflowMessage::newDataCollected($user);
 
-        $taskListPosition = TaskListPosition::at(TaskListId::linkWith(ProcessId::generate()), 1);
+        $taskListPosition = TaskListPosition::at(TaskListId::linkWith(NodeName::defaultName(), ProcessId::generate()), 1);
 
         $wfCommand = $wfMessage->prepareDataProcessing($taskListPosition);
 
@@ -192,7 +193,7 @@ class WorkflowMessageTest extends TestCase
 
         $wfMessage = WorkflowMessage::newDataCollected($user);
 
-        $taskListPosition = TaskListPosition::at(TaskListId::linkWith(ProcessId::generate()), 1);
+        $taskListPosition = TaskListPosition::at(TaskListId::linkWith(NodeName::defaultName(), ProcessId::generate()), 1);
 
         $wfCommand = $wfMessage->prepareDataProcessing($taskListPosition);
 

@@ -12,7 +12,10 @@
 namespace Ginger\Message\ProophPlugin;
 
 use Ginger\Message\WorkflowMessage;
+use Ginger\Processor\Command\StartSubProcess;
+use Ginger\Processor\Event\SubProcessFinished;
 use Prooph\ServiceBus\Message\MessageInterface;
+use Prooph\ServiceBus\Message\ToMessageTranslator;
 use Prooph\ServiceBus\Message\ToMessageTranslatorInterface;
 
 /**
@@ -24,12 +27,19 @@ use Prooph\ServiceBus\Message\ToMessageTranslatorInterface;
 class FromGingerMessageTranslator implements ToMessageTranslatorInterface
 {
     /**
+     * @var ToMessageTranslator
+     */
+    private $psbToMessageTranslator;
+
+    /**
      * @param $aCommandOrEvent
      * @return bool
      */
     public function canTranslateToMessage($aCommandOrEvent)
     {
-        return $aCommandOrEvent instanceof ServiceBusTranslatableMessage;
+        return $aCommandOrEvent instanceof ServiceBusTranslatableMessage
+            || $aCommandOrEvent instanceof StartSubProcess
+            || $aCommandOrEvent instanceof SubProcessFinished;
     }
 
     /**
@@ -43,6 +53,23 @@ class FromGingerMessageTranslator implements ToMessageTranslatorInterface
         {
             return $aCommandOrEvent->toServiceBusMessage();
         }
+
+        if ($aCommandOrEvent instanceof StartSubProcess || $aCommandOrEvent instanceof SubProcessFinished) {
+            return $this->getPSBToMessageTranslator()->translateToMessage($aCommandOrEvent);
+        }
     }
+
+    /**
+     * @return ToMessageTranslator
+     */
+    private function getPSBToMessageTranslator()
+    {
+        if (is_null($this->psbToMessageTranslator)) {
+            $this->psbToMessageTranslator = new ToMessageTranslator();
+        }
+
+        return $this->psbToMessageTranslator;
+    }
+
 }
  

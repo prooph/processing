@@ -15,6 +15,7 @@ use Ginger\Message\WorkflowMessage;
 use Ginger\Processor\Command\StartSubProcess;
 use Ginger\Processor\Definition;
 use Ginger\Processor\LinearMessagingProcess;
+use Ginger\Processor\NodeName;
 use Ginger\Processor\ProcessId;
 use Ginger\Processor\Task\TaskListId;
 use Ginger\Processor\Task\TaskListPosition;
@@ -57,11 +58,13 @@ class StartSubProcessTest extends TestCase
             ]
         ]));
 
-        $parentTaskListPosition = TaskListPosition::at(TaskListId::linkWith(ProcessId::generate()), 1);
+        $parentTaskListPosition = TaskListPosition::at(TaskListId::linkWith(NodeName::defaultName(), ProcessId::generate()), 1);
 
-        $command = StartSubProcess::at($parentTaskListPosition, $subProcessDefinition, $previousMessage);
+        $command = StartSubProcess::at($parentTaskListPosition, $subProcessDefinition, true, $previousMessage);
 
         $this->assertTrue($parentTaskListPosition->equals($command->parentTaskListPosition()));
+
+        $this->assertTrue($command->syncLogMessages());
 
         $this->assertEquals($subProcessDefinition, $command->subProcessDefinition());
 
@@ -73,7 +76,7 @@ class StartSubProcessTest extends TestCase
      */
     public function it_does_not_require_a_previous_message()
     {
-        $parentProcess = LinearMessagingProcess::setUp([]);
+        $parentProcess = LinearMessagingProcess::setUp(NodeName::defaultName(), []);
 
         $subProcessDefinition = [
             "process_type" => Definition::PROCESS_LINEAR_MESSAGING,
@@ -87,13 +90,15 @@ class StartSubProcessTest extends TestCase
             "config" => [Definition::PROCESS_CONFIG_STOP_ON_ERROR => true],
         ];
 
-        $parentTaskListPosition = TaskListPosition::at(TaskListId::linkWith(ProcessId::generate()), 1);
+        $parentTaskListPosition = TaskListPosition::at(TaskListId::linkWith(NodeName::defaultName(), ProcessId::generate()), 1);
 
-        $command = StartSubProcess::at($parentTaskListPosition, $subProcessDefinition);
+        $command = StartSubProcess::at($parentTaskListPosition, $subProcessDefinition, false);
 
         $this->assertTrue($parentTaskListPosition->equals($command->parentTaskListPosition()));
 
         $this->assertEquals($subProcessDefinition, $command->subProcessDefinition());
+
+        $this->assertFalse($command->syncLogMessages());
     }
 }
  

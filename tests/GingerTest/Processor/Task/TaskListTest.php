@@ -11,6 +11,7 @@
 
 namespace GingerTest\Processor\Task;
 
+use Ginger\Processor\NodeName;
 use Ginger\Processor\ProcessId;
 use Ginger\Processor\Task\CollectData;
 use Ginger\Processor\Task\TaskList;
@@ -172,7 +173,7 @@ class TaskListTest extends TestCase
 
         $processId = ProcessId::generate();
 
-        $taskListId = TaskListId::linkWith($processId);
+        $taskListId = TaskListId::linkWith(NodeName::defaultName(), $processId);
 
         return TaskList::scheduleTasks($taskListId, [$task1, $task2, $task3]);
     }
