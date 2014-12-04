@@ -14,7 +14,7 @@ namespace Ginger\Processor\ProophPlugin;
 use Ginger\Message\LogMessage;
 use Ginger\Message\WorkflowMessage;
 use Ginger\Message\WorkflowMessageHandler;
-use Ginger\Processor\Command\StartChildProcess;
+use Ginger\Processor\Command\StartSubProcess;
 use Ginger\Processor\WorkflowProcessor;
 use Prooph\ServiceBus\Message\MessageDispatcherInterface;
 use Prooph\ServiceBus\Process\CommandDispatch;
@@ -87,7 +87,7 @@ class SingleTargetMessageRouter extends AbstractListenerAggregate
     {
         $message = $dispatch->getCommand();
 
-        if ($message instanceof WorkflowMessage || $message instanceof StartChildProcess) {
+        if ($message instanceof WorkflowMessage || $message instanceof StartSubProcess) {
             $dispatch->setCommandHandler($this->targetHandler);
         }
     }

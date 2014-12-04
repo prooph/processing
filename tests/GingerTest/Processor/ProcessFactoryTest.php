@@ -12,7 +12,7 @@
 namespace GingerTest\Processor;
 
 use Ginger\Message\MessageNameUtils;
-use Ginger\Processor\Command\StartChildProcess;
+use Ginger\Processor\Command\StartSubProcess;
 use Ginger\Processor\Definition;
 use Ginger\Processor\ProcessFactory;
 use Ginger\Processor\ProcessId;
@@ -52,7 +52,7 @@ class ProcessFactoryTest extends TestCase
 
         $this->assertInstanceOf('Ginger\Processor\LinearMessagingProcess', $process);
 
-        $this->assertFalse($process->isChildProcess());
+        $this->assertFalse($process->isSubProcess());
 
         $process->perform($this->workflowEngine);
 
@@ -68,7 +68,7 @@ class ProcessFactoryTest extends TestCase
     /**
      * @test
      */
-    public function it_creates_linear_messaging_process_as_child_process_if_parent_process_id_is_given()
+    public function it_creates_linear_messaging_process_as_sub_process_if_parent_process_id_is_given()
     {
         $processDefinition = [
             "process_type" => Definition::PROCESS_LINEAR_MESSAGING,
@@ -90,7 +90,7 @@ class ProcessFactoryTest extends TestCase
 
         $this->assertInstanceOf('Ginger\Processor\LinearMessagingProcess', $process);
 
-        $this->assertTrue($process->isChildProcess());
+        $this->assertTrue($process->isSubProcess());
 
         $this->assertTrue($parentTaskListPosition->equals($process->parentTaskListPosition()));
     }
@@ -139,9 +139,9 @@ class ProcessFactoryTest extends TestCase
     /**
      * @test
      */
-    public function it_creates_process_with_run_child_process_task_from_definition()
+    public function it_creates_process_with_run_sub_process_task_from_definition()
     {
-        $childProcessDefinition = [
+        $subProcessDefinition = [
             "process_type" => Definition::PROCESS_LINEAR_MESSAGING,
             "tasks" => [
                 [
@@ -153,34 +153,34 @@ class ProcessFactoryTest extends TestCase
             "config" => [Definition::PROCESS_CONFIG_STOP_ON_ERROR => true],
         ];
 
-        $runChildProcessTaskDefinition = [
-            "task_type" => Definition::TASK_RUN_CHILD_PROCESS,
-            "process_definition" => $childProcessDefinition
+        $runSubProcessTaskDefinition = [
+            "task_type" => Definition::TASK_RUN_SUB_PROCESS,
+            "process_definition" => $subProcessDefinition
         ];
 
         $parentProcessDefinition = [
             "process_type" => Definition::PROCESS_LINEAR_MESSAGING,
-            "tasks" => [$runChildProcessTaskDefinition]
+            "tasks" => [$runSubProcessTaskDefinition]
         ];
 
         $processFactory = new ProcessFactory();
 
         $parentProcess = $processFactory->createProcessFromDefinition($parentProcessDefinition);
 
-        /** @var $startChildProcess StartChildProcess */
-        $startChildProcess = null;
+        /** @var $startSubProcess StartSubProcess */
+        $startSubProcess = null;
 
-        $this->commandRouter->route(StartChildProcess::MSG_NAME)->to(function(StartChildProcess $command) use (&$startChildProcess) {
-            $startChildProcess = $command;
+        $this->commandRouter->route(StartSubProcess::MSG_NAME)->to(function(StartSubProcess $command) use (&$startSubProcess) {
+            $startSubProcess = $command;
         });
 
         $this->workflowEngine->getCommandBusFor(Definition::SERVICE_WORKFLOW_PROCESSOR)->utilize(new CallbackStrategy());
 
         $parentProcess->perform($this->workflowEngine);
 
-        $this->assertNotNull($startChildProcess);
+        $this->assertNotNull($startSubProcess);
 
-        $this->assertEquals($childProcessDefinition, $startChildProcess->childProcessDefinition());
+        $this->assertEquals($subProcessDefinition, $startSubProcess->subProcessDefinition());
     }
 }
  

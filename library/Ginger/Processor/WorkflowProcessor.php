@@ -13,7 +13,7 @@ namespace Ginger\Processor;
 
 use Ginger\Message\LogMessage;
 use Ginger\Message\WorkflowMessage;
-use Ginger\Processor\Command\StartChildProcess;
+use Ginger\Processor\Command\StartSubProcess;
 use Ginger\Processor\Task\TaskListPosition;
 use Prooph\EventStore\EventStore;
 
@@ -94,8 +94,8 @@ class WorkflowProcessor
             }
         } elseif ($message instanceof LogMessage) {
             $this->continueProcessAt($message->getProcessTaskListPosition(), $message);
-        } elseif ($message instanceof StartChildProcess) {
-            $this->startChildProcess($message);
+        } elseif ($message instanceof StartSubProcess) {
+            $this->startSubProcess($message);
         } else {
             throw new \RuntimeException(sprintf(
                 "Unknown message type received: %s",
@@ -129,19 +129,19 @@ class WorkflowProcessor
     }
 
     /**
-     * @param StartChildProcess $command
+     * @param StartSubProcess $command
      * @throws \Exception
      */
-    private function startChildProcess(StartChildProcess $command)
+    private function startSubProcess(StartSubProcess $command)
     {
-        $childProcess = $this->processFactory->createProcessFromDefinition($command->childProcessDefinition(), $command->parentTaskListPosition());
+        $subProcess = $this->processFactory->createProcessFromDefinition($command->subProcessDefinition(), $command->parentTaskListPosition());
 
         $this->beginTransaction();
 
         try {
-            $childProcess->perform($this->workflowEngine, $command->previousWorkflowMessage());
+            $subProcess->perform($this->workflowEngine, $command->previousWorkflowMessage());
 
-            $this->processRepository->add($childProcess);
+            $this->processRepository->add($subProcess);
 
             $this->commitTransaction();
         } catch (\Exception $ex) {
@@ -182,13 +182,13 @@ class WorkflowProcessor
             throw $ex;
         }
 
-        if ($process->isChildProcess() && $process->isFinished()) {
+        if ($process->isSubProcess() && $process->isFinished()) {
             if ($process->isSuccessfulDone()) {
                 $this->continueParentProcessOf($process, $lastAnswer);
             } else {
                 if (! $lastAnswer instanceof LogMessage) {
                     $lastAnswer = LogMessage::logErrorMsg(
-                        "Child process failed but last message was not a LogMessage",
+                        "Sub process failed but last message was not a LogMessage",
                         $process->parentTaskListPosition()
                     );
                 }
@@ -197,27 +197,27 @@ class WorkflowProcessor
                     $lastAnswer = LogMessage::logErrorMsg($lastAnswer->getTechnicalMsg(), $lastAnswer->getProcessTaskListPosition());
                 }
 
-                $this->informParentProcessAboutFailedChildProcess($process, $lastAnswer);
+                $this->informParentProcessAboutFailedSubProcess($process, $lastAnswer);
             }
 
         }
     }
 
     /**
-     * @param Process $childProcess
-     * @param WorkflowMessage $lastAnswerReceivedForChild
+     * @param Process $subProcess
+     * @param WorkflowMessage $lastAnswerReceivedForSubProcess
      * @throws \RuntimeException
      * @throws \Exception
      */
-    private function continueParentProcessOf(Process $childProcess, WorkflowMessage $lastAnswerReceivedForChild)
+    private function continueParentProcessOf(Process $subProcess, WorkflowMessage $lastAnswerReceivedForSubProcess)
     {
-        $parentProcess = $this->processRepository->get($childProcess->parentTaskListPosition()->taskListId()->processId());
+        $parentProcess = $this->processRepository->get($subProcess->parentTaskListPosition()->taskListId()->processId());
 
         if (is_null($parentProcess)) {
             throw new \RuntimeException(sprintf(
-                "Child process %s contains unknown parent processId. A process with id %s cannot be found!",
-                $childProcess->processId()->toString(),
-                $childProcess->parentTaskListPosition()->taskListId()->processId()->toString()
+                "Sub process %s contains unknown parent processId. A process with id %s cannot be found!",
+                $subProcess->processId()->toString(),
+                $subProcess->parentTaskListPosition()->taskListId()->processId()->toString()
             ));
         }
 
@@ -225,8 +225,8 @@ class WorkflowProcessor
 
         try {
 
-            $lastAnswerReceivedForChild = $lastAnswerReceivedForChild->reconnectToProcessTask($childProcess->parentTaskListPosition());
-            $parentProcess->receiveMessage($lastAnswerReceivedForChild, $this->workflowEngine);
+            $lastAnswerReceivedForSubProcess = $lastAnswerReceivedForSubProcess->reconnectToProcessTask($subProcess->parentTaskListPosition());
+            $parentProcess->receiveMessage($lastAnswerReceivedForSubProcess, $this->workflowEngine);
 
             $this->commitTransaction();
         } catch (\Exception $ex) {
@@ -237,20 +237,20 @@ class WorkflowProcessor
     }
 
     /**
-     * @param Process $childProcess
-     * @param LogMessage $lastAnswerReceivedForChild
+     * @param Process $subProcess
+     * @param LogMessage $lastAnswerReceivedForSubProcess
      * @throws \RuntimeException
      * @throws \Exception
      */
-    private function informParentProcessAboutFailedChildProcess(Process $childProcess, LogMessage $lastAnswerReceivedForChild)
+    private function informParentProcessAboutFailedSubProcess(Process $subProcess, LogMessage $lastAnswerReceivedForSubProcess)
     {
-        $parentProcess = $this->processRepository->get($childProcess->parentTaskListPosition()->taskListId()->processId());
+        $parentProcess = $this->processRepository->get($subProcess->parentTaskListPosition()->taskListId()->processId());
 
         if (is_null($parentProcess)) {
             throw new \RuntimeException(sprintf(
-                "Child process %s contains unknown parent processId. A process with id %s cannot be found!",
-                $childProcess->processId()->toString(),
-                $childProcess->parentTaskListPosition()->taskListId()->processId()->toString()
+                "Sub process %s contains unknown parent processId. A process with id %s cannot be found!",
+                $subProcess->processId()->toString(),
+                $subProcess->parentTaskListPosition()->taskListId()->processId()->toString()
             ));
         }
 
@@ -258,8 +258,8 @@ class WorkflowProcessor
 
         try {
 
-            $lastAnswerReceivedForChild = $lastAnswerReceivedForChild->reconnectToProcessTask($childProcess->parentTaskListPosition());
-            $parentProcess->receiveMessage($lastAnswerReceivedForChild, $this->workflowEngine);
+            $lastAnswerReceivedForSubProcess = $lastAnswerReceivedForSubProcess->reconnectToProcessTask($subProcess->parentTaskListPosition());
+            $parentProcess->receiveMessage($lastAnswerReceivedForSubProcess, $this->workflowEngine);
 
             $this->commitTransaction();
         } catch (\Exception $ex) {

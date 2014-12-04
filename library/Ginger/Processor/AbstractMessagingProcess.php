@@ -16,7 +16,7 @@ use Ginger\Message\WorkflowMessage;
 use Ginger\Processor\Task\CollectData;
 use Ginger\Processor\Task\NotifyListeners;
 use Ginger\Processor\Task\ProcessData;
-use Ginger\Processor\Task\RunChildProcess;
+use Ginger\Processor\Task\RunSubProcess;
 use Ginger\Processor\Task\Task;
 use Ginger\Processor\Task\TaskListPosition;
 use Prooph\ServiceBus\Exception\CommandDispatchException;
@@ -40,8 +40,8 @@ abstract class AbstractMessagingProcess extends Process
             $this->performProcessData($task, $taskListPosition, $previousMessage, $workflowEngine);
         }
 
-        if ($task instanceof RunChildProcess) {
-            $this->performRunChildProcess($task, $taskListPosition, $workflowEngine, $previousMessage);
+        if ($task instanceof RunSubProcess) {
+            $this->performRunSubProcess($task, $taskListPosition, $workflowEngine, $previousMessage);
         }
 
         if ($task instanceof NotifyListeners) {

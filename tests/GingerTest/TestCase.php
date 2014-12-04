@@ -14,7 +14,7 @@ namespace GingerTest;
 use Ginger\Message\MessageNameUtils;
 use Ginger\Message\ProophPlugin\HandleWorkflowMessageInvokeStrategy;
 use Ginger\Message\WorkflowMessage;
-use Ginger\Processor\Command\StartChildProcess;
+use Ginger\Processor\Command\StartSubProcess;
 use Ginger\Processor\Definition;
 use Ginger\Processor\ProcessFactory;
 use Ginger\Processor\ProcessRepository;
@@ -160,7 +160,7 @@ class TestCase extends \PHPUnit_Framework_TestCase
                 $this->getTestProcessFactory()
             );
 
-            $this->commandRouter->route(StartChildProcess::MSG_NAME)->to($this->workflowProcessor);
+            $this->commandRouter->route(StartSubProcess::MSG_NAME)->to($this->workflowProcessor);
         }
 
         return $this->workflowProcessor;
@@ -230,7 +230,7 @@ class TestCase extends \PHPUnit_Framework_TestCase
             "process_type" => Definition::PROCESS_LINEAR_MESSAGING,
             "tasks" => [
                 [
-                    "task_type"          => Definition::TASK_RUN_CHILD_PROCESS,
+                    "task_type"          => Definition::TASK_RUN_SUB_PROCESS,
                     "process_definition" => [
                         "process_type" => Definition::PROCESS_LINEAR_MESSAGING,
                         "tasks" => [

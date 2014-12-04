@@ -20,7 +20,7 @@ use Ginger\Processor\Task\Event\LogMessageReceived;
 use Ginger\Processor\Task\Event\TaskEntryMarkedAsDone;
 use Ginger\Processor\Task\Event\TaskEntryMarkedAsFailed;
 use Ginger\Processor\Task\Event\TaskEntryMarkedAsRunning;
-use Ginger\Processor\Task\RunChildProcess;
+use Ginger\Processor\Task\RunSubProcess;
 use Ginger\Processor\Task\Task;
 use Ginger\Processor\Task\TaskList;
 use Ginger\Processor\Task\TaskListId;
@@ -109,7 +109,7 @@ abstract class Process extends AggregateRoot
      *
      * @return static
      */
-    public static function setUpAsChildProcess(TaskListPosition $parentTaskListPosition, array $tasks, array $config = array())
+    public static function setUpAsSubProcess(TaskListPosition $parentTaskListPosition, array $tasks, array $config = array())
     {
         /** @var $instance Process */
         $instance = new static();
@@ -120,7 +120,7 @@ abstract class Process extends AggregateRoot
 
         $taskList = TaskList::scheduleTasks(TaskListId::linkWith($processId), $tasks);
 
-        $instance->recordThat(ProcessSetUp::asChildProcess($processId, $parentTaskListPosition, $taskList, $config));
+        $instance->recordThat(ProcessSetUp::asSubProcess($processId, $parentTaskListPosition, $taskList, $config));
 
         return $instance;
     }
@@ -187,7 +187,7 @@ abstract class Process extends AggregateRoot
     /**
      * @return bool
      */
-    public function isChildProcess()
+    public function isSubProcess()
     {
         return ! is_null($this->parentTaskListPosition);
     }
@@ -209,21 +209,21 @@ abstract class Process extends AggregateRoot
     }
 
     /**
-     * @param RunChildProcess $task
+     * @param RunSubProcess $task
      * @param TaskListPosition $taskListPosition
      * @param WorkflowEngine $workflowEngine
      * @param WorkflowMessage $previousMessage
      */
-    protected function performRunChildProcess(
-        RunChildProcess $task,
+    protected function performRunSubProcess(
+        RunSubProcess $task,
         TaskListPosition $taskListPosition,
         WorkflowEngine $workflowEngine,
         WorkflowMessage $previousMessage = null)
     {
         try {
-            $startChildProcessCommand = $task->generateStartCommandForChildProcess($taskListPosition, $previousMessage);
+            $startSubProcessCommand = $task->generateStartCommandForSubProcess($taskListPosition, $previousMessage);
 
-            $workflowEngine->getCommandBusFor(Definition::SERVICE_WORKFLOW_PROCESSOR)->dispatch($startChildProcessCommand);
+            $workflowEngine->getCommandBusFor(Definition::SERVICE_WORKFLOW_PROCESSOR)->dispatch($startSubProcessCommand);
 
         } catch (CommandDispatchException $ex) {
             $this->receiveMessage(LogMessage::logException($ex->getPrevious(), $taskListPosition), $workflowEngine);

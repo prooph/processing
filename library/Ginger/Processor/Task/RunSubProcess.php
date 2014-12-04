@@ -12,20 +12,20 @@
 namespace Ginger\Processor\Task;
 use Assert\Assertion;
 use Ginger\Message\WorkflowMessage;
-use Ginger\Processor\Command\StartChildProcess;
+use Ginger\Processor\Command\StartSubProcess;
 use Ginger\Processor\Process;
 
 /**
- * Class RunChildProcess
+ * Class RunSubProcess
  *
  * This task provides information that a sub process should be used to perform the next step.
- * The parent process should use RunChildProcess::getStartCommandForChildProcess and send this command to
- * the WorkflowProcessor. The WorkflowProcessor creates the child process from given information and performs it.
+ * The parent process should use RunSubProcess::getStartCommandForSubProcess and send this command to
+ * the WorkflowProcessor. The WorkflowProcessor creates the sub process from given information and performs it.
  *
  * @package Ginger\Processor\Task
  * @author Alexander Miertsch <kontakt@codeliner.ws>
  */
-class RunChildProcess implements Task
+class RunSubProcess implements Task
 {
     /**
      * @var array
@@ -34,7 +34,7 @@ class RunChildProcess implements Task
 
     /**
      * @param array $processDefinition
-     * @return RunChildProcess
+     * @return RunSubProcess
      */
     public static function setUp(array $processDefinition)
     {
@@ -75,11 +75,11 @@ class RunChildProcess implements Task
     /**
      * @param TaskListPosition $parentTaskListPosition
      * @param WorkflowMessage|null $previousMessage
-     * @return StartChildProcess
+     * @return StartSubProcess
      */
-    public function generateStartCommandForChildProcess(TaskListPosition $parentTaskListPosition, WorkflowMessage $previousMessage = null)
+    public function generateStartCommandForSubProcess(TaskListPosition $parentTaskListPosition, WorkflowMessage $previousMessage = null)
     {
-        return StartChildProcess::at($parentTaskListPosition, $this->processDefinition, $previousMessage);
+        return StartSubProcess::at($parentTaskListPosition, $this->processDefinition, $previousMessage);
     }
 
     /**
@@ -88,7 +88,7 @@ class RunChildProcess implements Task
      */
     public function equals(Task $task)
     {
-        if (! $task instanceof RunChildProcess) return false;
+        if (! $task instanceof RunSubProcess) return false;
 
         return $this->getArrayCopy() === $task->getArrayCopy();
     }

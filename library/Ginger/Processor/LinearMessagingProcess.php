@@ -16,7 +16,7 @@ use Ginger\Message\WorkflowMessage;
 use Ginger\Message\LogMessage;
 use Ginger\Processor\Task\CollectData;
 use Ginger\Processor\Task\Event\TaskEntryMarkedAsRunning;
-use Ginger\Processor\Task\RunChildProcess;
+use Ginger\Processor\Task\RunSubProcess;
 use Ginger\Processor\Task\Task;
 
 /**
@@ -82,7 +82,7 @@ class LinearMessagingProcess extends AbstractMessagingProcess
 
             $task = $taskListEntry->task();
 
-            if (! $task instanceof CollectData && ! $task instanceof RunChildProcess) {
+            if (! $task instanceof CollectData && ! $task instanceof RunSubProcess) {
                 $this->receiveMessage(LogMessage::logNoMessageReceivedFor($task, $taskListEntry->taskListPosition()), $workflowEngine);
 
                 if (! $this->config->booleanValue('stop_on_error')) {

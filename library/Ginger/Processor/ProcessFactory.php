@@ -15,7 +15,7 @@ use Assert\Assertion;
 use Ginger\Message\WorkflowMessage;
 use Ginger\Processor\Task\CollectData;
 use Ginger\Processor\Task\ProcessData;
-use Ginger\Processor\Task\RunChildProcess;
+use Ginger\Processor\Task\RunSubProcess;
 use Ginger\Processor\Task\Task;
 use Ginger\Processor\Task\TaskListPosition;
 
@@ -83,7 +83,7 @@ class ProcessFactory
             case Definition::PROCESS_LINEAR_MESSAGING:
                 return (is_null($parentTaskListPosition))?
                     LinearMessagingProcess::setUp($tasks, $processConfig)
-                    : LinearMessagingProcess::setUpAsChildProcess($parentTaskListPosition, $tasks, $processConfig);
+                    : LinearMessagingProcess::setUpAsSubProcess($parentTaskListPosition, $tasks, $processConfig);
             default:
                 throw new \InvalidArgumentException(sprintf(
                     "Unsupported process_type given: %s",
@@ -106,8 +106,8 @@ class ProcessFactory
                 return $this->createCollectDataTaskFromDefinition($taskDefinition);
             case Definition::TASK_PROCESS_DATA:
                 return $this->createProcessDataTaskFromDefinition($taskDefinition);
-            case Definition::TASK_RUN_CHILD_PROCESS:
-                return $this->createRunChildProcessTaskFromDefinition($taskDefinition);
+            case Definition::TASK_RUN_SUB_PROCESS:
+                return $this->createRunSubProcessTaskFromDefinition($taskDefinition);
             default:
                 throw new \InvalidArgumentException(sprintf(
                     "Unsupported task_type given: %s",
@@ -154,14 +154,14 @@ class ProcessFactory
 
     /**
      * @param array $taskDefinition
-     * @return RunChildProcess
+     * @return RunSubProcess
      */
-    private function createRunChildProcessTaskFromDefinition(array $taskDefinition)
+    private function createRunSubProcessTaskFromDefinition(array $taskDefinition)
     {
         Assertion::keyExists($taskDefinition, "process_definition");
         Assertion::isArray($taskDefinition["process_definition"]);
 
-        return RunChildProcess::setUp($taskDefinition["process_definition"]);
+        return RunSubProcess::setUp($taskDefinition["process_definition"]);
     }
 }
  
