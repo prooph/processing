@@ -18,6 +18,8 @@ use Zend\ServiceManager\ServiceLocatorInterface;
 
 /**
  * Class WorkflowProcessorBusesProvider
+ * The workflow processor buses provider automatically injects the local workflow processor message buses
+ * when it detects a workflow message handler.
  *
  * @package GingerTest\Environment\Initializer
  * @author Alexander Miertsch <kontakt@codeliner.ws>
@@ -34,14 +36,14 @@ class WorkflowProcessorBusesProvider implements InitializerInterface
     public function initialize($instance, ServiceLocatorInterface $serviceLocator)
     {
         if ($instance instanceof WorkflowMessageHandler) {
+            $env = $serviceLocator->get(Definition::SERVICE_ENVIRONMENT);
+
             $instance->useCommandBus(
-                $serviceLocator->get(Definition::SERVICE_ENVIRONMENT)
-                    ->getWorkflowEngine()->getCommandBusFor(Definition::SERVICE_WORKFLOW_PROCESSOR)
+                $env->getWorkflowEngine()->getCommandBusFor($env->getNodeName())
             );
 
             $instance->useEventBus(
-                $serviceLocator->get(Definition::SERVICE_ENVIRONMENT)
-                    ->getWorkflowEngine()->getEventBusFor(Definition::SERVICE_WORKFLOW_PROCESSOR)
+                $env->getWorkflowEngine()->getEventBusFor($env->getNodeName())
             );
         }
     }

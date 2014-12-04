@@ -13,6 +13,7 @@ namespace GingerTest\Message;
 
 use Ginger\Message\LogMessage;
 use Ginger\Message\WorkflowMessage;
+use Ginger\Processor\NodeName;
 use Ginger\Processor\ProcessId;
 use Ginger\Processor\Task\CollectData;
 use Ginger\Processor\Task\TaskListId;
@@ -33,7 +34,7 @@ class LogMessageTest extends TestCase
      */
     public function it_can_log_a_warning_msg()
     {
-        $taskListPosition = TaskListPosition::at(TaskListId::linkWith(ProcessId::generate()), 1);
+        $taskListPosition = TaskListPosition::at(TaskListId::linkWith(NodeName::defaultName(), ProcessId::generate()), 1);
 
         $message = LogMessage::logWarningMsg("A simple warning msg", $taskListPosition);
 
@@ -47,7 +48,7 @@ class LogMessageTest extends TestCase
      */
     public function it_can_log_a_debug_msg()
     {
-        $taskListPosition = TaskListPosition::at(TaskListId::linkWith(ProcessId::generate()), 1);
+        $taskListPosition = TaskListPosition::at(TaskListId::linkWith(NodeName::defaultName(), ProcessId::generate()), 1);
 
         $message = LogMessage::logDebugMsg("A simple debug msg", $taskListPosition);
 
@@ -61,7 +62,7 @@ class LogMessageTest extends TestCase
      */
     public function it_can_log_a_data_processing_started_on_msg()
     {
-        $taskListPosition = TaskListPosition::at(TaskListId::linkWith(ProcessId::generate()), 1);
+        $taskListPosition = TaskListPosition::at(TaskListId::linkWith(NodeName::defaultName(), ProcessId::generate()), 1);
 
         $message = LogMessage::logInfoDataProcessingStarted($taskListPosition);
 
@@ -75,7 +76,7 @@ class LogMessageTest extends TestCase
      */
     public function it_can_log_an_exception_and_set_msg_code_to_500_if_no_code_is_specified()
     {
-        $taskListPosition = TaskListPosition::at(TaskListId::linkWith(ProcessId::generate()), 1);
+        $taskListPosition = TaskListPosition::at(TaskListId::linkWith(NodeName::defaultName(), ProcessId::generate()), 1);
 
         $exception = new \RuntimeException("Internal error");
 
@@ -93,7 +94,7 @@ class LogMessageTest extends TestCase
      */
     public function it_logs_exception_and_uses_exception_code_for_msg_code_if_specified()
     {
-        $taskListPosition = TaskListPosition::at(TaskListId::linkWith(ProcessId::generate()), 1);
+        $taskListPosition = TaskListPosition::at(TaskListId::linkWith(NodeName::defaultName(), ProcessId::generate()), 1);
 
         $exception = new \DomainException("Data cannot be found", 404);
 
@@ -111,7 +112,7 @@ class LogMessageTest extends TestCase
      */
     public function it_only_accepts_error_code_greater_than_399_otherwise_it_uses_500_as_code()
     {
-        $taskListPosition = TaskListPosition::at(TaskListId::linkWith(ProcessId::generate()), 1);
+        $taskListPosition = TaskListPosition::at(TaskListId::linkWith(NodeName::defaultName(), ProcessId::generate()), 1);
 
         $exception = new \DomainException("Data cannot be found", 399);
 
@@ -129,7 +130,7 @@ class LogMessageTest extends TestCase
      */
     public function it_logs_no_message_received_for_task_as_error()
     {
-        $taskListPosition = TaskListPosition::at(TaskListId::linkWith(ProcessId::generate()), 1);
+        $taskListPosition = TaskListPosition::at(TaskListId::linkWith(NodeName::defaultName(), ProcessId::generate()), 1);
 
         $task = CollectData::from('crm', UserDictionary::prototype());
 
@@ -154,7 +155,7 @@ class LogMessageTest extends TestCase
      */
     public function it_logs_wrong_message_received_for_task_as_error()
     {
-        $taskListPosition = TaskListPosition::at(TaskListId::linkWith(ProcessId::generate()), 1);
+        $taskListPosition = TaskListPosition::at(TaskListId::linkWith(NodeName::defaultName(), ProcessId::generate()), 1);
 
         $task = CollectData::from('crm', UserDictionary::prototype());
 

@@ -15,6 +15,7 @@ use Ginger\Message\LogMessage;
 use Ginger\Message\ProophPlugin\FromGingerMessageTranslator;
 use Ginger\Message\ProophPlugin\ToGingerMessageTranslator;
 use Ginger\Message\WorkflowMessage;
+use Ginger\Processor\NodeName;
 use Ginger\Processor\ProcessId;
 use Ginger\Processor\Task\TaskListId;
 use Ginger\Processor\Task\TaskListPosition;
@@ -76,7 +77,7 @@ class ServiceBusGingerIntegrationTest extends TestCase
     {
         $wfMessage = $this->getUserDataCollectedTestMessage();
 
-        $taskListPosition = TaskListPosition::at(TaskListId::linkWith(ProcessId::generate()), 1);
+        $taskListPosition = TaskListPosition::at(TaskListId::linkWith(NodeName::defaultName(), ProcessId::generate()), 1);
 
         $wfMessage->connectToProcessTask($taskListPosition);
 
@@ -105,7 +106,7 @@ class ServiceBusGingerIntegrationTest extends TestCase
      */
     public function it_sends_log_message_via_message_dispatcher_to_a_handler()
     {
-        $taskListPosition = TaskListPosition::at(TaskListId::linkWith(ProcessId::generate()), 1);
+        $taskListPosition = TaskListPosition::at(TaskListId::linkWith(NodeName::defaultName(), ProcessId::generate()), 1);
 
         $logMessage = LogMessage::logWarningMsg("Just a fake warning", $taskListPosition);
 

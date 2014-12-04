@@ -13,6 +13,7 @@ namespace Ginger\Environment;
 
 use Codeliner\ArrayReader\ArrayReader;
 use Ginger\Processor\Definition;
+use Ginger\Processor\NodeName;
 use Ginger\Processor\ProcessFactory;
 use Ginger\Processor\ProcessRepository;
 use Ginger\Processor\WorkflowEngine;
@@ -66,6 +67,7 @@ class Environment
     private static $defaultEnvConfig = [
         //Ginger specific env config
         'ginger' => [
+            'node_name' => Definition::DEFAULT_NODE_NAME, //The node name identifies the system running a ginger processor and is used as target for the local workflow processor
             'plugins' => [
                 //Plugins can either be objects or aliases resolvable by the ServiceManager
             ],
@@ -78,21 +80,19 @@ class Environment
                     'type' => Definition::ENV_CONFIG_TYPE_COMMAND_BUS, //Defines the type of the bus either command_bus or event_bus
                     'targets' => [
                         //List of targets for which the bus is responsible for
-                        Definition::SERVICE_WORKFLOW_PROCESSOR
+                        //The Environment sets the defined node name as target for the local workflow processor buses in the set up routine
+                        //'target_1_alias', 'target_2_alias', ...
                     ],
-                    'message_handler' => Definition::SERVICE_WORKFLOW_PROCESSOR, //Set the alias of the responsible message handler for all messages dispatched with this bus
-                                                                                       //If the target is located on the same node this will be the same alias as for the target itself
-                                                                                       //If the target is located on a remote node this will be an alias for a message dispatcher
+                    //'message_handler' => 'alias_of_message_dispatcher_or_target', //Set the alias of the responsible message handler for all messages dispatched with this bus
+                                                                                    //If the target is located on the same node this will be the same alias as for the target and you can skip this config param
+                                                                                    //If the target is located on a remote node this will be an alias for a message dispatcher
                     'utils' => [
                         //List of additional bus plugins, can be aliases resolvable by the ServiceManager
                     ]
                 ],
                 'workflow_processor_event_bus' => [
                     'type' => Definition::ENV_CONFIG_TYPE_EVENT_BUS,
-                    'targets' => [
-                        Definition::SERVICE_WORKFLOW_PROCESSOR
-                    ],
-                    'message_handler' => Definition::SERVICE_WORKFLOW_PROCESSOR,
+                    'targets' => [],
                     'utils' => []
                 ]
             ]
@@ -143,12 +143,17 @@ class Environment
     {
         $env = null;
 
+        //If neither a config array nor a ServiceManager is given, we initialize the variable with an empty array
+        //Later in the set up the default config is merged with this empty array
         if (is_null($configurationOrServices)) {
             $configurationOrServices = [];
         }
 
+        //Initialize the Environment
         if ($configurationOrServices instanceof ServiceManager) {
 
+            //We assume that when the workflow processor service definition is missing
+            //then the other services related to the workflow environment are also missing
             if (! $configurationOrServices->has(Definition::SERVICE_WORKFLOW_PROCESSOR)) {
                 $servicesConfig = new Config(self::$defaultServicesConfig);
 
@@ -157,6 +162,8 @@ class Environment
 
             $env = new self($configurationOrServices);
 
+            //Check if the provided ServiceManager already has a configuration service available
+            //so we make sure that we won't override it later but just merge it with the default environment config
             if ($env->services()->has('configuration')) {
                 $configurationOrServices = $env->services()->get('configuration');
             } else {
@@ -164,6 +171,7 @@ class Environment
             }
         } elseif (is_array($configurationOrServices))  {
 
+            //No external ServiceManager given, so we set up a new one
             $servicesConfig = [];
 
             if (isset($configurationOrServices['services'])) {
@@ -176,10 +184,53 @@ class Environment
             $env = new self(new ServiceManager($servicesConfig));
         }
 
+        //This should never happen, but if for whatever reason a wrong $configurationOrServices was passed to the set up
+        //we stop the process here
         if (is_null($env)) throw new \InvalidArgumentException("Ginger set up requires either a config array or a ready to use Zend\\ServiceManager");
 
+        //We proceed with merging and preparing the environment configuration
         $envConfig = ArrayUtils::merge(self::$defaultEnvConfig, $configurationOrServices);
 
+        //The environment node name is used as target for the local workflow processor, the config needs to be adapted accordingly.
+        $envConfigReader = new ArrayReader($envConfig);
+
+        $nodeName = $envConfigReader->stringValue('ginger.node_name', Definition::DEFAULT_NODE_NAME);
+
+        $processorCommandBusTargets = $envConfigReader->arrayValue('ginger.buses.workflow_processor_command_bus.targets');
+
+        if (! in_array($nodeName, $processorCommandBusTargets)) {
+            $envConfig = ArrayUtils::merge(
+                $envConfig,
+                [
+                    'ginger' => [
+                        'buses' => [
+                            'workflow_processor_command_bus' => [
+                                'targets' => [$nodeName]
+                            ]
+                        ]
+                    ]
+                ]
+            );
+        }
+
+        $processorEventBusTargets = $envConfigReader->arrayValue('ginger.buses.workflow_processor_event_bus.targets');
+
+        if (! in_array($nodeName, $processorEventBusTargets)) {
+            $envConfig = ArrayUtils::merge(
+                $envConfig,
+                [
+                    'ginger' => [
+                        'buses' => [
+                            'workflow_processor_event_bus' => [
+                                'targets' => [$nodeName]
+                            ]
+                        ]
+                    ]
+                ]
+            );
+        }
+
+        //We prepare the ServiceManager used by the Environment so that some standard services are always available
         $orgAllowOverride = $env->services()->getAllowOverride();
 
         $env->services()->setAllowOverride(true);
@@ -190,12 +241,21 @@ class Environment
 
         $env->services()->setService(Definition::SERVICE_ENVIRONMENT, $env);
 
+        //The node name is used as message bus target to address the workflow processor of the current environment
+        //We alias the workflow processor service with the node name to ensure that the target can be resolved
+        $env->services()->setAlias($nodeName, Definition::SERVICE_WORKFLOW_PROCESSOR);
+
         $env->services()->setAllowOverride($orgAllowOverride);
 
+        //The environment component ships with an own workflow engine implementation that uses the ServiceManager
+        //to resolve the required message buses for the various targets
         $env->workflowEngine = new ServicesAwareWorkflowEngine($env->services());
 
+        //Add an initializer which injects the local processor message buses whenever a workflow message handler
+        //is requested from the ServiceManager
         $env->services()->addInitializer(new WorkflowProcessorBusesProvider());
 
+        //After the set up routine is finished the plugin mechanism can be triggered
         foreach ($env->getConfig()->arrayValue('plugins') as $plugin) {
             if (! $plugin instanceof Plugin && ! is_string($plugin)) {
                 throw new \RuntimeException(sprintf(
@@ -226,6 +286,14 @@ class Environment
     private function __construct(ServiceManager $services)
     {
         $this->services = $services;
+    }
+
+    /**
+     * @return NodeName
+     */
+    public function getNodeName()
+    {
+        return NodeName::fromString($this->getConfig()->stringValue('node_name'));
     }
 
     /**

@@ -12,6 +12,7 @@
 namespace GingerTest\Processor;
 
 use Ginger\Message\LogMessage;
+use Ginger\Processor\NodeName;
 use Ginger\Processor\ProcessId;
 use Ginger\Processor\ProophPlugin\SingleTargetMessageRouter;
 use Ginger\Processor\ProophPlugin\WorkflowProcessorInvokeStrategy;
@@ -142,7 +143,7 @@ class WorkflowProcessorTest extends TestCase
         $this->workflowMessageHandler->useEventBus($eventBus);
 
         $nextAnswer = $wfMessage->prepareDataProcessing(
-            TaskListPosition::at(TaskListId::linkWith(ProcessId::generate()), 1)
+            TaskListPosition::at(TaskListId::linkWith(NodeName::defaultName(), ProcessId::generate()), 1)
         )->answerWithDataProcessingCompleted();
 
         $ref = new \ReflectionClass($nextAnswer);
@@ -179,6 +180,8 @@ class WorkflowProcessorTest extends TestCase
      */
     public function it_continues_parent_process_when_sub_process_is_finished()
     {
+        $this->setUpOtherMachine();
+
         $wfMessage = $this->getUserDataCollectedTestMessage();
 
         /**
@@ -189,26 +192,36 @@ class WorkflowProcessorTest extends TestCase
 
         $this->getTestWorkflowProcessor()->receiveMessage($wfMessage);
 
-        $receivedMessage = $this->workflowMessageHandler->lastWorkflowMessage();
+        $receivedMessage = $this->otherMachineWorkflowMessageHandler->lastWorkflowMessage();
 
         $this->assertNotNull($receivedMessage);
 
+        $logMessage = LogMessage::logInfoDataProcessingStarted($receivedMessage->getProcessTaskListPosition());
+
+        $this->getOtherMachineWorkflowProcessor()->receiveMessage($logMessage);
+
         $answer = $receivedMessage->answerWithDataProcessingCompleted();
 
-        $this->getTestWorkflowProcessor()->receiveMessage($answer);
+        $this->getOtherMachineWorkflowProcessor()->receiveMessage($answer);
 
         $this->assertNotNull($this->lastPostCommitEvent);
 
-        $expectedEventNames = [
+        $expectedEventNamesOnLocalhost = [
             'Ginger\Processor\Event\ProcessSetUp',
             'Ginger\Processor\Task\Event\TaskEntryMarkedAsRunning',
-            'Ginger\Processor\Event\ProcessSetUp',
-            'Ginger\Processor\Task\Event\TaskEntryMarkedAsRunning',
-            'Ginger\Processor\Task\Event\TaskEntryMarkedAsDone',
+            'Ginger\Processor\Task\Event\LogMessageReceived',
             'Ginger\Processor\Task\Event\TaskEntryMarkedAsDone'
         ];
 
-        $this->assertEquals($expectedEventNames, $this->eventNameLog);
+        $expectedEventNamesOnOtherMachine = [
+            'Ginger\Processor\Event\ProcessSetUp',
+            'Ginger\Processor\Task\Event\TaskEntryMarkedAsRunning',
+            'Ginger\Processor\Task\Event\LogMessageReceived',
+            'Ginger\Processor\Task\Event\TaskEntryMarkedAsDone',
+        ];
+
+        $this->assertEquals($expectedEventNamesOnLocalhost, $this->eventNameLog);
+        $this->assertEquals($expectedEventNamesOnOtherMachine, $this->otherMachineEventNameLog);
     }
 
     /**
@@ -216,6 +229,8 @@ class WorkflowProcessorTest extends TestCase
      */
     public function it_marks_task_of_parent_process_as_failed_when_sub_process_is_finished_with_error()
     {
+        $this->setUpOtherMachine();
+
         $wfMessage = $this->getUserDataCollectedTestMessage();
 
         /**
@@ -226,28 +241,32 @@ class WorkflowProcessorTest extends TestCase
 
         $this->getTestWorkflowProcessor()->receiveMessage($wfMessage);
 
-        $receivedMessage = $this->workflowMessageHandler->lastWorkflowMessage();
+        $receivedMessage = $this->otherMachineWorkflowMessageHandler->lastWorkflowMessage();
 
         $this->assertNotNull($receivedMessage);
 
         $error = LogMessage::logErrorMsg("Simulated error", $receivedMessage->getProcessTaskListPosition());
 
-        $this->getTestWorkflowProcessor()->receiveMessage($error);
+        $this->getOtherMachineWorkflowProcessor()->receiveMessage($error);
 
         $this->assertNotNull($this->lastPostCommitEvent);
 
-        $expectedEventNames = [
+        $expectedEventNamesLocalhost = [
             'Ginger\Processor\Event\ProcessSetUp',
             'Ginger\Processor\Task\Event\TaskEntryMarkedAsRunning',
-            'Ginger\Processor\Event\ProcessSetUp',
-            'Ginger\Processor\Task\Event\TaskEntryMarkedAsRunning',
-            'Ginger\Processor\Task\Event\LogMessageReceived',
-            'Ginger\Processor\Task\Event\TaskEntryMarkedAsFailed',
             'Ginger\Processor\Task\Event\LogMessageReceived',
             'Ginger\Processor\Task\Event\TaskEntryMarkedAsFailed'
         ];
 
-        $this->assertEquals($expectedEventNames, $this->eventNameLog);
+        $expectedEventNamesOtherMachine = [
+            'Ginger\Processor\Event\ProcessSetUp',
+            'Ginger\Processor\Task\Event\TaskEntryMarkedAsRunning',
+            'Ginger\Processor\Task\Event\LogMessageReceived',
+            'Ginger\Processor\Task\Event\TaskEntryMarkedAsFailed',
+        ];
+
+        $this->assertEquals($expectedEventNamesLocalhost, $this->eventNameLog);
+        $this->assertEquals($expectedEventNamesOtherMachine, $this->otherMachineEventNameLog);
     }
 }
  

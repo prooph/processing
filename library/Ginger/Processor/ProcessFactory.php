@@ -42,13 +42,14 @@ class ProcessFactory
 
     /**
      * @param WorkflowMessage $message
+     * @param NodeName $nodeName
      * @throws \InvalidArgumentException If process definition for message is not defined
      * @return Process
      */
-    public function deriveProcessFromMessage(WorkflowMessage $message)
+    public function deriveProcessFromMessage(WorkflowMessage $message, NodeName $nodeName)
     {
         if (isset($this->processDefinitions[$message->getMessageName()])) {
-            return $this->createProcessFromDefinition($this->processDefinitions[$message->getMessageName()]);
+            return $this->createProcessFromDefinition($this->processDefinitions[$message->getMessageName()], $nodeName);
         }
 
         throw new \InvalidArgumentException(sprintf(
@@ -59,11 +60,12 @@ class ProcessFactory
 
     /**
      * @param array $processDefinition
+     * @param NodeName $nodeName
      * @param TaskListPosition|null $parentTaskListPosition
      * @throws \InvalidArgumentException If process definition is incomplete or invalid
      * @return Process
      */
-    public function createProcessFromDefinition(array $processDefinition, TaskListPosition $parentTaskListPosition = null)
+    public function createProcessFromDefinition(array $processDefinition, NodeName $nodeName, TaskListPosition $parentTaskListPosition = null)
     {
         Assertion::keyExists($processDefinition, "process_type");
         Assertion::keyExists($processDefinition, "tasks");
@@ -82,8 +84,8 @@ class ProcessFactory
         switch($processDefinition["process_type"]) {
             case Definition::PROCESS_LINEAR_MESSAGING:
                 return (is_null($parentTaskListPosition))?
-                    LinearMessagingProcess::setUp($tasks, $processConfig)
-                    : LinearMessagingProcess::setUpAsSubProcess($parentTaskListPosition, $tasks, $processConfig);
+                    LinearMessagingProcess::setUp($nodeName, $tasks, $processConfig)
+                    : LinearMessagingProcess::setUpAsSubProcess($parentTaskListPosition, $nodeName, $tasks, $processConfig);
             default:
                 throw new \InvalidArgumentException(sprintf(
                     "Unsupported process_type given: %s",
@@ -158,10 +160,11 @@ class ProcessFactory
      */
     private function createRunSubProcessTaskFromDefinition(array $taskDefinition)
     {
+        Assertion::keyExists($taskDefinition, "target_node_name");
         Assertion::keyExists($taskDefinition, "process_definition");
         Assertion::isArray($taskDefinition["process_definition"]);
 
-        return RunSubProcess::setUp($taskDefinition["process_definition"]);
+        return RunSubProcess::setUp(NodeName::fromString($taskDefinition['target_node_name']), $taskDefinition["process_definition"]);
     }
 }
  

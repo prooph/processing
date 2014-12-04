@@ -14,6 +14,8 @@ namespace Ginger\Message\ProophPlugin;
 use Ginger\Message\LogMessage;
 use Ginger\Message\MessageNameUtils;
 use Ginger\Message\WorkflowMessage;
+use Ginger\Processor\Command\StartSubProcess;
+use Ginger\Processor\Event\SubProcessFinished;
 use Prooph\ServiceBus\Message\MessageInterface;
 use Prooph\ServiceBus\Process\CommandDispatch;
 use Prooph\ServiceBus\Process\EventDispatch;
@@ -55,6 +57,16 @@ class ToGingerMessageTranslator extends AbstractListenerAggregate
         if (MessageNameUtils::isGingerCommand($command->name())) {
             $commandDispatch->setCommand(WorkflowMessage::fromServiceBusMessage($command));
         }
+
+        if ($command->name() === StartSubProcess::MSG_NAME) {
+            $commandDispatch->setCommand(new StartSubProcess(
+                StartSubProcess::MSG_NAME,
+                $command->payload(),
+                $command->header()->version(),
+                $command->header()->uuid(),
+                $command->header()->createdOn()
+            ));
+        }
     }
 
     public function onInitializeEventDispatch(EventDispatch $eventDispatch)
@@ -67,6 +79,16 @@ class ToGingerMessageTranslator extends AbstractListenerAggregate
             $eventDispatch->setEvent(WorkflowMessage::fromServiceBusMessage($event));
         } else if (MessageNameUtils::isGingerLogMessage($event->name())) {
             $eventDispatch->setEvent(LogMessage::fromServiceBusMessage($event));
+        }
+
+        if ($event->name() === SubProcessFinished::MSG_NAME) {
+            $eventDispatch->setEvent(new SubProcessFinished(
+                SubProcessFinished::MSG_NAME,
+                $event->payload(),
+                $event->header()->version(),
+                $event->header()->uuid(),
+                $event->header()->createdOn()
+            ));
         }
     }
 }

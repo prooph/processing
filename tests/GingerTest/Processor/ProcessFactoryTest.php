@@ -14,12 +14,15 @@ namespace GingerTest\Processor;
 use Ginger\Message\MessageNameUtils;
 use Ginger\Processor\Command\StartSubProcess;
 use Ginger\Processor\Definition;
+use Ginger\Processor\NodeName;
 use Ginger\Processor\ProcessFactory;
 use Ginger\Processor\ProcessId;
 use Ginger\Processor\Task\TaskListId;
 use Ginger\Processor\Task\TaskListPosition;
 use GingerTest\TestCase;
+use Prooph\ServiceBus\CommandBus;
 use Prooph\ServiceBus\InvokeStrategy\CallbackStrategy;
+use Prooph\ServiceBus\Router\CommandRouter;
 
 /**
  * Class ProcessFactoryTest
@@ -48,7 +51,7 @@ class ProcessFactoryTest extends TestCase
 
         $processFactory = new ProcessFactory();
 
-        $process = $processFactory->createProcessFromDefinition($processDefinition);
+        $process = $processFactory->createProcessFromDefinition($processDefinition, NodeName::defaultName());
 
         $this->assertInstanceOf('Ginger\Processor\LinearMessagingProcess', $process);
 
@@ -82,11 +85,15 @@ class ProcessFactoryTest extends TestCase
             "config" => [Definition::PROCESS_CONFIG_STOP_ON_ERROR => true],
         ];
 
-        $parentTaskListPosition = TaskListPosition::at(TaskListId::linkWith(ProcessId::generate()), 1);
+        $parentTaskListPosition = TaskListPosition::at(TaskListId::linkWith(NodeName::defaultName(), ProcessId::generate()), 1);
 
         $processFactory = new ProcessFactory();
 
-        $process = $processFactory->createProcessFromDefinition($processDefinition, $parentTaskListPosition);
+        $process = $processFactory->createProcessFromDefinition(
+            $processDefinition,
+            NodeName::defaultName(),
+            $parentTaskListPosition
+        );
 
         $this->assertInstanceOf('Ginger\Processor\LinearMessagingProcess', $process);
 
@@ -120,7 +127,7 @@ class ProcessFactoryTest extends TestCase
             ]
         );
 
-        $process = $factory->deriveProcessFromMessage($wfMessage);
+        $process = $factory->deriveProcessFromMessage($wfMessage, NodeName::defaultName());
 
         $this->assertInstanceOf('Ginger\Processor\LinearMessagingProcess', $process);
 
@@ -154,6 +161,7 @@ class ProcessFactoryTest extends TestCase
         ];
 
         $runSubProcessTaskDefinition = [
+            "target_node_name" => 'other_machine',
             "task_type" => Definition::TASK_RUN_SUB_PROCESS,
             "process_definition" => $subProcessDefinition
         ];
@@ -165,16 +173,24 @@ class ProcessFactoryTest extends TestCase
 
         $processFactory = new ProcessFactory();
 
-        $parentProcess = $processFactory->createProcessFromDefinition($parentProcessDefinition);
+        $parentProcess = $processFactory->createProcessFromDefinition($parentProcessDefinition, NodeName::defaultName());
 
         /** @var $startSubProcess StartSubProcess */
         $startSubProcess = null;
 
-        $this->commandRouter->route(StartSubProcess::MSG_NAME)->to(function(StartSubProcess $command) use (&$startSubProcess) {
+        $otherMachineCommandBus = new CommandBus();
+
+        $otherMachineCommandRouter = new CommandRouter();
+
+        $otherMachineCommandRouter->route(StartSubProcess::MSG_NAME)->to(function(StartSubProcess $command) use (&$startSubProcess) {
             $startSubProcess = $command;
         });
 
-        $this->workflowEngine->getCommandBusFor(Definition::SERVICE_WORKFLOW_PROCESSOR)->utilize(new CallbackStrategy());
+        $otherMachineCommandBus->utilize($otherMachineCommandRouter);
+
+        $otherMachineCommandBus->utilize(new CallbackStrategy());
+
+        $this->workflowEngine->registerCommandBus($otherMachineCommandBus, ['other_machine']);
 
         $parentProcess->perform($this->workflowEngine);
 

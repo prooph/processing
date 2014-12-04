@@ -144,6 +144,30 @@ class EnvironmentTest extends TestCase
     /**
      * @test
      */
+    public function it_uses_default_node_name_when_nothing_else_is_configured()
+    {
+        $env = Environment::setUp();
+
+        $nodeName = $env->getNodeName();
+
+        $this->assertInstanceOf('Ginger\Processor\NodeName', $nodeName);
+
+        $this->assertEquals(Definition::DEFAULT_NODE_NAME, $nodeName->toString());
+    }
+
+    /**
+     * @test
+     */
+    public function it_can_be_set_up_with_a_custom_node_name()
+    {
+        $env = Environment::setUp(['ginger' => ['node_name' => 'CustomNode']]);
+
+        $this->assertEquals('CustomNode', $env->getNodeName()->toString());
+    }
+
+    /**
+     * @test
+     */
     public function it_can_be_set_up_with_a_process_definition()
     {
         $processDefinition = [
@@ -168,7 +192,8 @@ class EnvironmentTest extends TestCase
             ]
         ]);
 
-        $process = $env->services()->get(Definition::SERVICE_PROCESS_FACTORY)->deriveProcessFromMessage($wfMessage);
+        $process = $env->services()->get(Definition::SERVICE_PROCESS_FACTORY)
+            ->deriveProcessFromMessage($wfMessage, $env->getNodeName());
 
         $this->assertInstanceOf('Ginger\Processor\LinearMessagingProcess', $process);
     }

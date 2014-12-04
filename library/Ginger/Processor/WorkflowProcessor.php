@@ -14,6 +14,7 @@ namespace Ginger\Processor;
 use Ginger\Message\LogMessage;
 use Ginger\Message\WorkflowMessage;
 use Ginger\Processor\Command\StartSubProcess;
+use Ginger\Processor\Event\SubProcessFinished;
 use Ginger\Processor\Task\TaskListPosition;
 use Prooph\EventStore\EventStore;
 
@@ -23,8 +24,13 @@ use Prooph\EventStore\EventStore;
  * @package Ginger\Processor
  * @author Alexander Miertsch <kontakt@codeliner.ws>
  */
-class WorkflowProcessor 
+class WorkflowProcessor
 {
+    /**
+     * @var NodeName
+     */
+    private $nodeName;
+
     /**
      * @var ProcessRepository
      */
@@ -56,18 +62,21 @@ class WorkflowProcessor
     private $messageQueue;
 
     /**
+     * @param NodeName $nodeName
      * @param EventStore $eventStore
      * @param ProcessRepository $processRepository
      * @param WorkflowEngine $workflowEngine
      * @param ProcessFactory $processFactory
      */
     public function __construct(
+        NodeName $nodeName,
         EventStore $eventStore,
         ProcessRepository $processRepository,
         WorkflowEngine $workflowEngine,
         ProcessFactory $processFactory
     )
     {
+        $this->nodeName          = $nodeName;
         $this->eventStore        = $eventStore;
         $this->processRepository = $processRepository;
         $this->workflowEngine    = $workflowEngine;
@@ -96,6 +105,8 @@ class WorkflowProcessor
             $this->continueProcessAt($message->getProcessTaskListPosition(), $message);
         } elseif ($message instanceof StartSubProcess) {
             $this->startSubProcess($message);
+        }elseif ($message instanceof SubProcessFinished) {
+            $this->continueParentProcess($message);
         } else {
             throw new \RuntimeException(sprintf(
                 "Unknown message type received: %s",
@@ -111,7 +122,7 @@ class WorkflowProcessor
      */
     private function startProcessFromMessage(WorkflowMessage $workflowMessage)
     {
-        $process = $this->processFactory->deriveProcessFromMessage($workflowMessage);
+        $process = $this->processFactory->deriveProcessFromMessage($workflowMessage, $this->nodeName);
 
         $this->beginTransaction();
 
@@ -134,7 +145,11 @@ class WorkflowProcessor
      */
     private function startSubProcess(StartSubProcess $command)
     {
-        $subProcess = $this->processFactory->createProcessFromDefinition($command->subProcessDefinition(), $command->parentTaskListPosition());
+        $subProcess = $this->processFactory->createProcessFromDefinition(
+            $command->subProcessDefinition(),
+            $this->nodeName,
+            $command->parentTaskListPosition()
+        );
 
         $this->beginTransaction();
 
@@ -184,7 +199,7 @@ class WorkflowProcessor
 
         if ($process->isSubProcess() && $process->isFinished()) {
             if ($process->isSuccessfulDone()) {
-                $this->continueParentProcessOf($process, $lastAnswer);
+                $this->informParentProcessAboutSubProcess($process, true, $lastAnswer);
             } else {
                 if (! $lastAnswer instanceof LogMessage) {
                     $lastAnswer = LogMessage::logErrorMsg(
@@ -197,68 +212,51 @@ class WorkflowProcessor
                     $lastAnswer = LogMessage::logErrorMsg($lastAnswer->getTechnicalMsg(), $lastAnswer->getProcessTaskListPosition());
                 }
 
-                $this->informParentProcessAboutFailedSubProcess($process, $lastAnswer);
+                $this->informParentProcessAboutSubProcess($process, false, $lastAnswer);
             }
-
         }
     }
 
+    private function informParentProcessAboutSubProcess(Process $subProcess, $succeed, $lastAnswerReceivedForSubProcess)
+    {
+        $event = SubProcessFinished::record(
+            $this->nodeName,
+            $subProcess->processId(),
+            $succeed,
+            $lastAnswerReceivedForSubProcess,
+            $subProcess->parentTaskListPosition()
+        );
+
+        $eventBus = $this->workflowEngine->getEventBusFor(
+            $subProcess->parentTaskListPosition()->taskListId()->nodeName()->toString()
+        );
+
+        $eventBus->dispatch($event);
+    }
+
     /**
-     * @param Process $subProcess
-     * @param WorkflowMessage $lastAnswerReceivedForSubProcess
+     * @param Event\SubProcessFinished $subProcessFinished
      * @throws \RuntimeException
      * @throws \Exception
      */
-    private function continueParentProcessOf(Process $subProcess, WorkflowMessage $lastAnswerReceivedForSubProcess)
+    private function continueParentProcess(SubProcessFinished $subProcessFinished)
     {
-        $parentProcess = $this->processRepository->get($subProcess->parentTaskListPosition()->taskListId()->processId());
+        $parentProcess = $this->processRepository->get($subProcessFinished->parentTaskListPosition()->taskListId()->processId());
 
         if (is_null($parentProcess)) {
             throw new \RuntimeException(sprintf(
                 "Sub process %s contains unknown parent processId. A process with id %s cannot be found!",
-                $subProcess->processId()->toString(),
-                $subProcess->parentTaskListPosition()->taskListId()->processId()->toString()
+                $subProcessFinished->subProcessId()->toString(),
+                $subProcessFinished->parentTaskListPosition()->taskListId()->processId()->toString()
             ));
         }
 
         $this->beginTransaction();
 
         try {
+            $lastAnswerReceivedForSubProcess = $subProcessFinished->lastMessage()
+                ->reconnectToProcessTask($subProcessFinished->parentTaskListPosition());
 
-            $lastAnswerReceivedForSubProcess = $lastAnswerReceivedForSubProcess->reconnectToProcessTask($subProcess->parentTaskListPosition());
-            $parentProcess->receiveMessage($lastAnswerReceivedForSubProcess, $this->workflowEngine);
-
-            $this->commitTransaction();
-        } catch (\Exception $ex) {
-            $this->rollbackTransaction();
-
-            throw $ex;
-        }
-    }
-
-    /**
-     * @param Process $subProcess
-     * @param LogMessage $lastAnswerReceivedForSubProcess
-     * @throws \RuntimeException
-     * @throws \Exception
-     */
-    private function informParentProcessAboutFailedSubProcess(Process $subProcess, LogMessage $lastAnswerReceivedForSubProcess)
-    {
-        $parentProcess = $this->processRepository->get($subProcess->parentTaskListPosition()->taskListId()->processId());
-
-        if (is_null($parentProcess)) {
-            throw new \RuntimeException(sprintf(
-                "Sub process %s contains unknown parent processId. A process with id %s cannot be found!",
-                $subProcess->processId()->toString(),
-                $subProcess->parentTaskListPosition()->taskListId()->processId()->toString()
-            ));
-        }
-
-        $this->beginTransaction();
-
-        try {
-
-            $lastAnswerReceivedForSubProcess = $lastAnswerReceivedForSubProcess->reconnectToProcessTask($subProcess->parentTaskListPosition());
             $parentProcess->receiveMessage($lastAnswerReceivedForSubProcess, $this->workflowEngine);
 
             $this->commitTransaction();

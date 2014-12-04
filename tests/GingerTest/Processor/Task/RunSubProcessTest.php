@@ -14,6 +14,7 @@ namespace GingerTest\Processor\Task;
 use Ginger\Message\WorkflowMessage;
 use Ginger\Processor\Definition;
 use Ginger\Processor\LinearMessagingProcess;
+use Ginger\Processor\NodeName;
 use Ginger\Processor\ProcessId;
 use Ginger\Processor\Task\RunSubProcess;
 use Ginger\Processor\Task\TaskListId;
@@ -32,6 +33,30 @@ class RunSubProcessTest extends TestCase
     /**
      * @test
      */
+    public function it_is_set_up_with_a_target_node_nome()
+    {
+        $subProcessDefinition = [
+            "process_type" => Definition::PROCESS_LINEAR_MESSAGING,
+            "tasks" => [
+                [
+                    "task_type"   => Definition::TASK_COLLECT_DATA,
+                    "source"      => 'test-case',
+                    "ginger_type" => 'GingerTest\Mock\UserDictionary'
+                ]
+            ],
+            "config" => [Definition::PROCESS_CONFIG_STOP_ON_ERROR => true],
+        ];
+
+        $task = RunSubProcess::setUp(NodeName::fromString('other_machine'), $subProcessDefinition);
+
+        $this->assertInstanceOf('Ginger\Processor\NodeName', $task->getTargetNodeName());
+
+        $this->assertEquals('other_machine', $task->getTargetNodeName()->toString());
+    }
+
+    /**
+     * @test
+     */
     public function it_returns_start_sub_process_command()
     {
         $subProcessDefinition = [
@@ -46,9 +71,9 @@ class RunSubProcessTest extends TestCase
             "config" => [Definition::PROCESS_CONFIG_STOP_ON_ERROR => true],
         ];
 
-        $task = RunSubProcess::setUp($subProcessDefinition);
+        $task = RunSubProcess::setUp(NodeName::defaultName(), $subProcessDefinition);
 
-        $parentTaskListPosition = TaskListPosition::at(TaskListId::linkWith(ProcessId::generate()), 1);
+        $parentTaskListPosition = TaskListPosition::at(TaskListId::linkWith(NodeName::defaultName(), ProcessId::generate()), 1);
 
         $startSubProcess = $task->generateStartCommandForSubProcess($parentTaskListPosition);
 
@@ -74,9 +99,9 @@ class RunSubProcessTest extends TestCase
             "config" => [Definition::PROCESS_CONFIG_STOP_ON_ERROR => true],
         ];
 
-        $task = RunSubProcess::setUp($subProcessDefinition);
+        $task = RunSubProcess::setUp(NodeName::defaultName(), $subProcessDefinition);
 
-        $parentTaskListPosition = TaskListPosition::at(TaskListId::linkWith(ProcessId::generate()), 1);
+        $parentTaskListPosition = TaskListPosition::at(TaskListId::linkWith(NodeName::defaultName(), ProcessId::generate()), 1);
 
         $previousMessage = WorkflowMessage::newDataCollected(UserDictionary::fromNativeValue([
             'id' => 1,

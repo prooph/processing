@@ -50,6 +50,11 @@ abstract class Process extends AggregateRoot
     protected $parentTaskListPosition;
 
     /**
+     * @var bool
+     */
+    protected $syncLogMessages;
+
+    /**
      * @var ArrayReader
      */
     protected $config;
@@ -82,11 +87,12 @@ abstract class Process extends AggregateRoot
     /**
      * Creates new process from given tasks and config
      *
+     * @param NodeName $nodeName
      * @param Task[] $tasks
      * @param array $config
      * @return static
      */
-    public static function setUp(array $tasks, array $config = array())
+    public static function setUp(NodeName $nodeName, array $tasks, array $config = array())
     {
         /** @var $instance Process */
         $instance = new static();
@@ -95,7 +101,7 @@ abstract class Process extends AggregateRoot
 
         $processId = ProcessId::generate();
 
-        $taskList = TaskList::scheduleTasks(TaskListId::linkWith($processId), $tasks);
+        $taskList = TaskList::scheduleTasks(TaskListId::linkWith($nodeName, $processId), $tasks);
 
         $instance->recordThat(ProcessSetUp::with($processId, $taskList, $config));
 
@@ -104,13 +110,20 @@ abstract class Process extends AggregateRoot
 
     /**
      * @param TaskListPosition $parentTaskListPosition
+     * @param NodeName $nodeName
      * @param Task[] $tasks
      * @param array $config
-     *
+     * @param bool $syncLogMessages
+     * @throws \InvalidArgumentException
      * @return static
      */
-    public static function setUpAsSubProcess(TaskListPosition $parentTaskListPosition, array $tasks, array $config = array())
-    {
+    public static function setUpAsSubProcess(
+        TaskListPosition $parentTaskListPosition,
+        NodeName $nodeName,
+        array $tasks,
+        array $config = array(),
+        $syncLogMessages = true
+    ) {
         /** @var $instance Process */
         $instance = new static();
 
@@ -118,9 +131,13 @@ abstract class Process extends AggregateRoot
 
         $processId = ProcessId::generate();
 
-        $taskList = TaskList::scheduleTasks(TaskListId::linkWith($processId), $tasks);
+        $taskList = TaskList::scheduleTasks(TaskListId::linkWith($nodeName, $processId), $tasks);
 
-        $instance->recordThat(ProcessSetUp::asSubProcess($processId, $parentTaskListPosition, $taskList, $config));
+        if (! is_bool($syncLogMessages)) {
+            throw new \InvalidArgumentException("Argument syncLogMessages must be of type boolean");
+        }
+
+        $instance->recordThat(ProcessSetUp::asSubProcess($processId, $parentTaskListPosition, $taskList, $config, $syncLogMessages));
 
         return $instance;
     }
@@ -164,6 +181,11 @@ abstract class Process extends AggregateRoot
 
             if ($message->isError()) {
                 $this->recordThat(TaskEntryMarkedAsFailed::at($message->getProcessTaskListPosition()));
+            } elseif ($this->isSubProcess() && $this->syncLogMessages) {
+                //We only sync non error messages, because errors are always sync and then they would be received twice
+                $messageForParent = $message->reconnectToProcessTask($this->parentTaskListPosition);
+                $workflowEngine->getEventBusFor($this->parentTaskListPosition->taskListId()->nodeName()->toString())
+                    ->dispatch($messageForParent);
             }
         }
     }
@@ -223,7 +245,7 @@ abstract class Process extends AggregateRoot
         try {
             $startSubProcessCommand = $task->generateStartCommandForSubProcess($taskListPosition, $previousMessage);
 
-            $workflowEngine->getCommandBusFor(Definition::SERVICE_WORKFLOW_PROCESSOR)->dispatch($startSubProcessCommand);
+            $workflowEngine->getCommandBusFor($task->getTargetNodeName()->toString())->dispatch($startSubProcessCommand);
 
         } catch (CommandDispatchException $ex) {
             $this->receiveMessage(LogMessage::logException($ex->getPrevious(), $taskListPosition), $workflowEngine);
@@ -257,6 +279,7 @@ abstract class Process extends AggregateRoot
         $this->parentTaskListPosition = $event->parentTaskListPosition();
         $this->config = new ArrayReader($event->config());
         $this->taskList = TaskList::fromArray($event->taskList());
+        $this->syncLogMessages = $event->syncLogMessages();
     }
 
     /**

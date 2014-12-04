@@ -12,6 +12,7 @@
 namespace GingerTest\Processor\Task;
 
 use Ginger\Message\LogMessage;
+use Ginger\Processor\NodeName;
 use Ginger\Processor\ProcessId;
 use Ginger\Processor\Task\CollectData;
 use Ginger\Processor\Task\TaskListEntry;
@@ -202,7 +203,7 @@ class TaskListEntryTest extends TestCase
     {
         $processId = ProcessId::generate();
 
-        $taskListId = TaskListId::linkWith($processId);
+        $taskListId = TaskListId::linkWith(NodeName::defaultName(), $processId);
 
         $taskListPosition = TaskListPosition::at($taskListId, 1);
 

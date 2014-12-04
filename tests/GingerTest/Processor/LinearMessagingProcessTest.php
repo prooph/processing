@@ -15,6 +15,7 @@ namespace GingerTest\Processor;
 use Ginger\Message\MessageNameUtils;
 use Ginger\Message\WorkflowMessage;
 use Ginger\Processor\LinearMessagingProcess;
+use Ginger\Processor\NodeName;
 use Ginger\Processor\ProcessId;
 use Ginger\Processor\Task\CollectData;
 use Ginger\Processor\Task\ProcessData;
@@ -41,7 +42,7 @@ class LinearMessagingProcessTest extends TestCase
     {
         $task = CollectData::from('test-case', UserDictionary::prototype());
 
-        $process = LinearMessagingProcess::setUp([$task]);
+        $process = LinearMessagingProcess::setUp(NodeName::defaultName(), [$task]);
 
         $process->perform($this->workflowEngine);
 
@@ -70,7 +71,7 @@ class LinearMessagingProcessTest extends TestCase
     {
         $task = CollectData::from('test-case', UserDictionary::prototype());
 
-        $process = LinearMessagingProcess::setUp([$task]);
+        $process = LinearMessagingProcess::setUp(NodeName::defaultName(), [$task]);
 
         $wfm = WorkflowMessage::collectDataOf(UserDictionary::prototype());
 
@@ -113,7 +114,7 @@ class LinearMessagingProcessTest extends TestCase
     {
         $task = CollectData::from('test-case', UserDictionary::prototype());
 
-        $process = LinearMessagingProcess::setUp([$task]);
+        $process = LinearMessagingProcess::setUp(NodeName::defaultName(), [$task]);
 
         //We deactivate the router so message cannot be dispatched
         $this->workflowEngine->getCommandBusFor('test-case')->deactivate($this->commandRouter);
@@ -134,7 +135,7 @@ class LinearMessagingProcessTest extends TestCase
 
         $task2 = ProcessData::address('test-target', ['GingerTest\Mock\UserDictionary']);
 
-        $process = LinearMessagingProcess::setUp([$task1, $task2]);
+        $process = LinearMessagingProcess::setUp(NodeName::defaultName(), [$task1, $task2]);
 
         $wfm = WorkflowMessage::collectDataOf(UserDictionary::prototype());
 
@@ -151,7 +152,7 @@ class LinearMessagingProcessTest extends TestCase
 
         $this->workflowMessageHandler->setNextAnswer($answer1);
 
-        $taskListPosition = TaskListPosition::at(TaskListId::linkWith(ProcessId::generate()), 2);
+        $taskListPosition = TaskListPosition::at(TaskListId::linkWith(NodeName::defaultName(), ProcessId::generate()), 2);
 
         //Fake follow up task execution
         $processDataMessage = $answer1->prepareDataProcessing($taskListPosition);
@@ -203,7 +204,7 @@ class LinearMessagingProcessTest extends TestCase
     {
         $task = ProcessData::address('test-target', ['GingerTest\Mock\TargetUserDictionary']);
 
-        $process = LinearMessagingProcess::setUp([$task]);
+        $process = LinearMessagingProcess::setUp(NodeName::defaultName(), [$task]);
 
         $wfm = WorkflowMessage::collectDataOf(UserDictionary::prototype());
 

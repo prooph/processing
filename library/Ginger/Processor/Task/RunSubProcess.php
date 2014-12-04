@@ -13,6 +13,7 @@ namespace Ginger\Processor\Task;
 use Assert\Assertion;
 use Ginger\Message\WorkflowMessage;
 use Ginger\Processor\Command\StartSubProcess;
+use Ginger\Processor\NodeName;
 use Ginger\Processor\Process;
 
 /**
@@ -28,19 +29,31 @@ use Ginger\Processor\Process;
 class RunSubProcess implements Task
 {
     /**
+     * @var NodeName
+     */
+    private $targetNodeName;
+
+    /**
      * @var array
      */
     private $processDefinition;
 
     /**
+     * @var bool
+     */
+    private $syncLogMessages;
+
+    /**
+     * @param NodeName $targetNodeName
      * @param array $processDefinition
+     * @param bool $syncLogMessages
      * @return RunSubProcess
      */
-    public static function setUp(array $processDefinition)
+    public static function setUp(NodeName $targetNodeName, array $processDefinition, $syncLogMessages = true)
     {
         Assertion::keyExists($processDefinition, "process_type");
 
-        return new self($processDefinition);
+        return new self($targetNodeName, $processDefinition, $syncLogMessages);
     }
 
     /**
@@ -49,17 +62,40 @@ class RunSubProcess implements Task
      */
     public static function reconstituteFromArray(array $taskData)
     {
+        Assertion::keyExists($taskData, 'target_node_name');
         Assertion::keyExists($taskData, 'process_definition');
+        Assertion::keyExists($taskData, 'sync_log_messages');
 
-        return new self($taskData['process_definition']);
+        return new self(
+            NodeName::fromString($taskData['target_node_name']),
+            $taskData['process_definition'],
+            (bool)$taskData['sync_log_messages']
+        );
     }
 
     /**
+     * @param NodeName $targetNodeName
      * @param array $processDefinition
+     * @param bool $syncLogMessages
+     * @throws \InvalidArgumentException
      */
-    private function __construct(array $processDefinition)
+    private function __construct(NodeName $targetNodeName, array $processDefinition, $syncLogMessages)
     {
+        if (! is_bool($syncLogMessages)) {
+            throw new \InvalidArgumentException("Argument syncLogMessages must be of type boolean");
+        }
+
+        $this->targetNodeName    = $targetNodeName;
         $this->processDefinition = $processDefinition;
+        $this->syncLogMessages   = $syncLogMessages;
+    }
+
+    /**
+     * @return NodeName
+     */
+    public function getTargetNodeName()
+    {
+        return $this->targetNodeName;
     }
 
     /**
@@ -68,7 +104,9 @@ class RunSubProcess implements Task
     public function getArrayCopy()
     {
         return [
-            'process_definition' => $this->processDefinition
+            'target_node_name'   => $this->targetNodeName->toString(),
+            'process_definition' => $this->processDefinition,
+            'sync_log_messages'  => $this->syncLogMessages,
         ];
     }
 
@@ -79,7 +117,7 @@ class RunSubProcess implements Task
      */
     public function generateStartCommandForSubProcess(TaskListPosition $parentTaskListPosition, WorkflowMessage $previousMessage = null)
     {
-        return StartSubProcess::at($parentTaskListPosition, $this->processDefinition, $previousMessage);
+        return StartSubProcess::at($parentTaskListPosition, $this->processDefinition, $this->syncLogMessages, $previousMessage);
     }
 
     /**
