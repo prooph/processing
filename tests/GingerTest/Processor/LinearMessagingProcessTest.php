@@ -51,7 +51,7 @@ class LinearMessagingProcessTest extends TestCase
 
         $this->assertEquals('GingerTest\Mock\UserDictionary', $collectDataMessage->getPayload()->getTypeClass());
 
-        $this->assertFalse($process->isChildProcess());
+        $this->assertFalse($process->isSubProcess());
 
         $this->assertFalse($process->isFinished());
 

@@ -177,7 +177,7 @@ class WorkflowProcessorTest extends TestCase
     /**
      * @test
      */
-    public function it_continues_parent_process_when_child_process_is_finished()
+    public function it_continues_parent_process_when_sub_process_is_finished()
     {
         $wfMessage = $this->getUserDataCollectedTestMessage();
 
@@ -214,7 +214,7 @@ class WorkflowProcessorTest extends TestCase
     /**
      * @test
      */
-    public function it_marks_task_of_parent_process_as_failed_when_child_process_is_finished_with_error()
+    public function it_marks_task_of_parent_process_as_failed_when_sub_process_is_finished_with_error()
     {
         $wfMessage = $this->getUserDataCollectedTestMessage();
 

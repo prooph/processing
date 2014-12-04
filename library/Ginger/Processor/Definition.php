@@ -28,7 +28,7 @@ class Definition
 
     const TASK_COLLECT_DATA          = "collect_data";
     const TASK_PROCESS_DATA          = "process_data";
-    const TASK_RUN_CHILD_PROCESS     = "run_child_process";
+    const TASK_RUN_SUB_PROCESS       = "run_sub_process";
 
     const PROCESS_CONFIG_STOP_ON_ERROR  = "stop_on_error";
 

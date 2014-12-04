@@ -63,7 +63,7 @@ class ProcessSetUp extends AggregateChanged
      * @param array $config
      * @return static
      */
-    public static function asChildProcess(ProcessId $processId, TaskListPosition $parentTaskListPosition, TaskList $taskList, array $config)
+    public static function asSubProcess(ProcessId $processId, TaskListPosition $parentTaskListPosition, TaskList $taskList, array $config)
     {
         $instance = self::occur(
             $processId->toString(),

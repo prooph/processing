@@ -15,26 +15,26 @@ use Ginger\Message\WorkflowMessage;
 use Ginger\Processor\Definition;
 use Ginger\Processor\LinearMessagingProcess;
 use Ginger\Processor\ProcessId;
-use Ginger\Processor\Task\RunChildProcess;
+use Ginger\Processor\Task\RunSubProcess;
 use Ginger\Processor\Task\TaskListId;
 use Ginger\Processor\Task\TaskListPosition;
 use GingerTest\Mock\UserDictionary;
 use GingerTest\TestCase;
 
 /**
- * Class RunChildProcessTest
+ * Class RunSubProcessTest
  *
  * @package GingerTest\Processor\Task
  * @author Alexander Miertsch <kontakt@codeliner.ws>
  */
-class RunChildProcessTest extends TestCase
+class RunSubProcessTest extends TestCase
 {
     /**
      * @test
      */
-    public function it_returns_start_child_process_command()
+    public function it_returns_start_sub_process_command()
     {
-        $childProcessDefinition = [
+        $subProcessDefinition = [
             "process_type" => Definition::PROCESS_LINEAR_MESSAGING,
             "tasks" => [
                 [
@@ -46,23 +46,23 @@ class RunChildProcessTest extends TestCase
             "config" => [Definition::PROCESS_CONFIG_STOP_ON_ERROR => true],
         ];
 
-        $task = RunChildProcess::setUp($childProcessDefinition);
+        $task = RunSubProcess::setUp($subProcessDefinition);
 
         $parentTaskListPosition = TaskListPosition::at(TaskListId::linkWith(ProcessId::generate()), 1);
 
-        $startChildProcess = $task->generateStartCommandForChildProcess($parentTaskListPosition);
+        $startSubProcess = $task->generateStartCommandForSubProcess($parentTaskListPosition);
 
-        $this->assertTrue($parentTaskListPosition->equals($startChildProcess->parentTaskListPosition()));
+        $this->assertTrue($parentTaskListPosition->equals($startSubProcess->parentTaskListPosition()));
 
-        $this->assertEquals($childProcessDefinition, $startChildProcess->childProcessDefinition());
+        $this->assertEquals($subProcessDefinition, $startSubProcess->subProcessDefinition());
     }
 
     /**
      * @test
      */
-    public function it_returns_start_child_process_command_including_previous_message()
+    public function it_returns_start_sub_process_command_including_previous_message()
     {
-        $childProcessDefinition = [
+        $subProcessDefinition = [
             "process_type" => Definition::PROCESS_LINEAR_MESSAGING,
             "tasks" => [
                 [
@@ -74,7 +74,7 @@ class RunChildProcessTest extends TestCase
             "config" => [Definition::PROCESS_CONFIG_STOP_ON_ERROR => true],
         ];
 
-        $task = RunChildProcess::setUp($childProcessDefinition);
+        $task = RunSubProcess::setUp($subProcessDefinition);
 
         $parentTaskListPosition = TaskListPosition::at(TaskListId::linkWith(ProcessId::generate()), 1);
 
@@ -89,13 +89,13 @@ class RunChildProcessTest extends TestCase
             ]
         ]));
 
-        $startChildProcess = $task->generateStartCommandForChildProcess($parentTaskListPosition, $previousMessage);
+        $startSubProcess = $task->generateStartCommandForSubProcess($parentTaskListPosition, $previousMessage);
 
-        $this->assertTrue($parentTaskListPosition->equals($startChildProcess->parentTaskListPosition()));
+        $this->assertTrue($parentTaskListPosition->equals($startSubProcess->parentTaskListPosition()));
 
-        $this->assertEquals($childProcessDefinition, $startChildProcess->childProcessDefinition());
+        $this->assertEquals($subProcessDefinition, $startSubProcess->subProcessDefinition());
 
-        $this->assertEquals($previousMessage->getMessageName(), $startChildProcess->previousWorkflowMessage()->getMessageName());
+        $this->assertEquals($previousMessage->getMessageName(), $startSubProcess->previousWorkflowMessage()->getMessageName());
     }
 }
  

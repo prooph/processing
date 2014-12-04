@@ -12,7 +12,7 @@
 namespace GingerTest\Processor\Command;
 
 use Ginger\Message\WorkflowMessage;
-use Ginger\Processor\Command\StartChildProcess;
+use Ginger\Processor\Command\StartSubProcess;
 use Ginger\Processor\Definition;
 use Ginger\Processor\LinearMessagingProcess;
 use Ginger\Processor\ProcessId;
@@ -22,19 +22,19 @@ use GingerTest\Mock\UserDictionary;
 use GingerTest\TestCase;
 
 /**
- * Class StartChildProcessTest
+ * Class StartSubProcessTest
  *
  * @package GingerTest\Processor\Command
  * @author Alexander Miertsch <kontakt@codeliner.ws>
  */
-class StartChildProcessTest extends TestCase
+class StartSubProcessTest extends TestCase
 {
     /**
      * @test
      */
-    public function it_collects_information_for_the_child_process()
+    public function it_collects_information_for_the_sub_process()
     {
-        $childProcessDefinition = [
+        $subProcessDefinition = [
             "process_type" => Definition::PROCESS_LINEAR_MESSAGING,
             "tasks" => [
                 [
@@ -59,11 +59,11 @@ class StartChildProcessTest extends TestCase
 
         $parentTaskListPosition = TaskListPosition::at(TaskListId::linkWith(ProcessId::generate()), 1);
 
-        $command = StartChildProcess::at($parentTaskListPosition, $childProcessDefinition, $previousMessage);
+        $command = StartSubProcess::at($parentTaskListPosition, $subProcessDefinition, $previousMessage);
 
         $this->assertTrue($parentTaskListPosition->equals($command->parentTaskListPosition()));
 
-        $this->assertEquals($childProcessDefinition, $command->childProcessDefinition());
+        $this->assertEquals($subProcessDefinition, $command->subProcessDefinition());
 
         $this->assertEquals($previousMessage->getMessageName(), $command->previousWorkflowMessage()->getMessageName());
     }
@@ -75,7 +75,7 @@ class StartChildProcessTest extends TestCase
     {
         $parentProcess = LinearMessagingProcess::setUp([]);
 
-        $childProcessDefinition = [
+        $subProcessDefinition = [
             "process_type" => Definition::PROCESS_LINEAR_MESSAGING,
             "tasks" => [
                 [
@@ -89,11 +89,11 @@ class StartChildProcessTest extends TestCase
 
         $parentTaskListPosition = TaskListPosition::at(TaskListId::linkWith(ProcessId::generate()), 1);
 
-        $command = StartChildProcess::at($parentTaskListPosition, $childProcessDefinition);
+        $command = StartSubProcess::at($parentTaskListPosition, $subProcessDefinition);
 
         $this->assertTrue($parentTaskListPosition->equals($command->parentTaskListPosition()));
 
-        $this->assertEquals($childProcessDefinition, $command->childProcessDefinition());
+        $this->assertEquals($subProcessDefinition, $command->subProcessDefinition());
     }
 }
  

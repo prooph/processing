@@ -19,20 +19,20 @@ use Prooph\ServiceBus\Command;
 use Prooph\ServiceBus\Message\StandardMessage;
 
 /**
- * Class StartChildProcess
+ * Class StartSubProcess
  *
  * @package Ginger\Processor\Command
  * @author Alexander Miertsch <kontakt@codeliner.ws>
  */
-class StartChildProcess extends Command
+class StartSubProcess extends Command
 {
-    const MSG_NAME = "ginger-processor-command-start-child-process";
+    const MSG_NAME = "ginger-processor-command-start-sub-process";
 
     /**
      * @param TaskListPosition $parentTaskListPosition
      * @param array $processDefinition
      * @param WorkflowMessage $previousMessage
-     * @return StartChildProcess
+     * @return StartSubProcess
      */
     public static function at(TaskListPosition $parentTaskListPosition, array $processDefinition, WorkflowMessage $previousMessage = null)
     {
@@ -40,7 +40,7 @@ class StartChildProcess extends Command
 
         $payload = [
             'parent_task_list_position' => $parentTaskListPosition->toString(),
-            'child_process_definition' => $processDefinition,
+            'sub_process_definition' => $processDefinition,
             'previous_message' => $previousMessageArrayOrNull
         ];
 
@@ -58,9 +58,9 @@ class StartChildProcess extends Command
     /**
      * @return array
      */
-    public function childProcessDefinition()
+    public function subProcessDefinition()
     {
-        return $this->payload['child_process_definition'];
+        return $this->payload['sub_process_definition'];
     }
 
     /**
