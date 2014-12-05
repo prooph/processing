@@ -25,7 +25,7 @@ use Ginger\Processor\Task\Task;
  * @package Ginger\Processor
  * @author Alexander Miertsch <kontakt@codeliner.ws>
  */
-class LinearMessagingProcess extends AbstractMessagingProcess
+class LinearMessagingProcess extends Process
 {
     /**
      * Start or continue the process with the help of given WorkflowEngine and optionally with given WorkflowMessage
@@ -56,10 +56,6 @@ class LinearMessagingProcess extends AbstractMessagingProcess
                     $workflowEngine
                 );
 
-                if (! $this->config->booleanValue(Definition::PROCESS_CONFIG_STOP_ON_ERROR)) {
-                    $this->perform($workflowEngine);
-                }
-
                 return;
             }
 
@@ -84,11 +80,7 @@ class LinearMessagingProcess extends AbstractMessagingProcess
 
             if (! $task instanceof CollectData && ! $task instanceof RunSubProcess) {
                 $this->receiveMessage(LogMessage::logNoMessageReceivedFor($task, $taskListEntry->taskListPosition()), $workflowEngine);
-
-                if (! $this->config->booleanValue('stop_on_error')) {
-                    $this->perform($workflowEngine);
-                    return;
-                }
+                return;
             }
 
             $this->performTask($task, $taskListEntry->taskListPosition(), $workflowEngine);

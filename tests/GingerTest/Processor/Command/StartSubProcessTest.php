@@ -44,7 +44,6 @@ class StartSubProcessTest extends TestCase
                     "ginger_type" => 'GingerTest\Mock\UserDictionary'
                 ]
             ],
-            "config" => [Definition::PROCESS_CONFIG_STOP_ON_ERROR => true],
         ];
 
         $previousMessage = WorkflowMessage::newDataCollected(UserDictionary::fromNativeValue([
@@ -87,7 +86,6 @@ class StartSubProcessTest extends TestCase
                     "ginger_type" => 'GingerTest\Mock\UserDictionary'
                 ]
             ],
-            "config" => [Definition::PROCESS_CONFIG_STOP_ON_ERROR => true],
         ];
 
         $parentTaskListPosition = TaskListPosition::at(TaskListId::linkWith(NodeName::defaultName(), ProcessId::generate()), 1);

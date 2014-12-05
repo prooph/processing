@@ -14,6 +14,7 @@ namespace Ginger\Processor;
 use Assert\Assertion;
 use Ginger\Message\WorkflowMessage;
 use Ginger\Processor\Task\CollectData;
+use Ginger\Processor\Task\ManipulatePayload;
 use Ginger\Processor\Task\ProcessData;
 use Ginger\Processor\Task\RunSubProcess;
 use Ginger\Processor\Task\Task;
@@ -110,6 +111,8 @@ class ProcessFactory
                 return $this->createProcessDataTaskFromDefinition($taskDefinition);
             case Definition::TASK_RUN_SUB_PROCESS:
                 return $this->createRunSubProcessTaskFromDefinition($taskDefinition);
+            case Definition::TASK_MANIPULATE_PAYLOAD:
+                return $this->createManipulatePayloadFromDefinition($taskDefinition);
             default:
                 throw new \InvalidArgumentException(sprintf(
                     "Unsupported task_type given: %s",
@@ -165,6 +168,17 @@ class ProcessFactory
         Assertion::isArray($taskDefinition["process_definition"]);
 
         return RunSubProcess::setUp(NodeName::fromString($taskDefinition['target_node_name']), $taskDefinition["process_definition"]);
+    }
+
+    /**
+     * @param array $taskDefinition
+     * @return ManipulatePayload
+     */
+    private function createManipulatePayloadFromDefinition(array $taskDefinition)
+    {
+        Assertion::keyExists($taskDefinition, 'manipulation_script');
+
+        return ManipulatePayload::with($taskDefinition['manipulation_script']);
     }
 }
  

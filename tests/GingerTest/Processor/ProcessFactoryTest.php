@@ -12,6 +12,7 @@
 namespace GingerTest\Processor;
 
 use Ginger\Message\MessageNameUtils;
+use Ginger\Message\WorkflowMessage;
 use Ginger\Processor\Command\StartSubProcess;
 use Ginger\Processor\Definition;
 use Ginger\Processor\NodeName;
@@ -19,6 +20,7 @@ use Ginger\Processor\ProcessFactory;
 use Ginger\Processor\ProcessId;
 use Ginger\Processor\Task\TaskListId;
 use Ginger\Processor\Task\TaskListPosition;
+use Ginger\Type\String;
 use GingerTest\TestCase;
 use Prooph\ServiceBus\CommandBus;
 use Prooph\ServiceBus\InvokeStrategy\CallbackStrategy;
@@ -46,7 +48,6 @@ class ProcessFactoryTest extends TestCase
                     "ginger_type" => 'GingerTest\Mock\UserDictionary'
                 ]
             ],
-            "config" => [Definition::PROCESS_CONFIG_STOP_ON_ERROR => true],
         ];
 
         $processFactory = new ProcessFactory();
@@ -64,8 +65,6 @@ class ProcessFactoryTest extends TestCase
         $this->assertInstanceOf('Ginger\Message\WorkflowMessage', $collectDataMessage);
 
         $this->assertEquals('GingerTest\Mock\UserDictionary', $collectDataMessage->getPayload()->getTypeClass());
-
-        $this->assertTrue($process->config()->booleanValue(Definition::PROCESS_CONFIG_STOP_ON_ERROR));
     }
 
     /**
@@ -82,7 +81,6 @@ class ProcessFactoryTest extends TestCase
                     "ginger_type" => 'GingerTest\Mock\UserDictionary'
                 ]
             ],
-            "config" => [Definition::PROCESS_CONFIG_STOP_ON_ERROR => true],
         ];
 
         $parentTaskListPosition = TaskListPosition::at(TaskListId::linkWith(NodeName::defaultName(), ProcessId::generate()), 1);
@@ -157,7 +155,6 @@ class ProcessFactoryTest extends TestCase
                     "ginger_type" => 'GingerTest\Mock\UserDictionary'
                 ]
             ],
-            "config" => [Definition::PROCESS_CONFIG_STOP_ON_ERROR => true],
         ];
 
         $runSubProcessTaskDefinition = [
@@ -197,6 +194,36 @@ class ProcessFactoryTest extends TestCase
         $this->assertNotNull($startSubProcess);
 
         $this->assertEquals($subProcessDefinition, $startSubProcess->subProcessDefinition());
+    }
+
+    /**
+     * @test
+     */
+    function it_creates_linear_messaging_process_with_manipulate_payload_task_from_definition()
+    {
+        $definition = [
+            "process_type" => Definition::PROCESS_LINEAR_MESSAGING,
+            "tasks" => [
+                [
+                    "task_type" => Definition::TASK_MANIPULATE_PAYLOAD,
+                    'manipulation_script' => __DIR__ . '/../Mock/manipulation/append_world.php'
+                ]
+            ]
+        ];
+
+        $processFactory = new ProcessFactory();
+
+        $process = $processFactory->createProcessFromDefinition($definition, NodeName::defaultName());
+
+        $this->assertInstanceOf('Ginger\Processor\LinearMessagingProcess', $process);
+
+        $message = WorkflowMessage::newDataCollected(String::fromString('Hello'));
+
+        $process->perform($this->workflowEngine, $message);
+
+        $this->assertTrue($process->isSuccessfulDone());
+
+        $this->assertEquals('Hello World', $message->getPayload()->getData());
     }
 }
  

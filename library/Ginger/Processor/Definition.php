@@ -30,8 +30,7 @@ class Definition
     const TASK_COLLECT_DATA          = "collect_data";
     const TASK_PROCESS_DATA          = "process_data";
     const TASK_RUN_SUB_PROCESS       = "run_sub_process";
-
-    const PROCESS_CONFIG_STOP_ON_ERROR  = "stop_on_error";
+    const TASK_MANIPULATE_PAYLOAD    = "manipulate_payload";
 
     const ENV_CONFIG_TYPE_COMMAND_BUS = "command_bus";
     const ENV_CONFIG_TYPE_EVENT_BUS   = "event_bus";

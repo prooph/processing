@@ -44,7 +44,6 @@ class RunSubProcessTest extends TestCase
                     "ginger_type" => 'GingerTest\Mock\UserDictionary'
                 ]
             ],
-            "config" => [Definition::PROCESS_CONFIG_STOP_ON_ERROR => true],
         ];
 
         $task = RunSubProcess::setUp(NodeName::fromString('other_machine'), $subProcessDefinition);
@@ -68,7 +67,6 @@ class RunSubProcessTest extends TestCase
                     "ginger_type" => 'GingerTest\Mock\UserDictionary'
                 ]
             ],
-            "config" => [Definition::PROCESS_CONFIG_STOP_ON_ERROR => true],
         ];
 
         $task = RunSubProcess::setUp(NodeName::defaultName(), $subProcessDefinition);
@@ -96,7 +94,6 @@ class RunSubProcessTest extends TestCase
                     "ginger_type" => 'GingerTest\Mock\UserDictionary'
                 ]
             ],
-            "config" => [Definition::PROCESS_CONFIG_STOP_ON_ERROR => true],
         ];
 
         $task = RunSubProcess::setUp(NodeName::defaultName(), $subProcessDefinition);
