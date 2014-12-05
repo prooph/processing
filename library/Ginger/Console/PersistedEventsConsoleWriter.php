@@ -10,6 +10,7 @@
  */
 
 namespace Ginger\Console;
+
 use Prooph\EventStore\PersistenceEvent\PostCommitEvent;
 use Zend\EventManager\AbstractListenerAggregate;
 use Zend\EventManager\EventManagerInterface;

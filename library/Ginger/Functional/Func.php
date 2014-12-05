@@ -7,6 +7,7 @@
  * file that was distributed with this source code.
  */
 namespace Ginger\Functional;
+
 use Ginger\Message\Payload;
 
 /**
@@ -19,6 +20,9 @@ use Ginger\Message\Payload;
  */
 final class Func
 {
+    //////////////////////////////////////////////////////
+    /////////////////  Func Utils  ///////////////////////
+    //////////////////////////////////////////////////////
     /**
      * Returns the requested method of Func as a callable function
      *
@@ -100,6 +104,10 @@ final class Func
         }
     }
 
+    //////////////////////////////////////////////////////
+    /////////////////  Assertions  ///////////////////////
+    //////////////////////////////////////////////////////
+
     /**
      * @param $callback
      * @throws \InvalidArgumentException
@@ -110,6 +118,10 @@ final class Func
             throw new \InvalidArgumentException("Provided callback is not callable. It is of type " . gettype($callback));
         }
     }
+
+    //////////////////////////////////////////////////////
+    /////////////  Collection Methods  ///////////////////
+    //////////////////////////////////////////////////////
 
     /**
      * Returns an array of values by mapping each in collection through the callback.
@@ -132,6 +144,10 @@ final class Func
         return $result;
     }
 
+    //////////////////////////////////////////////////////
+    //////////  Payload Manipulation  ////////////////////
+    //////////////////////////////////////////////////////
+
     /**
      * Converts payload to original data
      *
@@ -144,7 +160,7 @@ final class Func
     }
 
     /**
-     * Extracts data from payload passes it to callback and replaces and overrides payload data with result
+     * Extracts data from payload, passes it to callback and overrides payload data with result
      *
      * @param Payload $payload
      * @param $callback

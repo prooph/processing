@@ -16,10 +16,14 @@ use Ginger\Message\LogMessage;
 use Ginger\Message\MessageNameUtils;
 use Ginger\Message\WorkflowMessage;
 use Ginger\Processor\Event\ProcessSetUp;
+use Ginger\Processor\Task\CollectData;
 use Ginger\Processor\Task\Event\LogMessageReceived;
 use Ginger\Processor\Task\Event\TaskEntryMarkedAsDone;
 use Ginger\Processor\Task\Event\TaskEntryMarkedAsFailed;
 use Ginger\Processor\Task\Event\TaskEntryMarkedAsRunning;
+use Ginger\Processor\Task\ManipulatePayload;
+use Ginger\Processor\Task\NotifyListeners;
+use Ginger\Processor\Task\ProcessData;
 use Ginger\Processor\Task\RunSubProcess;
 use Ginger\Processor\Task\Task;
 use Ginger\Processor\Task\TaskList;
@@ -27,6 +31,7 @@ use Ginger\Processor\Task\TaskListId;
 use Ginger\Processor\Task\TaskListPosition;
 use Prooph\EventSourcing\AggregateRoot;
 use Prooph\ServiceBus\Exception\CommandDispatchException;
+use Prooph\ServiceBus\Exception\EventDispatchException;
 use Prooph\ServiceBus\Message\StandardMessage;
 
 /**
@@ -182,7 +187,7 @@ abstract class Process extends AggregateRoot
             if ($message->isError()) {
                 $this->recordThat(TaskEntryMarkedAsFailed::at($message->getProcessTaskListPosition()));
             } elseif ($this->isSubProcess() && $this->syncLogMessages) {
-                //We only sync non error messages, because errors are always sync and then they would be received twice
+                //We only sync non error messages, because errors are always synced and then they would be received twice
                 $messageForParent = $message->reconnectToProcessTask($this->parentTaskListPosition);
                 $workflowEngine->getEventBusFor($this->parentTaskListPosition->taskListId()->nodeName()->toString())
                     ->dispatch($messageForParent);
@@ -231,6 +236,80 @@ abstract class Process extends AggregateRoot
     }
 
     /**
+     * @param Task $task
+     * @param TaskListPosition $taskListPosition
+     * @param WorkflowEngine $workflowEngine
+     * @param WorkflowMessage $previousMessage
+     * @throws \RuntimeException
+     */
+    protected function performTask(Task $task, TaskListPosition $taskListPosition, WorkflowEngine $workflowEngine, WorkflowMessage $previousMessage = null)
+    {
+        if ($task instanceof CollectData) {
+            $this->performCollectData($task, $taskListPosition, $workflowEngine);
+            return;
+        }
+
+        if ($task instanceof ProcessData) {
+            $this->performProcessData($task, $taskListPosition, $previousMessage, $workflowEngine);
+        }
+
+        if ($task instanceof RunSubProcess) {
+            $this->performRunSubProcess($task, $taskListPosition, $workflowEngine, $previousMessage);
+        }
+
+        if ($task instanceof ManipulatePayload) {
+            $this->performManipulatePayload($task, $taskListPosition, $workflowEngine, $previousMessage);
+        }
+
+        if ($task instanceof NotifyListeners) {
+            throw new \RuntimeException("NotifyListeners is not yet supported");
+        }
+    }
+
+    /**
+     * @param CollectData $collectData
+     * @param TaskListPosition $taskListPosition
+     * @param WorkflowEngine $workflowEngine
+     */
+    protected function performCollectData(CollectData $collectData, TaskListPosition $taskListPosition, WorkflowEngine $workflowEngine)
+    {
+        $workflowMessage = WorkflowMessage::collectDataOf($collectData->prototype());
+
+        $workflowMessage->connectToProcessTask($taskListPosition);
+
+        try {
+            $workflowEngine->getCommandBusFor($collectData->source())->dispatch($workflowMessage);
+        } catch (CommandDispatchException $ex) {
+            $this->receiveMessage(LogMessage::logException($ex->getPrevious(), $workflowMessage->getProcessTaskListPosition()), $workflowEngine);
+        } catch (\Exception $ex) {
+            $this->receiveMessage(LogMessage::logException($ex, $workflowMessage->getProcessTaskListPosition()), $workflowEngine);
+        }
+    }
+
+    /**
+     * @param ProcessData $processData
+     * @param TaskListPosition $taskListPosition
+     * @param WorkflowMessage $previousMessage
+     * @param WorkflowEngine $workflowEngine
+     */
+    protected function performProcessData(ProcessData $processData, TaskListPosition $taskListPosition, WorkflowMessage $previousMessage, WorkflowEngine $workflowEngine)
+    {
+        $workflowMessage = $previousMessage->prepareDataProcessing($taskListPosition);
+
+        if (! in_array($workflowMessage->getPayload()->getTypeClass(), $processData->allowedTypes())) {
+            $workflowMessage->changeGingerType($processData->preferredType());
+        }
+
+        try {
+            $workflowEngine->getCommandBusFor($processData->target())->dispatch($workflowMessage);
+        } catch (CommandDispatchException $ex) {
+            $this->receiveMessage(LogMessage::logException($ex->getPrevious(), $workflowMessage->getProcessTaskListPosition()), $workflowEngine);
+        } catch (\Exception $ex) {
+            $this->receiveMessage(LogMessage::logException($ex, $workflowMessage->getProcessTaskListPosition()), $workflowEngine);
+        }
+    }
+
+    /**
      * @param RunSubProcess $task
      * @param TaskListPosition $taskListPosition
      * @param WorkflowEngine $workflowEngine
@@ -252,6 +331,41 @@ abstract class Process extends AggregateRoot
         } catch (\Exception $ex) {
             $this->receiveMessage(LogMessage::logException($ex, $taskListPosition), $workflowEngine);
         }
+    }
+
+    /**
+     * @param ManipulatePayload $task
+     * @param TaskListPosition $taskListPosition
+     * @param WorkflowEngine $workflowEngine
+     * @param WorkflowMessage $previousMessage
+     */
+    protected function performManipulatePayload(
+        ManipulatePayload $task,
+        TaskListPosition $taskListPosition,
+        WorkflowEngine $workflowEngine,
+        WorkflowMessage $previousMessage)
+    {
+        if (! MessageNameUtils::isGingerEvent($previousMessage->getMessageName())) {
+            $this->receiveMessage(
+                LogMessage::logWrongMessageReceivedFor($task, $taskListPosition, $previousMessage),
+                $workflowEngine
+            );
+
+            return;
+        }
+
+        $payload = $previousMessage->getPayload();
+
+        try {
+            $task->performManipulationOn($payload);
+        } catch (\Exception $ex) {
+            $this->receiveMessage(LogMessage::logException($ex, $taskListPosition), $workflowEngine);
+            return;
+        }
+
+        $newEvent = $previousMessage->prepareDataProcessing($taskListPosition)->answerWithDataProcessingCompleted();
+
+        $this->receiveMessage($newEvent, $workflowEngine);
     }
 
     /**
