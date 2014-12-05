@@ -18,7 +18,7 @@ system in the comments of the script.
 `Ginger\Console` provides an easy way to start a pre configured workflow from the command line. The example
 ships with such a workflow configuration. Please see [example2-workflow.config.php](config/example2-workflow.config.php).
 
-To run the example (currently only possible on a *nix system) navigate to
+To run the example navigate to
 `<ginger-package-root>/examples` and fire up
 `./bin/ginger collect GingerExample\\Type\\SourceUser --config-file config/example2-workflow.config.php --verbose`
 
