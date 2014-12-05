@@ -54,7 +54,7 @@ class ProcessFactoryTest extends TestCase
 
         $process = $processFactory->createProcessFromDefinition($processDefinition, NodeName::defaultName());
 
-        $this->assertInstanceOf('Ginger\Processor\LinearMessagingProcess', $process);
+        $this->assertInstanceOf('Ginger\Processor\LinearProcess', $process);
 
         $this->assertFalse($process->isSubProcess());
 
@@ -93,7 +93,7 @@ class ProcessFactoryTest extends TestCase
             $parentTaskListPosition
         );
 
-        $this->assertInstanceOf('Ginger\Processor\LinearMessagingProcess', $process);
+        $this->assertInstanceOf('Ginger\Processor\LinearProcess', $process);
 
         $this->assertTrue($process->isSubProcess());
 
@@ -127,7 +127,7 @@ class ProcessFactoryTest extends TestCase
 
         $process = $factory->deriveProcessFromMessage($wfMessage, NodeName::defaultName());
 
-        $this->assertInstanceOf('Ginger\Processor\LinearMessagingProcess', $process);
+        $this->assertInstanceOf('Ginger\Processor\LinearProcess', $process);
 
         $this->commandRouter->route(
             MessageNameUtils::getProcessDataCommandName('GingerTest\Mock\AddressDictionary')
@@ -215,7 +215,7 @@ class ProcessFactoryTest extends TestCase
 
         $process = $processFactory->createProcessFromDefinition($definition, NodeName::defaultName());
 
-        $this->assertInstanceOf('Ginger\Processor\LinearMessagingProcess', $process);
+        $this->assertInstanceOf('Ginger\Processor\LinearProcess', $process);
 
         $message = WorkflowMessage::newDataCollected(String::fromString('Hello'));
 

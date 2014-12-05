@@ -85,8 +85,8 @@ class ProcessFactory
         switch($processDefinition["process_type"]) {
             case Definition::PROCESS_LINEAR_MESSAGING:
                 return (is_null($parentTaskListPosition))?
-                    LinearMessagingProcess::setUp($nodeName, $tasks, $processConfig)
-                    : LinearMessagingProcess::setUpAsSubProcess($parentTaskListPosition, $nodeName, $tasks, $processConfig);
+                    LinearProcess::setUp($nodeName, $tasks, $processConfig)
+                    : LinearProcess::setUpAsSubProcess($parentTaskListPosition, $nodeName, $tasks, $processConfig);
             default:
                 throw new \InvalidArgumentException(sprintf(
                     "Unsupported process_type given: %s",

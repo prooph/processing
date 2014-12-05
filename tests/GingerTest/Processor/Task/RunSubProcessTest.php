@@ -13,7 +13,7 @@ namespace GingerTest\Processor\Task;
 
 use Ginger\Message\WorkflowMessage;
 use Ginger\Processor\Definition;
-use Ginger\Processor\LinearMessagingProcess;
+use Ginger\Processor\LinearProcess;
 use Ginger\Processor\NodeName;
 use Ginger\Processor\ProcessId;
 use Ginger\Processor\Task\RunSubProcess;

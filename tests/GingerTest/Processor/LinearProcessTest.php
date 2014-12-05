@@ -11,7 +11,6 @@
 
 namespace GingerTest\Processor;
 
-
 use Ginger\Message\MessageNameUtils;
 use Ginger\Message\WorkflowMessage;
 use Ginger\Processor\LinearProcess;
@@ -28,7 +27,7 @@ use Prooph\ServiceBus\InvokeStrategy\CallbackStrategy;
 use Prooph\ServiceBus\Router\EventRouter;
 
 /**
- * Class LinearMessagingProcessTest
+ * Class LinearProcessTest
  *
  * @package GingerTest\Processor
  * @author Alexander Miertsch <kontakt@codeliner.ws>

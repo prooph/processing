@@ -20,7 +20,7 @@ use Ginger\Processor\Task\RunSubProcess;
 use Ginger\Processor\Task\Task;
 
 /**
- * Class LinearMessagingProcess
+ * Class LinearProcess
  *
  * @package Ginger\Processor
  * @author Alexander Miertsch <kontakt@codeliner.ws>
