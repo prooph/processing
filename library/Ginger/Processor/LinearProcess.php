@@ -25,7 +25,7 @@ use Ginger\Processor\Task\Task;
  * @package Ginger\Processor
  * @author Alexander Miertsch <kontakt@codeliner.ws>
  */
-class LinearMessagingProcess extends Process
+class LinearProcess extends Process
 {
     /**
      * Start or continue the process with the help of given WorkflowEngine and optionally with given WorkflowMessage
