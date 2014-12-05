@@ -14,7 +14,7 @@ namespace GingerTest\Processor\Command;
 use Ginger\Message\WorkflowMessage;
 use Ginger\Processor\Command\StartSubProcess;
 use Ginger\Processor\Definition;
-use Ginger\Processor\LinearMessagingProcess;
+use Ginger\Processor\LinearProcess;
 use Ginger\Processor\NodeName;
 use Ginger\Processor\ProcessId;
 use Ginger\Processor\Task\TaskListId;
@@ -75,7 +75,7 @@ class StartSubProcessTest extends TestCase
      */
     public function it_does_not_require_a_previous_message()
     {
-        $parentProcess = LinearMessagingProcess::setUp(NodeName::defaultName(), []);
+        $parentProcess = LinearProcess::setUp(NodeName::defaultName(), []);
 
         $subProcessDefinition = [
             "process_type" => Definition::PROCESS_LINEAR_MESSAGING,

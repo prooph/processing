@@ -195,7 +195,7 @@ class EnvironmentTest extends TestCase
         $process = $env->services()->get(Definition::SERVICE_PROCESS_FACTORY)
             ->deriveProcessFromMessage($wfMessage, $env->getNodeName());
 
-        $this->assertInstanceOf('Ginger\Processor\LinearMessagingProcess', $process);
+        $this->assertInstanceOf('Ginger\Processor\LinearProcess', $process);
     }
 
     /**
