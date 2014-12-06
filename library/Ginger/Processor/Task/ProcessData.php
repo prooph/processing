@@ -11,6 +11,7 @@
 
 namespace Ginger\Processor\Task;
 
+use Assert\Assertion;
 use Codeliner\Comparison\EqualsBuilder;
 
 /**
@@ -53,22 +54,28 @@ class ProcessData implements Task
      */
     public static function reconstituteFromArray(array $taskData)
     {
-        \Assert\that($taskData)->keyExists('target')
-            ->keyExists('allowed_types')
-            ->keyExists('preferred_type');
-
-        \Assert\that($taskData['allowed_types'])->isArray();
+        Assertion::keyExists($taskData, 'target');
+        Assertion::keyExists($taskData, 'allowed_types');
+        Assertion::keyExists($taskData, 'preferred_type');
+        Assertion::isArray($taskData['allowed_types']);
 
         return new self($taskData['target'], $taskData['allowed_types'], $taskData['preferred_type']);
     }
 
     private function __construct($target, array $allowedTypes, $preferredType = null)
     {
-        \Assert\that($target)->notEmpty()->string();
+        Assertion::notEmpty($target);
+        Assertion::string($target);
+        Assertion::notEmpty($allowedTypes);
 
-        \Assert\that($allowedTypes)->notEmpty()->all()->classExists()->implementsInterface('Ginger\Type\Type');
+        foreach ($allowedTypes as $allowedType) {
+            Assertion::classExists($allowedType);
+            Assertion::implementsInterface($allowedType, 'Ginger\Type\Type');
+        }
 
-        \Assert\that($preferredType)->nullOr()->inArray($allowedTypes);
+        if (! is_null($preferredType)) {
+            Assertion::inArray($preferredType, $allowedTypes);
+        }
 
         $this->target = $target;
         $this->allowedTypes = $allowedTypes;

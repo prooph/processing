@@ -10,6 +10,8 @@
  */
 namespace Ginger\Type\Description;
 
+use Assert\Assertion;
+
 /**
  * Class Description
  *
@@ -55,10 +57,14 @@ class Description
      */
     public function __construct($label, $nativeType, $hasIdentifier, $identifierName = null)
     {
-        \Assert\that($label)->notEmpty()->string();
-        \Assert\that($nativeType)->inArray(NativeType::all());
-        \Assert\that($hasIdentifier)->boolean();
-        \Assert\that($identifierName)->nullOr()->notEmpty()->string();
+        Assertion::notEmpty($label);
+        Assertion::string($label);
+        Assertion::inArray($nativeType, NativeType::all());
+        Assertion::boolean($hasIdentifier);
+        if (! is_null($identifierName)) {
+            Assertion::notEmpty($identifierName);
+            Assertion::string($identifierName);
+        }
 
         $this->label = $label;
         $this->nativeType = $nativeType;

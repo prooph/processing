@@ -10,6 +10,7 @@
  */
 
 namespace Ginger\Processor\Task;
+use Assert\Assertion;
 
 /**
  * Class TaskListPosition
@@ -41,7 +42,7 @@ class TaskListPosition
 
     public static function fromString($taskListPositionStr)
     {
-        \Assert\that($taskListPositionStr)->string();
+        Assertion::string($taskListPositionStr);
 
         $parts = explode(':TASK_POSITION:', $taskListPositionStr);
 
@@ -59,7 +60,7 @@ class TaskListPosition
 
     private function __construct(TaskListId $taskListId, $position)
     {
-        \Assert\that($position)->integer();
+        Assertion::integer($position);
 
         $this->taskListId = $taskListId;
         $this->position = $position;

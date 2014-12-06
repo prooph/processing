@@ -88,7 +88,9 @@ class TaskList
      */
     private function __construct(TaskListId $taskListId, array $taskListEntries)
     {
-        \Assert\that($taskListEntries)->all()->isInstanceOf('Ginger\Processor\Task\TaskListEntry');
+        foreach ($taskListEntries as $taskListEntry) {
+            Assertion::isInstanceOf($taskListEntry, 'Ginger\Processor\Task\TaskListEntry');
+        }
 
         $this->taskListEntries = $taskListEntries;
         $this->taskListId = $taskListId;
