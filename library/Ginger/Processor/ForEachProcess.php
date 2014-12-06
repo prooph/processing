@@ -13,11 +13,15 @@ namespace Ginger\Processor;
 use Ginger\Message\LogMessage;
 use Ginger\Message\MessageNameUtils;
 use Ginger\Message\WorkflowMessage;
+use Ginger\Processor\Task\Event\TaskEntryMarkedAsRunning;
+use Ginger\Processor\Task\Event\TaskListWasRescheduled;
 use Ginger\Processor\Task\RunSubProcess;
 use Ginger\Processor\Task\TaskList;
 use Ginger\Processor\Task\TaskListId;
 use Ginger\Type\AbstractCollection;
+use Ginger\Type\CollectionType;
 use Ginger\Type\Description\NativeType;
+use Zend\Validator\Exception\BadMethodCallException;
 
 /**
  * Class ForEachProcess
@@ -36,17 +40,26 @@ class ForEachProcess extends Process
      *
      * @param WorkflowEngine $workflowEngine
      * @param WorkflowMessage $workflowMessage
+     * @throws \RuntimeException
+     * @throws \BadMethodCallException
      * @return void
      */
     public function perform(WorkflowEngine $workflowEngine, WorkflowMessage $workflowMessage = null)
     {
-        $taskListEntry = $this->taskList->getNextNotStartedTaskListEntry();
-
-        if (is_null($taskListEntry)) {
+        if ($this->taskList->isStarted()) {
+            $this->checkFinished();
             return;
         }
 
+        $taskListEntry = $this->taskList->getNextNotStartedTaskListEntry();
+
+        if (is_null($taskListEntry)) {
+            throw new \RuntimeException('ForEachProcess::perform was called but there are no tasks configured!');
+        }
+
+
         if (count($this->taskList->getAllTaskListEntries()) > 1) {
+            $this->recordThat(TaskEntryMarkedAsRunning::at($taskListEntry->taskListPosition()));
             $this->receiveMessage(
                 LogMessage::logErrorMsg(
                     'The ForEachProcess can only handle a single RunSubProcess task but there are more tasks configured',
@@ -58,6 +71,7 @@ class ForEachProcess extends Process
         }
 
         if (! $taskListEntry->task() instanceof RunSubProcess) {
+            $this->recordThat(TaskEntryMarkedAsRunning::at($taskListEntry->taskListPosition()));
             $this->receiveMessage(
                 LogMessage::logErrorMsg(
                     sprintf(
@@ -72,6 +86,7 @@ class ForEachProcess extends Process
         }
 
         if (is_null($workflowMessage)) {
+            $this->recordThat(TaskEntryMarkedAsRunning::at($taskListEntry->taskListPosition()));
             $this->receiveMessage(
                 LogMessage::logNoMessageReceivedFor($taskListEntry->task(), $taskListEntry->taskListPosition()),
                 $workflowEngine
@@ -80,7 +95,7 @@ class ForEachProcess extends Process
         }
 
         if (! MessageNameUtils::isGingerEvent($workflowMessage->getMessageName())) {
-            $taskListEntry = $this->taskList->getNextNotStartedTaskListEntry();
+            $this->recordThat(TaskEntryMarkedAsRunning::at($taskListEntry->taskListPosition()));
             $this->receiveMessage(
                 LogMessage::logWrongMessageReceivedFor($taskListEntry->task(), $taskListEntry->taskListPosition(), $workflowMessage),
                 $workflowEngine
@@ -90,11 +105,11 @@ class ForEachProcess extends Process
 
         $collection = $workflowMessage->getPayload()->toType();
 
-        if ($collection->description()->nativeType() !== NativeType::COLLECTION) {
+        if (! $collection instanceof CollectionType) {
             $this->receiveMessage(
                 LogMessage::logErrorMsg(
                     sprintf(
-                        'The ForEachProcess requires a Ginger\Type\NativeType::COLLECTION as payload of the incoming message, but it is a %s type given',
+                        'The ForEachProcess requires a Ginger\Type\CollectionType as payload of the incoming message, but it is a %s type given',
                         $workflowMessage->getPayload()->getTypeClass()
                     ),
                     $taskListEntry->taskListPosition()
@@ -104,19 +119,22 @@ class ForEachProcess extends Process
             return;
         }
 
+        //Pre conditions are met so we can prepare the perform
         $this->rescheduleTasksBasedOnCollection(
-            $collection->value(),
+            $collection,
             $taskListEntry->task(),
             $taskListEntry->taskListPosition()->taskListId()->nodeName()
         );
+
+        $this->startSubProcessForEachItem($collection, $workflowEngine);
     }
 
     /**
-     * @param array $collection
+     * @param CollectionType $collection
      * @param RunSubProcess $task
      * @param NodeName $nodeName
      */
-    private function rescheduleTasksBasedOnCollection(array &$collection, RunSubProcess $task, NodeName $nodeName)
+    private function rescheduleTasksBasedOnCollection(CollectionType $collection, RunSubProcess $task, NodeName $nodeName)
     {
         $taskCollection = [];
 
@@ -128,6 +146,40 @@ class ForEachProcess extends Process
 
         $taskList = TaskList::scheduleTasks(TaskListId::linkWith($nodeName, $this->processId()), $taskCollection);
 
-        //@TODO record TaskListWasRescheduled event
+        $this->recordThat(TaskListWasRescheduled::with($taskList, $this->processId()));
+    }
+
+    /**
+     * @param CollectionType $collection
+     * @param WorkflowEngine $workflowEngine
+     */
+    private function startSubProcessForEachItem(CollectionType $collection, WorkflowEngine $workflowEngine)
+    {
+        foreach ($collection as $item) {
+            $taskListEntry = $this->taskList->getNextNotStartedTaskListEntry();
+
+            $task = $taskListEntry->task();
+
+            $message = WorkflowMessage::newDataCollected($item);
+
+            $message->connectToProcessTask($taskListEntry->taskListPosition());
+
+            $this->recordThat(TaskEntryMarkedAsRunning::at($taskListEntry->taskListPosition()));
+
+            $this->performRunSubProcess($task, $taskListEntry->taskListPosition(), $workflowEngine, $message);
+        }
+    }
+
+    /**
+     * @param TaskListWasRescheduled $taskListWasRescheduled
+     */
+    protected function whenTaskListWasRescheduled(TaskListWasRescheduled $taskListWasRescheduled)
+    {
+        $this->taskList = $taskListWasRescheduled->newTaskList();
+    }
+
+    private function checkFinished()
+    {
+        //@TODO record a ProcessFinished event
     }
 }

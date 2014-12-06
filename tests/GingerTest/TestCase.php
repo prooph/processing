@@ -141,7 +141,7 @@ class TestCase extends \PHPUnit_Framework_TestCase
 
     protected $otherMachineEventNameLog = array();
 
-    protected function setUp()
+    protected function setUpLocalMachine()
     {
         $this->workflowMessageHandler = new TestWorkflowMessageHandler();
 
@@ -231,7 +231,7 @@ class TestCase extends \PHPUnit_Framework_TestCase
         $this->otherMachineWorkflowEngine->registerEventBus($otherMachineEventBus, [Definition::DEFAULT_NODE_NAME]);
     }
 
-    protected function tearDown()
+    protected function tearDownTestEnvironment()
     {
         $this->workflowMessageHandler->reset();
 

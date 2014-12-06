@@ -163,6 +163,22 @@ class TaskListTest extends TestCase
     }
 
     /**
+     * @test
+     */
+    public function it_is_not_started_as_long_as_no_task_is_started()
+    {
+        $taskList = $this->getTestTaskList();
+
+        $this->assertFalse($taskList->isStarted());
+
+        $task1 = $taskList->getTaskListEntryAtPosition(TaskListPosition::at($taskList->taskListId(), 1));
+
+        $task1->markAsRunning();
+
+        $this->assertTrue($taskList->isStarted());
+    }
+
+    /**
      * @return TaskList
      */
     protected function getTestTaskList()
