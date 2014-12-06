@@ -11,6 +11,7 @@
 
 namespace Ginger\Message;
 
+use Assert\Assertion;
 use Codeliner\ArrayReader\ArrayReader;
 use Ginger\Type\Prototype;
 use Ginger\Type\Type;
@@ -67,9 +68,10 @@ class Payload implements \JsonSerializable
      */
     public static function fromJsonDecodedData(array $jsonDecodedData)
     {
-        \Assert\that($jsonDecodedData)->keyExists("typeClass");
-        \Assert\that($jsonDecodedData)->keyExists("data");
-        \Assert\that($jsonDecodedData['typeClass'])->notEmpty()->string();
+        Assertion::keyExists($jsonDecodedData, 'typeClass');
+        Assertion::keyExists($jsonDecodedData, 'data');
+        Assertion::notEmpty($jsonDecodedData['typeClass']);
+        Assertion::string($jsonDecodedData['typeClass']);
 
         return new static($jsonDecodedData['typeClass'], static::normalizeData($jsonDecodedData['data']));
     }
@@ -155,6 +157,8 @@ class Payload implements \JsonSerializable
      */
     public function changeTypeClass($newTypeClass)
     {
+        Assertion::string($newTypeClass);
+        Assertion::implementsInterface($newTypeClass, 'Ginger\Type\Type');
         $this->typeClass = $newTypeClass;
     }
 

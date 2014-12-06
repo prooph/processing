@@ -10,6 +10,7 @@
  */
 
 namespace Ginger\Message;
+use Assert\Assertion;
 
 /**
  * Class MessageNameUtils
@@ -95,7 +96,8 @@ class MessageNameUtils
      */
     public static function normalize($messageName)
     {
-        \Assert\that($messageName)->notEmpty()->string();
+        Assertion::notEmpty($messageName);
+        Assertion::string($messageName);
 
         $search = array(
             static::MESSAGE_NAME_PREFIX,

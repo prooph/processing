@@ -179,10 +179,10 @@ final class LogMessage implements MessageNameProvider, ServiceBusTranslatableMes
     {
         $payload = $aMessage->payload();
 
-        \Assert\that($payload)->keyExists('processTaskListPosition')
-            ->keyExists('technicalMsg')
-            ->keyExists('msgParams')
-            ->keyExists('msgCode');
+        Assertion::keyExists($payload, 'processTaskListPosition');
+        Assertion::keyExists($payload, 'technicalMsg');
+        Assertion::keyExists($payload, 'msgParams');
+        Assertion::keyExists($payload, 'msgCode');
 
         $taskListPosition = TaskListPosition::fromString($payload['processTaskListPosition']);
 
@@ -207,8 +207,8 @@ final class LogMessage implements MessageNameProvider, ServiceBusTranslatableMes
      */
     private function __construct(TaskListPosition $taskListPosition, $technicalMsg, $msgCode = 0, array $msgParams = array(), Uuid $uuid = null, \DateTime $createdOn = null)
     {
-        \Assert\that($technicalMsg)->string();
-        \Assert\that($msgCode)->integer();
+        Assertion::string($technicalMsg);
+        Assertion::integer($msgCode);
 
         foreach ($msgParams as $key => $param) {
             if (! is_scalar($param)) {

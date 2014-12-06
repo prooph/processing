@@ -11,6 +11,7 @@
 
 namespace Ginger\Processor;
 
+use Assert\Assertion;
 use Prooph\ServiceBus\CommandBus;
 use Prooph\ServiceBus\EventBus;
 use Zend\EventManager\ListenerAggregateInterface;
@@ -40,7 +41,10 @@ class RegistryWorkflowEngine implements WorkflowEngine
      */
     public function registerCommandBus(CommandBus $commandBus, array $targets)
     {
-        \Assert\that($targets)->all()->notEmpty()->string();
+        foreach($targets as $target) {
+            Assertion::notEmpty($target);
+            Assertion::string($target);
+        }
 
         $registered = false;
 
@@ -73,8 +77,6 @@ class RegistryWorkflowEngine implements WorkflowEngine
      */
     public function registerEventBus(EventBus $eventBus, array $targets)
     {
-        \Assert\that($targets)->all()->notEmpty()->string();
-
         $registered = false;
 
         foreach($this->eventBusList as $registeredEventBus) {
@@ -88,6 +90,9 @@ class RegistryWorkflowEngine implements WorkflowEngine
             $this->eventBusList[] = $eventBus;
 
         foreach ($targets as $target) {
+            Assertion::notEmpty($target);
+            Assertion::string($target);
+
             if (isset($this->eventBusMap[$target])) {
                 throw new \RuntimeException(sprintf(
                     "Target %s is already connected with an event bus",
@@ -106,7 +111,7 @@ class RegistryWorkflowEngine implements WorkflowEngine
      */
     public function getCommandBusFor($target)
     {
-        \Assert\that($target)->string();
+        Assertion::string($target);
 
         if (! isset($this->commandBusMap[$target])) {
             throw new \RuntimeException(sprintf(
@@ -125,7 +130,7 @@ class RegistryWorkflowEngine implements WorkflowEngine
      */
     public function getEventBusFor($target)
     {
-        \Assert\that($target)->string();
+        Assertion::string($target);
 
         if (! isset($this->eventBusMap[$target])) {
             throw new \RuntimeException(sprintf(

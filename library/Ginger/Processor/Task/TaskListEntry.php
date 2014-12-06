@@ -11,6 +11,7 @@
 
 namespace Ginger\Processor\Task;
 
+use Assert\Assertion;
 use Ginger\Message\LogMessage;
 use Prooph\ServiceBus\Message\StandardMessage;
 
@@ -73,16 +74,14 @@ class TaskListEntry
      */
     public static function fromArray(array $taskListEntryData)
     {
-        \Assert\that($taskListEntryData)
-            ->keyExists('taskListPosition')
-            ->keyExists('taskData')
-            ->keyExists('taskClass')
-            ->keyExists('status')
-            ->keyExists('startedOn')
-            ->keyExists('finishedOn')
-            ->keyExists('log');
-
-        \Assert\that($taskListEntryData['status'])->inArray([
+        Assertion::keyExists($taskListEntryData, 'taskListPosition');
+        Assertion::keyExists($taskListEntryData, 'taskData');
+        Assertion::keyExists($taskListEntryData, 'taskClass');
+        Assertion::keyExists($taskListEntryData, 'status');
+        Assertion::keyExists($taskListEntryData, 'startedOn');
+        Assertion::keyExists($taskListEntryData, 'finishedOn');
+        Assertion::keyExists($taskListEntryData, 'log');
+        Assertion::inArray($taskListEntryData['status'], [
             self::STATUS_NOT_STARTED,
             self::STATUS_IN_PROGRESS,
             self::STATUS_DONE,

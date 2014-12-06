@@ -97,8 +97,8 @@ abstract class AbstractDictionary implements DictionaryType
 
         try{
             if ($valueKeys != $propertyNames) {
-                \Assert\that(array_keys($value))->all()->inArray($propertyNames);
-                \Assert\that($propertyNames)->all()->inArray(array_keys($value));
+                foreach (array_keys($value) as $propertyName) Assertion::inArray($propertyName, $propertyNames);
+                foreach ($propertyNames as $propertyName) Assertion::inArray($propertyName, array_keys($value));
             }
 
             return new static($value);

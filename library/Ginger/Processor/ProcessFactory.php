@@ -133,9 +133,10 @@ class ProcessFactory
     private function createCollectDataTaskFromDefinition(array $taskDefinition)
     {
         Assertion::keyExists($taskDefinition, "source");
-        \Assert\that($taskDefinition["source"])->notEmpty()->string();
+        Assertion::notEmpty($taskDefinition["source"]);
+        Assertion::string($taskDefinition["source"]);
         Assertion::keyExists($taskDefinition, "ginger_type");
-        \Assert\that($taskDefinition["ginger_type"])->implementsInterface('Ginger\Type\Type');
+        Assertion::implementsInterface($taskDefinition["ginger_type"], 'Ginger\Type\Type');
 
         $gingerType = $taskDefinition["ginger_type"];
 
@@ -151,7 +152,8 @@ class ProcessFactory
     private function createProcessDataTaskFromDefinition(array $taskDefinition)
     {
         Assertion::keyExists($taskDefinition, "target");
-        \Assert\that($taskDefinition["target"])->notEmpty()->string();
+        Assertion::notEmpty($taskDefinition["target"]);
+        Assertion::string($taskDefinition["target"]);
         Assertion::keyExists($taskDefinition, "allowed_types");
         Assertion::isArray($taskDefinition["allowed_types"]);
         Assertion::allString($taskDefinition["allowed_types"]);

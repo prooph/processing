@@ -11,6 +11,7 @@
 
 namespace Ginger\Processor\Task;
 
+use Assert\Assertion;
 use Ginger\Type\Prototype;
 
 /**
@@ -62,7 +63,8 @@ class CollectData implements Task
      */
     private function __construct($source, Prototype $prototype)
     {
-        \Assert\that($source)->notEmpty()->string();
+        Assertion::notEmpty($source);
+        Assertion::string($source);
 
         $this->source = $source;
         $this->prototype = $prototype;

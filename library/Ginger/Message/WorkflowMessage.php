@@ -11,6 +11,7 @@
 
 namespace Ginger\Message;
 
+use Assert\Assertion;
 use Ginger\Message\ProophPlugin\ServiceBusTranslatableMessage;
 use Ginger\Processor\ProcessId;
 use Ginger\Processor\Task\TaskListPosition;
@@ -94,7 +95,7 @@ class WorkflowMessage implements MessageNameProvider, ServiceBusTranslatableMess
     {
         $messagePayload = $aMessage->payload();
 
-        \Assert\that($messagePayload)->keyExists('json');
+        Assertion::keyExists($messagePayload, 'json');
 
         $taskListPosition = (isset($messagePayload['processTaskListPosition']))?
             TaskListPosition::fromString($messagePayload['processTaskListPosition']) : null;
@@ -129,7 +130,8 @@ class WorkflowMessage implements MessageNameProvider, ServiceBusTranslatableMess
     ) {
         $this->payload = $payload;
 
-        \Assert\that($messageName)->notEmpty()->string();
+        Assertion::notEmpty($messageName);
+        Assertion::string($messageName);
 
         $this->messageName = $messageName;
 
@@ -304,7 +306,7 @@ class WorkflowMessage implements MessageNameProvider, ServiceBusTranslatableMess
      */
     public function changeGingerType($newGingerType)
     {
-        \Assert\that($newGingerType)->string()->implementsInterface('Ginger\Type\Type');
+        Assertion::string($newGingerType);
 
         $oldGingerType = MessageNameUtils::getTypePartOfMessageName($this->messageName);
 
