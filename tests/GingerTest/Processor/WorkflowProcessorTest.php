@@ -29,6 +29,16 @@ use Prooph\ServiceBus\EventBus;
  */
 class WorkflowProcessorTest extends TestCase
 {
+    protected function setUp()
+    {
+        parent::setUpLocalMachine();
+    }
+
+    protected function tearDown()
+    {
+        parent::tearDownTestEnvironment();
+    }
+    
     /**
      * @test
      */

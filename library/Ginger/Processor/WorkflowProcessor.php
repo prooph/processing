@@ -251,20 +251,10 @@ class WorkflowProcessor
             ));
         }
 
-        $this->beginTransaction();
+        $lastAnswerReceivedForSubProcess = $subProcessFinished->lastMessage()
+            ->reconnectToProcessTask($subProcessFinished->parentTaskListPosition());
 
-        try {
-            $lastAnswerReceivedForSubProcess = $subProcessFinished->lastMessage()
-                ->reconnectToProcessTask($subProcessFinished->parentTaskListPosition());
-
-            $parentProcess->receiveMessage($lastAnswerReceivedForSubProcess, $this->workflowEngine);
-
-            $this->commitTransaction();
-        } catch (\Exception $ex) {
-            $this->rollbackTransaction();
-
-            throw $ex;
-        }
+        $this->continueProcessAt($subProcessFinished->parentTaskListPosition(), $lastAnswerReceivedForSubProcess);
     }
 
     private function beginTransaction()

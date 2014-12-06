@@ -26,6 +26,7 @@ class Definition
     const SERVICE_PROCESS_REPOSITORY   = "ginger.process_repository";
 
     const PROCESS_LINEAR_MESSAGING   = "linear_messaging";
+    const PROCESS_PARALLEL_FOR_EACH  = "parallel_for_each";
 
     const TASK_COLLECT_DATA          = "collect_data";
     const TASK_PROCESS_DATA          = "process_data";

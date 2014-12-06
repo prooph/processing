@@ -34,6 +34,16 @@ use Prooph\ServiceBus\Router\EventRouter;
  */
 class LinearProcessTest extends TestCase
 {
+    protected function setUp()
+    {
+        parent::setUpLocalMachine();
+    }
+
+    protected function tearDown()
+    {
+        parent::tearDownTestEnvironment();
+    }
+
     /**
      * @test
      */

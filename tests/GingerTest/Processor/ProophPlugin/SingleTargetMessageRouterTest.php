@@ -30,6 +30,16 @@ use Prooph\ServiceBus\Process\EventDispatch;
  */
 class SingleTargetMessageRouterTest extends TestCase
 {
+    protected function setUp()
+    {
+        parent::setUpLocalMachine();
+    }
+
+    protected function tearDown()
+    {
+        parent::tearDownTestEnvironment();
+    }
+
     /**
      * @test
      * @dataProvider dataProviderTargetListeners
@@ -41,7 +51,7 @@ class SingleTargetMessageRouterTest extends TestCase
 
     public function dataProviderTargetListeners()
     {
-        parent::setUp();
+        parent::setUpLocalMachine();
         return [
             [$this->getTestWorkflowProcessor()],
             [new TestWorkflowMessageHandler()],

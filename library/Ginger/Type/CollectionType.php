@@ -27,5 +27,22 @@ interface CollectionType extends Type
      * @return Prototype
      */
     public static function itemPrototype();
+
+    /**
+     * Returns the item count
+     * The implementer should implement \Countable
+     *
+     * @return int
+     */
+    public function count();
+
+    /**
+     * Forces the implementer to be a \IteratorAggregate
+     * The implementer should implement \IteratorAggregate
+     * to be directly usable in a foreach
+     *
+     * @return \Traversable
+     */
+    public function getIterator();
 }
  

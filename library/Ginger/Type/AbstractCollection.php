@@ -20,7 +20,7 @@ use Ginger\Type\Exception\InvalidTypeException;
  * @package Ginger\Type
  * @author Alexander Miertsch <kontakt@codeliner.ws>
  */
-abstract class AbstractCollection implements CollectionType
+abstract class AbstractCollection implements CollectionType, \IteratorAggregate, \Countable
 {
     /**
      * @var array
@@ -198,6 +198,22 @@ abstract class AbstractCollection implements CollectionType
     public function jsonSerialize()
     {
         return $this->value();
+    }
+
+    /**
+     * @return int
+     */
+    public function count()
+    {
+        return count($this->value());
+    }
+
+    /**
+     * @return \ArrayIterator
+     */
+    public function getIterator()
+    {
+        return new \ArrayIterator($this->value());
     }
 
     /**

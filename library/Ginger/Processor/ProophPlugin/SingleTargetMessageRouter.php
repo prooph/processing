@@ -11,6 +11,7 @@
 
 namespace Ginger\Processor\ProophPlugin;
 
+use Assert\Assertion;
 use Ginger\Message\LogMessage;
 use Ginger\Message\WorkflowMessage;
 use Ginger\Message\WorkflowMessageHandler;
@@ -54,7 +55,8 @@ class SingleTargetMessageRouter extends AbstractListenerAggregate
                 ));
             }
         } else {
-            \Assert\that($targetHandler)->notEmpty()->string();
+            Assertion::notEmpty($targetHandler);
+            Assertion::string($targetHandler);
         }
 
         $this->targetHandler = $targetHandler;

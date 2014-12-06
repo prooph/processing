@@ -10,6 +10,7 @@
  */
 
 namespace Ginger\Processor\Task;
+use Assert\Assertion;
 
 /**
  * Class TaskList
@@ -36,7 +37,9 @@ class TaskList
      */
     public static function scheduleTasks(TaskListId $taskListId, array $tasks)
     {
-        \Assert\that($tasks)->all()->isInstanceOf('Ginger\Processor\Task\Task');
+        foreach ($tasks as $task) {
+            Assertion::isInstanceOf($task, 'Ginger\Processor\Task\Task');
+        }
 
         $position = 1;
 
@@ -64,9 +67,9 @@ class TaskList
      */
     public static function fromArray(array $taskListArr)
     {
-        \Assert\that($taskListArr)->keyExists('taskListId')->keyExists('entries');
-
-        \Assert\that($taskListArr['entries'])->isArray();
+        Assertion::keyExists($taskListArr, 'taskListId');
+        Assertion::keyExists($taskListArr, 'entries');
+        Assertion::isArray($taskListArr['entries']);
 
         $taskListId = TaskListId::fromString($taskListArr['taskListId']);
 
@@ -167,6 +170,20 @@ class TaskList
     public function getArrayCopyOfEntries()
     {
         return array_map(function(TaskListEntry $taskListEntry) {return $taskListEntry->getArrayCopy();}, $this->taskListEntries);
+    }
+
+    /**
+     * @return bool
+     */
+    public function isStarted()
+    {
+        foreach($this->taskListEntries as $taskListEntry) {
+            if ($taskListEntry->isStarted()) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
