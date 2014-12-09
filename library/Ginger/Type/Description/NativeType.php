@@ -17,7 +17,9 @@ namespace Ginger\Type\Description;
  */
 class NativeType
 {
-    const STRING      = "string";
+    const UNKNOWN      = "unknown";
+
+    const STRING       = "string";
 
     const BOOLEAN      = "boolean";
 
@@ -40,6 +42,7 @@ class NativeType
     public static function all()
     {
         return array(
+            self::UNKNOWN,
             self::STRING,
             self::BOOLEAN,
             self::INTEGER,
