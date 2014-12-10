@@ -44,12 +44,6 @@ interface WorkflowEngine
      * @param ListenerAggregateInterface $plugin
      * @return void
      */
-    public function attachPluginToAllCommandBuses(ListenerAggregateInterface $plugin);
-
-    /**
-     * @param ListenerAggregateInterface $plugin
-     * @return void
-     */
-    public function attachPluginToAllEventBuses(ListenerAggregateInterface $plugin);
+    public function attachPluginToAllChannels(ListenerAggregateInterface $plugin);
 }
  

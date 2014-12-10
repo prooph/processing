@@ -51,25 +51,5 @@ return [
                 ]
             ]
         ],
-        //The "buses" configuration is used to set up the required communication channels to the plugins
-        //The workflow processor channels are set up automatically by Ginger\Environment but you can override
-        //the default system configuration if the workflow processor is located on another server. We will
-        //discover this later.
-        //The keys "read_user_data_command_bus" and "write_user_data_command_bus" follow no convention.
-        //Name it as you like.
-        'buses' => [
-            'read_user_data_command_bus' => [
-                'type' => 'command_bus',
-                'targets' => [
-                    'GingerExample\Plugin\UserDataProvider',
-                ]
-            ],
-            'write_user_data_command_bus' => [
-                'type' => 'command_bus',
-                'targets' => [
-                    'target-file-writer',
-                ]
-            ]
-        ]
-    ]
+    ],
 ];

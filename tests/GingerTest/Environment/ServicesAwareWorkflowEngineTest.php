@@ -51,15 +51,14 @@ class ServicesAwareWorkflowEngineTest extends TestCase
     /**
      * @test
      */
-    public function it_attaches_plugin_to_configured_command_bus_of_each_target()
+    public function it_attaches_plugin_to_configured_channel_of_each_target()
     {
         $env = Environment::setUp([
             "ginger" => [
-                "buses" => [
-                    "multi_target_command_bus" => [
-                        "type" => Definition::ENV_CONFIG_TYPE_COMMAND_BUS,
+                "channels" => [
+                    "multi_target_channel" => [
                         "targets" => ["target1", "target2"],
-                        "message_handler" => "mocked_message_handler"
+                        "message_dispatcher" => "mocked_message_handler"
                     ]
                 ]
             ]
@@ -67,35 +66,11 @@ class ServicesAwareWorkflowEngineTest extends TestCase
 
         $plugin = new SimpleBusPlugin();
 
-        $env->getWorkflowEngine()->attachPluginToAllCommandBuses($plugin);
+        $env->getWorkflowEngine()->attachPluginToAllChannels($plugin);
 
-        //It should be one time attached to the default workflow_processor_command_bus and two times for each target bus
-        $this->assertEquals(3, $plugin->getAttachCount());
-    }
-
-    /**
-     * @test
-     */
-    public function it_attaches_plugin_to_configured_event_bus_of_each_target()
-    {
-        $env = Environment::setUp([
-            "ginger" => [
-                "buses" => [
-                    "multi_target_event_bus" => [
-                        "type" => Definition::ENV_CONFIG_TYPE_EVENT_BUS,
-                        "targets" => ["target1", "target2"],
-                        "message_handler" => "mocked_message_handler"
-                    ]
-                ]
-            ]
-        ]);
-
-        $plugin = new SimpleBusPlugin();
-
-        $env->getWorkflowEngine()->attachPluginToAllEventBuses($plugin);
-
-        //It should be one time attached to the default workflow_processor_event_bus and two times for each target bus
-        $this->assertEquals(3, $plugin->getAttachCount());
+        //It should be attached two times to the node name channel and two times for each target bus
+        //Two times because for every target the workflow engine creates a command bus and an event bus
+        $this->assertEquals(6, $plugin->getAttachCount());
     }
 }
  

@@ -121,8 +121,8 @@ class AbstractServiceBusFactoryTest extends TestCase
 
         $env = Environment::setUp([
             "ginger" => [
-                "buses" => [
-                    'workflow_processor_command_bus' => [
+                "channels" => [
+                    'local' => [
                         'utils' => ["bus_plugin_1", "bus_plugin_2"]
                     ]
                 ]
@@ -145,11 +145,10 @@ class AbstractServiceBusFactoryTest extends TestCase
     {
         $env = Environment::setUp([
             "ginger" => [
-                "buses" => [
-                    'stupid_dispatcher_command_bus' => [
-                        'type' => "command_bus",
+                "channels" => [
+                    'stupid_dispatcher_channel' => [
                         'targets' => ["remote_command_handler"],
-                        "message_handler" => "stupid_message_dispatcher"
+                        "message_dispatcher" => "stupid_message_dispatcher"
                     ]
                 ]
             ]
@@ -175,11 +174,9 @@ class AbstractServiceBusFactoryTest extends TestCase
     {
         $env = Environment::setUp([
             "ginger" => [
-                "buses" => [
-                    'message_handler_command_bus' => [
-                        'type' => "command_bus",
+                "channels" => [
+                    'message_handler_channel' => [
                         'targets' => ["test_command_handler"],
-                        "message_handler" => "test_command_handler"
                     ]
                 ]
             ]

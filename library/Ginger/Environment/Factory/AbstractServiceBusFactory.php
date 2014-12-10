@@ -97,7 +97,7 @@ class AbstractServiceBusFactory implements AbstractFactoryInterface
 
         $bus->utilize(new Zf2ServiceLocatorProxy($serviceLocator));
 
-        $messageHandler = $busConfig->stringValue('message_handler', $target);
+        $messageHandler = $busConfig->stringValue('message_dispatcher', $target);
 
         if (! empty($messageHandler)) {
             $bus->utilize(new SingleTargetMessageRouter($messageHandler));
@@ -105,8 +105,12 @@ class AbstractServiceBusFactory implements AbstractFactoryInterface
             throw new \LogicException("Missing a message handler for the bus " . $requestedName);
         }
 
-        foreach ($busConfig->arrayValue('utils') as $utilAlias) {
-            $bus->utilize($serviceLocator->get((string)$utilAlias));
+        foreach ($busConfig->arrayValue('utils') as $busUtil) {
+            if (is_string($busUtil)) {
+                $busUtil = $serviceLocator->get($busUtil);
+            }
+
+            $bus->utilize($busUtil);
         }
 
         return $bus;
@@ -167,13 +171,10 @@ class AbstractServiceBusFactory implements AbstractFactoryInterface
      */
     private function getBusConfigFor(Environment $env, $target, $busType)
     {
-        foreach ($env->getConfig()->arrayValue('buses') as $busConfig) {
+        foreach ($env->getConfig()->arrayValue('channels') as $busConfig) {
             if (is_array($busConfig)
                 && array_key_exists('targets', $busConfig)
-                && is_array($busConfig['targets'])
-                && array_key_exists('type', $busConfig)) {
-
-                if (!$busConfig['type'] === $busType) continue;
+                && is_array($busConfig['targets'])) {
 
                 if (in_array($target, $busConfig['targets'])) {
                     return new ArrayReader($busConfig);
@@ -181,7 +182,8 @@ class AbstractServiceBusFactory implements AbstractFactoryInterface
             }
         }
 
-        return new ArrayReader([]);
+        //The local channel is the default one, so if we do not find a channel for a target we assume that it is locally available
+        return new ArrayReader($env->getConfig()->arrayValue('channels.local'));
     }
 }
  
