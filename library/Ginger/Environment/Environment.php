@@ -74,28 +74,24 @@ class Environment
             'processes' => [
                 //Process definitions @see @TODO add link to documentation
             ],
-            'buses' => [
-                //You can provide different configurations for buses responsible for different targets
-                'workflow_processor_command_bus' => [
-                    'type' => Definition::ENV_CONFIG_TYPE_COMMAND_BUS, //Defines the type of the bus either command_bus or event_bus
+            'channels' => [
+                //You can provide different configurations for channels responsible for different targets
+                //A channel is automatically split into a command bus and an event bus and some standard utilities are attached to
+                //each bus {@see Ginger\Environment\Factory\AbstractServiceBusFactory} for details
+                'local' => [
                     'targets' => [
-                        //List of targets for which the bus is responsible for
-                        //The Environment sets the defined node name as target for the local workflow processor buses in the set up routine
+                        //List of targets for which the channel is responsible for
+                        //Note: The Environment sets the defined node name as target for the local channel in the set up routine
                         //'target_1_alias', 'target_2_alias', ...
                     ],
-                    //'message_handler' => 'alias_of_message_dispatcher_or_target', //Set the alias of the responsible message handler for all messages dispatched with this bus
-                                                                                    //If the target is located on the same node this will be the same alias as for the target and you can skip this config param
-                                                                                    //If the target is located on a remote node this will be an alias for a message dispatcher
+                    //Set the alias of a message dispatcher that dispatches all messages send over the channel to a remote system
+                    //This is an optional config, because it is only required for remote channels
+                    //'message_dispatcher' => 'alias_of_message_dispatcher',
                     'utils' => [
-                        //List of additional bus plugins, can be aliases resolvable by the ServiceManager
+                        //List of additional channel or ProophServiceBus plugins, can be aliases resolvable by the ServiceManager
                     ]
                 ],
-                'workflow_processor_event_bus' => [
-                    'type' => Definition::ENV_CONFIG_TYPE_EVENT_BUS,
-                    'targets' => [],
-                    'utils' => []
-                ]
-            ]
+            ],
         ],
         //Global env config
         'prooph.event_store' => [
@@ -191,37 +187,20 @@ class Environment
         //We proceed with merging and preparing the environment configuration
         $envConfig = ArrayUtils::merge(self::$defaultEnvConfig, $configurationOrServices);
 
-        //The environment node name is used as target for the local workflow processor, the config needs to be adapted accordingly.
+        //The environment node name is used as target for the local channel, the config needs to be adapted accordingly.
         $envConfigReader = new ArrayReader($envConfig);
 
         $nodeName = $envConfigReader->stringValue('ginger.node_name', Definition::DEFAULT_NODE_NAME);
 
-        $processorCommandBusTargets = $envConfigReader->arrayValue('ginger.buses.workflow_processor_command_bus.targets');
+        $localChannelTargets = $envConfigReader->arrayValue('ginger.channels.local.targets');
 
-        if (! in_array($nodeName, $processorCommandBusTargets)) {
+        if (! in_array($nodeName, $localChannelTargets)) {
             $envConfig = ArrayUtils::merge(
                 $envConfig,
                 [
                     'ginger' => [
-                        'buses' => [
-                            'workflow_processor_command_bus' => [
-                                'targets' => [$nodeName]
-                            ]
-                        ]
-                    ]
-                ]
-            );
-        }
-
-        $processorEventBusTargets = $envConfigReader->arrayValue('ginger.buses.workflow_processor_event_bus.targets');
-
-        if (! in_array($nodeName, $processorEventBusTargets)) {
-            $envConfig = ArrayUtils::merge(
-                $envConfig,
-                [
-                    'ginger' => [
-                        'buses' => [
-                            'workflow_processor_event_bus' => [
+                        'channels' => [
+                            'local' => [
                                 'targets' => [$nodeName]
                             ]
                         ]
