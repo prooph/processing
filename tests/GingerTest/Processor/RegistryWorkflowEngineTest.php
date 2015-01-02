@@ -99,9 +99,10 @@ class RegistryWorkflowEngineTest extends TestCase
 
         $plugin = new SimpleBusPlugin();
 
-        $workflowEngine->attachPluginToAllCommandBuses($plugin);
+        $workflowEngine->attachPluginToAllChannels($plugin);
 
-        $this->assertEquals(2, $plugin->getAttachCount());
+        //Plugin should be attached to the new command bus as well as to the already configured channel (command + event bus) of the test system
+        $this->assertEquals(3, $plugin->getAttachCount());
     }
 
     /**
@@ -117,9 +118,10 @@ class RegistryWorkflowEngineTest extends TestCase
 
         $plugin = new SimpleBusPlugin();
 
-        $workflowEngine->attachPluginToAllEventBuses($plugin);
+        $workflowEngine->attachPluginToAllChannels($plugin);
 
-        $this->assertEquals(2, $plugin->getAttachCount());
+        //Plugin should be attached to the new event bus as well as to the already configured channel (command + event bus) of the test system
+        $this->assertEquals(3, $plugin->getAttachCount());
     }
 
     /**

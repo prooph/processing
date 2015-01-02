@@ -146,17 +146,9 @@ class RegistryWorkflowEngine implements WorkflowEngine
      * @param ListenerAggregateInterface $plugin
      * @return void
      */
-    public function attachPluginToAllCommandBuses(ListenerAggregateInterface $plugin)
+    public function attachPluginToAllChannels(ListenerAggregateInterface $plugin)
     {
         foreach ($this->commandBusList as $commandBus) $commandBus->utilize($plugin);
-    }
-
-    /**
-     * @param ListenerAggregateInterface $plugin
-     * @return void
-     */
-    public function attachPluginToAllEventBuses(ListenerAggregateInterface $plugin)
-    {
         foreach ($this->eventBusList as $eventBus) $eventBus->utilize($plugin);
     }
 }

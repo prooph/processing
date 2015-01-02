@@ -80,39 +80,19 @@ class ServicesAwareWorkflowEngine implements WorkflowEngine
      * @param ListenerAggregateInterface $plugin
      * @return void
      */
-    public function attachPluginToAllCommandBuses(ListenerAggregateInterface $plugin)
+    public function attachPluginToAllChannels(ListenerAggregateInterface $plugin)
     {
         /** @var $env Environment */
         $env = $this->services->get(Definition::SERVICE_ENVIRONMENT);
 
-        foreach ($env->getConfig()->arrayValue('buses') as $busConfig) {
-            $busConfig = new ArrayReader($busConfig);
+        foreach ($env->getConfig()->arrayValue('channels') as $channelConfig) {
+            $channelConfig = new ArrayReader($channelConfig);
 
-            if ($busConfig->stringValue('type') === Definition::ENV_CONFIG_TYPE_COMMAND_BUS) {
-                foreach ($busConfig->arrayValue('targets') as $target) {
-                    $this->getCommandBusFor($target)->utilize($plugin);
-                }
+            foreach ($channelConfig->arrayValue('targets') as $target) {
+                $this->getCommandBusFor($target)->utilize($plugin);
+                $this->getEventBusFor($target)->utilize($plugin);
             }
-        }
-    }
 
-    /**
-     * @param ListenerAggregateInterface $plugin
-     * @return void
-     */
-    public function attachPluginToAllEventBuses(ListenerAggregateInterface $plugin)
-    {
-        /** @var $env Environment */
-        $env = $this->services->get(Definition::SERVICE_ENVIRONMENT);
-
-        foreach ($env->getConfig()->arrayValue('buses') as $busConfig) {
-            $busConfig = new ArrayReader($busConfig);
-
-            if ($busConfig->stringValue('type') === Definition::ENV_CONFIG_TYPE_EVENT_BUS) {
-                foreach ($busConfig->arrayValue('targets') as $target) {
-                    $this->getEventBusFor($target)->utilize($plugin);
-                }
-            }
         }
     }
 }

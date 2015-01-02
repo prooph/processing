@@ -27,6 +27,7 @@ class Definition
 
     const PROCESS_LINEAR_MESSAGING   = "linear_messaging";
     const PROCESS_PARALLEL_FOR_EACH  = "parallel_for_each";
+    const PROCESS_PARALLEL_FORK      = "parallel_fork";
 
     const TASK_COLLECT_DATA          = "collect_data";
     const TASK_PROCESS_DATA          = "process_data";
@@ -35,5 +36,30 @@ class Definition
 
     const ENV_CONFIG_TYPE_COMMAND_BUS = "command_bus";
     const ENV_CONFIG_TYPE_EVENT_BUS   = "event_bus";
+
+    /**
+     * @return array
+     */
+    public static function getAllProcessTypes()
+    {
+        return [
+            self::PROCESS_LINEAR_MESSAGING,
+            self::PROCESS_PARALLEL_FOR_EACH,
+            self::PROCESS_PARALLEL_FORK,
+        ];
+    }
+
+    /**
+     * @return array
+     */
+    public static function getAllTaskTypes()
+    {
+        return [
+            self::TASK_COLLECT_DATA,
+            self::TASK_PROCESS_DATA,
+            self::TASK_MANIPULATE_PAYLOAD,
+            self::TASK_RUN_SUB_PROCESS
+        ];
+    }
 }
  
