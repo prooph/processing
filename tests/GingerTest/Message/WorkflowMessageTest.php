@@ -45,6 +45,7 @@ class WorkflowMessageTest extends TestCase
 
         $this->assertEquals(array(), $wfMessage->getPayload()->getData());
         $this->assertEquals(array('metadata' => true), $wfMessage->getMetadata());
+        $this->assertEquals(MessageNameUtils::COLLECT_DATA, $wfMessage->getMessageType());
     }
 
     /**
@@ -76,6 +77,7 @@ class WorkflowMessageTest extends TestCase
 
         $this->assertEquals($userData, $wfMessage->getPayload()->getData());
         $this->assertEquals(array('metadata' => true), $wfMessage->getMetadata());
+        $this->assertEquals(MessageNameUtils::DATA_COLLECTED, $wfMessage->getMessageType());
     }
 
     /**

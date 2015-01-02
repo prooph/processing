@@ -291,6 +291,14 @@ class WorkflowMessage implements MessageNameProvider, ServiceBusTranslatableMess
     }
 
     /**
+     * @return string
+     */
+    public function getMessageType()
+    {
+        return MessageNameUtils::getMessageSuffix($this->getMessageName());
+    }
+
+    /**
      * @return Payload
      */
     public function getPayload()
