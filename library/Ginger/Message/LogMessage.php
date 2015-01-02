@@ -151,6 +151,29 @@ final class LogMessage implements MessageNameProvider, ServiceBusTranslatableMes
     }
 
     /**
+     * @param WorkflowMessage $workflowMessage
+     * @param string $workflowMessageHandlerName
+     * @return LogMessage
+     */
+    public static function logUnsupportedMessageReceived(WorkflowMessage $workflowMessage, $workflowMessageHandlerName)
+    {
+        return new self(
+            $workflowMessage->getProcessTaskListPosition(),
+            sprintf(
+                "Workflow message handler %s received wrong message with name %s for task %s",
+                (string)$workflowMessageHandlerName,
+                $workflowMessage->getMessageName(),
+                $workflowMessage->getProcessTaskListPosition()->toString()
+            ),
+            416,
+            array(
+                'workflow_message_handler' => (string)$workflowMessageHandlerName,
+                'message_name' => $workflowMessage->getMessageName(),
+            )
+        );
+    }
+
+    /**
      * @param string $msg
      * @param TaskListPosition $taskListPosition
      * @return LogMessage

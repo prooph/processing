@@ -178,5 +178,28 @@ class LogMessageTest extends TestCase
         $this->assertEquals(json_encode($task->getArrayCopy()), $logMessage->getMsgParams()['task_as_json']);
         $this->assertEquals($wfMessage->getMessageName(), $logMessage->getMsgParams()['message_name']);
     }
+
+    /**
+     * @test
+     */
+    public function it_logs_unsupported_message_received_as_error()
+    {
+        $taskListPosition = TaskListPosition::at(TaskListId::linkWith(NodeName::defaultName(), ProcessId::generate()), 1);
+
+        $wfMessage = WorkflowMessage::collectDataOf(UserDictionary::prototype());
+
+        $wfMessage->connectToProcessTask($taskListPosition);
+
+        $logMessage = LogMessage::logUnsupportedMessageReceived($wfMessage, 'test-message-handler');
+
+        $this->assertTrue($logMessage->isError());
+        $this->assertEquals(416, $logMessage->getMsgCode());
+        $this->assertTrue($taskListPosition->equals($logMessage->getProcessTaskListPosition()));
+        $this->assertTrue(isset($logMessage->getMsgParams()['workflow_message_handler']));
+        $this->assertTrue(isset($logMessage->getMsgParams()['message_name']));
+
+        $this->assertEquals('test-message-handler', $logMessage->getMsgParams()['workflow_message_handler']);
+        $this->assertEquals($wfMessage->getMessageName(), $logMessage->getMsgParams()['message_name']);
+    }
 }
  
