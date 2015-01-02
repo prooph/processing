@@ -93,7 +93,8 @@ class ProcessDataTest extends TestCase
         $task = ProcessData::address(
             'online-shop',
             ['GingerTest\Mock\UserDictionary', 'GingerTest\Mock\AddressDictionary'],
-            'GingerTest\Mock\AddressDictionary'
+            'GingerTest\Mock\AddressDictionary',
+            ['metadata' => true]
         );
 
         $taskData = $task->getArrayCopy();
@@ -105,6 +106,7 @@ class ProcessDataTest extends TestCase
         $this->assertEquals('online-shop', $copiedTask->target());
         $this->assertEquals(['GingerTest\Mock\UserDictionary', 'GingerTest\Mock\AddressDictionary'], $copiedTask->allowedTypes());
         $this->assertEquals('GingerTest\Mock\AddressDictionary', $copiedTask->preferredType());
+        $this->assertEquals(['metadata' => true], $copiedTask->metadata());
     }
 }
  

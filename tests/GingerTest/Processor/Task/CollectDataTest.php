@@ -28,10 +28,11 @@ class CollectDataTest extends TestCase
      */
     public function it_can_be_created_from_source_and_prototype()
     {
-        $task = CollectData::from('online-shop', UserDictionary::prototype());
+        $task = CollectData::from('online-shop', UserDictionary::prototype(), ['metadata' => true]);
 
         $this->assertEquals('online-shop', $task->source());
         $this->assertInstanceOf('Ginger\Type\Prototype', $task->prototype());
+        $this->assertEquals(['metadata' => true], $task->metadata());
     }
 
     /**
@@ -39,7 +40,7 @@ class CollectDataTest extends TestCase
      */
     public function it_can_be_converted_to_array_and_back()
     {
-        $task = CollectData::from('online-shop', UserDictionary::prototype());
+        $task = CollectData::from('online-shop', UserDictionary::prototype(), ['metadata' => true]);
 
         $arrayCopy = $task->getArrayCopy();
 

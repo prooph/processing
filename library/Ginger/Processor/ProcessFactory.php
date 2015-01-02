@@ -142,7 +142,9 @@ class ProcessFactory
 
         $prototype = $gingerType::prototype();
 
-        return CollectData::from($taskDefinition["source"], $prototype);
+        $metadata = isset($taskDefinition['metadata'])? $taskDefinition['metadata'] : array();
+
+        return CollectData::from($taskDefinition["source"], $prototype, $metadata);
     }
 
     /**
@@ -160,7 +162,9 @@ class ProcessFactory
 
         $preferredType = (isset($taskDefinition["preferred_type"]))? $taskDefinition["preferred_type"] : null;
 
-        return ProcessData::address($taskDefinition["target"], $taskDefinition["allowed_types"], $preferredType);
+        $metadata = isset($taskDefinition['metadata'])? $taskDefinition['metadata'] : array();
+
+        return ProcessData::address($taskDefinition["target"], $taskDefinition["allowed_types"], $preferredType, $metadata);
     }
 
     /**

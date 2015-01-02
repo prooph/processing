@@ -77,6 +77,8 @@ class ServiceBusGingerIntegrationTest extends TestCase
     {
         $wfMessage = $this->getUserDataCollectedTestMessage();
 
+        $wfMessage->addMetadata(array('metadata' => true));
+
         $taskListPosition = TaskListPosition::at(TaskListId::linkWith(NodeName::defaultName(), ProcessId::generate()), 1);
 
         $wfMessage->connectToProcessTask($taskListPosition);
@@ -99,6 +101,7 @@ class ServiceBusGingerIntegrationTest extends TestCase
         $this->assertEquals($wfMessage->getPayload()->getData(), $this->receivedMessage->getPayload()->getData());
         $this->assertEquals($wfMessage->getVersion(), $this->receivedMessage->getVersion());
         $this->assertEquals($wfMessage->getCreatedOn()->format('Y-m-d H:i:s'), $this->receivedMessage->getCreatedOn()->format('Y-m-d H:i:s'));
+        $this->assertEquals(array('metadata' => true), $this->receivedMessage->getMetadata());
     }
 
     /**

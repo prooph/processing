@@ -33,13 +33,21 @@ class CollectData implements Task
     private $prototype;
 
     /**
+     * Metadata is passed along with the workflow message to the handler and can be used to define filters etc.
+     *
+     * @var array
+     */
+    private $metadata;
+
+    /**
      * @param string $source
      * @param Prototype $prototype
+     * @param array $metadata
      * @return \Ginger\Processor\Task\CollectData
      */
-    public static function from($source, Prototype $prototype)
+    public static function from($source, Prototype $prototype, array $metadata = [])
     {
-        return new self($source, $prototype);
+        return new self($source, $prototype, $metadata);
     }
 
     /**
@@ -54,20 +62,23 @@ class CollectData implements Task
 
         $prototype = $typeClass::prototype();
 
-        return new self($source, $prototype);
+        return new self($source, $prototype, $taskData['metadata']);
     }
 
     /**
      * @param string $source
      * @param Prototype $prototype
+     * @param array $metadata
      */
-    private function __construct($source, Prototype $prototype)
+    private function __construct($source, Prototype $prototype, array $metadata)
     {
         Assertion::notEmpty($source);
         Assertion::string($source);
+        $this->assertMetadata($metadata);
 
         $this->source = $source;
         $this->prototype = $prototype;
+        $this->metadata  = $metadata;
     }
 
     /**
@@ -89,11 +100,20 @@ class CollectData implements Task
     /**
      * @return array
      */
+    public function metadata()
+    {
+        return $this->metadata;
+    }
+
+    /**
+     * @return array
+     */
     public function getArrayCopy()
     {
         return [
             'source' => $this->source(),
             'prototype' => $this->prototype()->of(),
+            'metadata'  => $this->metadata(),
         ];
     }
 
@@ -104,6 +124,18 @@ class CollectData implements Task
     public function equals(Task $task)
     {
         return $this->getArrayCopy() === $task->getArrayCopy();
+    }
+
+    /**
+     * @param array $metadata
+     * @throws \InvalidArgumentException
+     */
+    private function assertMetadata(array $metadata)
+    {
+        foreach ($metadata as $entry) {
+            if (is_array($entry)) $this->assertMetadata($entry);
+            elseif (! is_scalar($entry)) throw new \InvalidArgumentException('Metadata must only contain arrays or scalar values');
+        }
     }
 }
  

@@ -23,6 +23,7 @@ use Prooph\ServiceBus\Message\MessageInterface;
 use Prooph\ServiceBus\Message\MessageNameProvider;
 use Prooph\ServiceBus\Message\StandardMessage;
 use Rhumsaa\Uuid\Uuid;
+use Zend\Stdlib\ArrayUtils;
 
 /**
  * Class WorkflowMessage
@@ -63,27 +64,34 @@ class WorkflowMessage implements MessageNameProvider, ServiceBusTranslatableMess
     protected $payload;
 
     /**
+     * @var array
+     */
+    protected $metadata;
+
+    /**
      * @param Prototype $aPrototype
+     * @param array $metadata
      * @return WorkflowMessage
      */
-    public static function collectDataOf(Prototype $aPrototype)
+    public static function collectDataOf(Prototype $aPrototype, array $metadata = [])
     {
         $messageName = MessageNameUtils::getCollectDataCommandName($aPrototype->of());
 
-        return new static(Payload::fromPrototype($aPrototype), $messageName);
+        return new static(Payload::fromPrototype($aPrototype), $messageName, $metadata);
     }
 
     /**
      * @param \Ginger\Type\Type $data
+     * @param array $metadata
      * @return WorkflowMessage
      */
-    public static function newDataCollected(Type $data)
+    public static function newDataCollected(Type $data, array $metadata = [])
     {
         $payload = Payload::fromType($data);
 
         $messageName = MessageNameUtils::getDataCollectedEventName($payload->getTypeClass());
 
-        return new static($payload, $messageName);
+        return new static($payload, $messageName, $metadata);
     }
 
     /**
@@ -93,18 +101,21 @@ class WorkflowMessage implements MessageNameProvider, ServiceBusTranslatableMess
      */
     public static function fromServiceBusMessage(MessageInterface $aMessage)
     {
-        $messagePayload = $aMessage->payload();
+        $payload = $aMessage->payload();
 
-        Assertion::keyExists($messagePayload, 'json');
+        Assertion::keyExists($payload, 'json');
 
-        $taskListPosition = (isset($messagePayload['processTaskListPosition']))?
-            TaskListPosition::fromString($messagePayload['processTaskListPosition']) : null;
+        $taskListPosition = (isset($payload['processTaskListPosition']))?
+            TaskListPosition::fromString($payload['processTaskListPosition']) : null;
 
-        $messagePayload = Payload::fromJsonDecodedData(json_decode($messagePayload['json'], true));
+        $messagePayload = Payload::fromJsonDecodedData(json_decode($payload['json'], true));
+
+        $metadata = isset($payload['metadata'])? $payload['metadata'] : [];
 
         return new static(
             $messagePayload,
             $aMessage->name(),
+            $metadata,
             $taskListPosition,
             $aMessage->header()->version(),
             $aMessage->header()->createdOn(),
@@ -115,6 +126,7 @@ class WorkflowMessage implements MessageNameProvider, ServiceBusTranslatableMess
     /**
      * @param Payload $payload
      * @param string $messageName
+     * @param array|null $metadata
      * @param TaskListPosition|null $taskListPosition
      * @param int $version
      * @param \DateTime|null $createdOn
@@ -123,6 +135,7 @@ class WorkflowMessage implements MessageNameProvider, ServiceBusTranslatableMess
     protected function __construct(
         Payload $payload,
         $messageName,
+        array $metadata,
         TaskListPosition $taskListPosition = null,
         $version = 1,
         \DateTime $createdOn = null,
@@ -134,6 +147,10 @@ class WorkflowMessage implements MessageNameProvider, ServiceBusTranslatableMess
         Assertion::string($messageName);
 
         $this->messageName = $messageName;
+
+        $this->assertMetadata($metadata);
+
+        $this->metadata = $metadata;
 
         $this->processTaskListPosition = $taskListPosition;
 
@@ -156,10 +173,11 @@ class WorkflowMessage implements MessageNameProvider, ServiceBusTranslatableMess
      * Transforms current message to a data collected event and replaces payload data with collected data
      *
      * @param Type $collectedData
-     * @return WorkflowMessage
+     * @param array $metadata
      * @throws \Ginger\Type\Exception\InvalidTypeException If answer type does not match with the previous requested type
+     * @return WorkflowMessage
      */
-    public function answerWith(Type $collectedData)
+    public function answerWith(Type $collectedData, array $metadata = [])
     {
         $collectedPayload = Payload::fromType($collectedData);
 
@@ -178,9 +196,12 @@ class WorkflowMessage implements MessageNameProvider, ServiceBusTranslatableMess
 
         $type = MessageNameUtils::getTypePartOfMessageName($this->messageName);
 
+        $metadata = ArrayUtils::merge($this->metadata, $metadata);
+
         return new self(
             $collectedPayload,
             MessageNameUtils::getDataCollectedEventName($type),
+            $metadata,
             $this->processTaskListPosition,
             $this->version + 1
         );
@@ -190,15 +211,19 @@ class WorkflowMessage implements MessageNameProvider, ServiceBusTranslatableMess
      * Transforms current message to a process data command
      *
      * @param \Ginger\Processor\Task\TaskListPosition $newTaskListPosition
+     * @param array $metadata
      * @return WorkflowMessage
      */
-    public function prepareDataProcessing(TaskListPosition $newTaskListPosition)
+    public function prepareDataProcessing(TaskListPosition $newTaskListPosition, array $metadata = [])
     {
         $type = MessageNameUtils::getTypePartOfMessageName($this->messageName);
+
+        $metadata = ArrayUtils::merge($this->metadata, $metadata);
 
         return new self(
             $this->payload,
             MessageNameUtils::getProcessDataCommandName($type),
+            $metadata,
             $newTaskListPosition,
             $this->version + 1
         );
@@ -207,13 +232,16 @@ class WorkflowMessage implements MessageNameProvider, ServiceBusTranslatableMess
     /**
      * Transforms current message to a data processed event
      */
-    public function answerWithDataProcessingCompleted()
+    public function answerWithDataProcessingCompleted(array $metadata = [])
     {
         $type = MessageNameUtils::getTypePartOfMessageName($this->messageName);
+
+        $metadata = ArrayUtils::merge($this->metadata, $metadata);
 
         return new self(
             $this->payload,
             MessageNameUtils::getDataProcessedEventName($type),
+            $metadata,
             $this->processTaskListPosition,
             $this->version + 1
         );
@@ -247,6 +275,7 @@ class WorkflowMessage implements MessageNameProvider, ServiceBusTranslatableMess
         return new self(
             $this->payload,
             $this->getMessageName(),
+            $this->metadata,
             $taskListPosition,
             $this->version,
             $this->getCreatedOn()
@@ -316,6 +345,24 @@ class WorkflowMessage implements MessageNameProvider, ServiceBusTranslatableMess
     }
 
     /**
+     * @return array|null
+     */
+    public function getMetadata()
+    {
+        return $this->metadata;
+    }
+
+    /**
+     * @param array $metadata
+     */
+    public function addMetadata(array $metadata)
+    {
+        $this->assertMetadata($metadata);
+
+        $this->metadata = ArrayUtils::merge($this->metadata, $metadata);
+    }
+
+    /**
      * @throws \RuntimeException
      * @return MessageInterface
      */
@@ -340,7 +387,7 @@ class WorkflowMessage implements MessageNameProvider, ServiceBusTranslatableMess
             $messageType
         );
 
-        $msgPayload = array('json' => json_encode($this->getPayload()));
+        $msgPayload = array('json' => json_encode($this->getPayload()), 'metadata' => $this->metadata);
 
         if ($this->getProcessTaskListPosition()) {
             $msgPayload['processTaskListPosition'] = $this->getProcessTaskListPosition()->toString();
@@ -351,6 +398,18 @@ class WorkflowMessage implements MessageNameProvider, ServiceBusTranslatableMess
             $messageHeader,
             $msgPayload
         );
+    }
+
+    /**
+     * @param array $metadata
+     * @throws \InvalidArgumentException
+     */
+    protected function assertMetadata(array $metadata)
+    {
+        foreach ($metadata as $entry) {
+            if (is_array($entry)) $this->assertMetadata($entry);
+            elseif (! is_scalar($entry)) throw new \InvalidArgumentException('Metadata must only contain arrays or scalar values');
+        }
     }
 }
  

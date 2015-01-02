@@ -38,14 +38,22 @@ class ProcessData implements Task
     private $preferredType;
 
     /**
+     * Metadata is passed along with the workflow message to the handler and can be used to provide additional information
+     *
+     * @var array
+     */
+    private $metadata;
+
+    /**
      * @param string $target
      * @param array $allowedTypes
      * @param null|string $preferredType
+     * @param array $metadata
      * @return ProcessData
      */
-    public static function address($target, array $allowedTypes, $preferredType = null)
+    public static function address($target, array $allowedTypes, $preferredType = null, array $metadata = [])
     {
-        return new self($target, $allowedTypes, $preferredType);
+        return new self($target, $allowedTypes, $preferredType, $metadata);
     }
 
     /**
@@ -57,16 +65,18 @@ class ProcessData implements Task
         Assertion::keyExists($taskData, 'target');
         Assertion::keyExists($taskData, 'allowed_types');
         Assertion::keyExists($taskData, 'preferred_type');
+        Assertion::keyExists($taskData, 'metadata');
         Assertion::isArray($taskData['allowed_types']);
 
-        return new self($taskData['target'], $taskData['allowed_types'], $taskData['preferred_type']);
+        return new self($taskData['target'], $taskData['allowed_types'], $taskData['preferred_type'], $taskData['metadata']);
     }
 
-    private function __construct($target, array $allowedTypes, $preferredType = null)
+    private function __construct($target, array $allowedTypes, $preferredType = null, array $metadata)
     {
         Assertion::notEmpty($target);
         Assertion::string($target);
         Assertion::notEmpty($allowedTypes);
+        $this->assertMetadata($metadata);
 
         foreach ($allowedTypes as $allowedType) {
             Assertion::classExists($allowedType);
@@ -78,8 +88,9 @@ class ProcessData implements Task
         }
 
         $this->target = $target;
-        $this->allowedTypes = $allowedTypes;
+        $this->allowedTypes  = $allowedTypes;
         $this->preferredType = $preferredType;
+        $this->metadata      = $metadata;
     }
 
     /**
@@ -89,8 +100,9 @@ class ProcessData implements Task
     {
         return [
             'target' => $this->target,
-            'allowed_types' => $this->allowedTypes,
-            'preferred_type' => $this->preferredType
+            'allowed_types'  => $this->allowedTypes,
+            'preferred_type' => $this->preferredType,
+            'metadata'       => $this->metadata,
         ];
     }
 
@@ -123,6 +135,14 @@ class ProcessData implements Task
     }
 
     /**
+     * @return array
+     */
+    public function metadata()
+    {
+        return $this->metadata;
+    }
+
+    /**
      * @param Task $task
      * @return bool
      */
@@ -136,8 +156,21 @@ class ProcessData implements Task
             ->append($this->target, $task->target)
             ->append($this->allowedTypes, $task->allowedTypes)
             ->append($this->preferredType, $task->preferredType)
+            ->append($this->metadata(), $task->metadata())
             ->strict()
             ->equals();
+    }
+
+    /**
+     * @param array $metadata
+     * @throws \InvalidArgumentException
+     */
+    private function assertMetadata(array $metadata)
+    {
+        foreach ($metadata as $entry) {
+            if (is_array($entry)) $this->assertMetadata($entry);
+            elseif (! is_scalar($entry)) throw new \InvalidArgumentException('Metadata must only contain arrays or scalar values');
+        }
     }
 }
  

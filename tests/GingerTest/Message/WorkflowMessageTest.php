@@ -34,7 +34,7 @@ class WorkflowMessageTest extends TestCase
      */
     public function it_constructs_a_collect_data_of_prototype_command()
     {
-        $wfMessage = WorkflowMessage::collectDataOf(UserDictionary::prototype());
+        $wfMessage = WorkflowMessage::collectDataOf(UserDictionary::prototype(), array('metadata' => true));
 
         $this->assertInstanceOf('Ginger\Message\WorkflowMessage', $wfMessage);
 
@@ -44,6 +44,7 @@ class WorkflowMessageTest extends TestCase
         );
 
         $this->assertEquals(array(), $wfMessage->getPayload()->getData());
+        $this->assertEquals(array('metadata' => true), $wfMessage->getMetadata());
     }
 
     /**
@@ -64,7 +65,7 @@ class WorkflowMessageTest extends TestCase
 
         $user = UserDictionary::fromNativeValue($userData);
 
-        $wfMessage = WorkflowMessage::newDataCollected($user);
+        $wfMessage = WorkflowMessage::newDataCollected($user, array('metadata' => true));
 
         $this->assertInstanceOf('Ginger\Message\WorkflowMessage', $wfMessage);
 
@@ -74,6 +75,7 @@ class WorkflowMessageTest extends TestCase
         );
 
         $this->assertEquals($userData, $wfMessage->getPayload()->getData());
+        $this->assertEquals(array('metadata' => true), $wfMessage->getMetadata());
     }
 
     /**
@@ -81,7 +83,7 @@ class WorkflowMessageTest extends TestCase
      */
     public function it_transforms_a_collect_data_command_to_data_collected_event()
     {
-        $wfMessage = WorkflowMessage::collectDataOf(UserDictionary::prototype());
+        $wfMessage = WorkflowMessage::collectDataOf(UserDictionary::prototype(), array('metadata' => true));
 
         $wfMessage->connectToProcessTask(TaskListPosition::at(TaskListId::linkWith(NodeName::defaultName(), ProcessId::generate()), 1));
 
@@ -98,7 +100,7 @@ class WorkflowMessageTest extends TestCase
 
         $user = UserDictionary::fromNativeValue($userData);
 
-        $wfAnswer = $wfMessage->answerWith($user);
+        $wfAnswer = $wfMessage->answerWith($user, array('success' => true));
 
         $this->assertEquals(
             MessageNameUtils::MESSAGE_NAME_PREFIX . 'gingertestmockuserdictionary-data-collected',
@@ -113,6 +115,8 @@ class WorkflowMessageTest extends TestCase
         $this->assertEquals(2, $wfAnswer->getVersion());
 
         $this->assertTrue($wfMessage->getProcessTaskListPosition()->equals($wfAnswer->getProcessTaskListPosition()));
+
+        $this->assertEquals(array('metadata' => true, 'success' => true), $wfAnswer->getMetadata());
     }
 
     /**
@@ -152,11 +156,11 @@ class WorkflowMessageTest extends TestCase
 
         $user = UserDictionary::fromNativeValue($userData);
 
-        $wfMessage = WorkflowMessage::newDataCollected($user);
+        $wfMessage = WorkflowMessage::newDataCollected($user, array('metadata' => true));
 
         $taskListPosition = TaskListPosition::at(TaskListId::linkWith(NodeName::defaultName(), ProcessId::generate()), 1);
 
-        $wfCommand = $wfMessage->prepareDataProcessing($taskListPosition);
+        $wfCommand = $wfMessage->prepareDataProcessing($taskListPosition, array('count' => 1));
 
         $this->assertEquals(
             MessageNameUtils::MESSAGE_NAME_PREFIX . 'gingertestmockuserdictionary-process-data',
@@ -171,6 +175,8 @@ class WorkflowMessageTest extends TestCase
         $this->assertEquals(2, $wfCommand->getVersion());
 
         $this->assertTrue($taskListPosition->equals($wfCommand->getProcessTaskListPosition()));
+
+        $this->assertEquals(array('metadata' => true, 'count' => 1), $wfCommand->getMetadata());
     }
 
     /**
@@ -191,13 +197,13 @@ class WorkflowMessageTest extends TestCase
 
         $user = UserDictionary::fromNativeValue($userData);
 
-        $wfMessage = WorkflowMessage::newDataCollected($user);
+        $wfMessage = WorkflowMessage::newDataCollected($user, array('metadata' => true));
 
         $taskListPosition = TaskListPosition::at(TaskListId::linkWith(NodeName::defaultName(), ProcessId::generate()), 1);
 
-        $wfCommand = $wfMessage->prepareDataProcessing($taskListPosition);
+        $wfCommand = $wfMessage->prepareDataProcessing($taskListPosition, array('prepared' => true));
 
-        $wfAnswer = $wfCommand->answerWithDataProcessingCompleted();
+        $wfAnswer = $wfCommand->answerWithDataProcessingCompleted(array('processed' => true));
 
         $this->assertEquals(
             MessageNameUtils::MESSAGE_NAME_PREFIX . 'gingertestmockuserdictionary-data-processed',
@@ -214,6 +220,8 @@ class WorkflowMessageTest extends TestCase
 
         $this->assertTrue($taskListPosition->equals($wfCommand->getProcessTaskListPosition()));
         $this->assertTrue($wfCommand->getProcessTaskListPosition()->equals($wfAnswer->getProcessTaskListPosition()));
+
+        $this->assertEquals(array('metadata' => true, 'prepared' => true, 'processed' => true), $wfAnswer->getMetadata());
     }
 
     /**

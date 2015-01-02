@@ -55,7 +55,12 @@ class ProcessFactoryTest extends TestCase
                 [
                     "task_type"   => Definition::TASK_COLLECT_DATA,
                     "source"      => 'test-case',
-                    "ginger_type" => 'GingerTest\Mock\UserDictionary'
+                    "ginger_type" => 'GingerTest\Mock\UserDictionary',
+                    "metadata"    => [
+                        'filter' => [
+                            'name' => 'John'
+                        ]
+                    ]
                 ]
             ],
         ];
@@ -75,6 +80,8 @@ class ProcessFactoryTest extends TestCase
         $this->assertInstanceOf('Ginger\Message\WorkflowMessage', $collectDataMessage);
 
         $this->assertEquals('GingerTest\Mock\UserDictionary', $collectDataMessage->getPayload()->getTypeClass());
+
+        $this->assertEquals(['filter' => ['name' => 'John']], $collectDataMessage->getMetadata());
     }
 
     /**
@@ -122,7 +129,7 @@ class ProcessFactoryTest extends TestCase
                     "task_type"      => Definition::TASK_PROCESS_DATA,
                     "target"         => 'test-target',
                     "allowed_types"  => ['GingerTest\Mock\TargetUserDictionary', 'GingerTest\Mock\AddressDictionary'],
-                    "preferred_type" => 'GingerTest\Mock\AddressDictionary'
+                    "preferred_type" => 'GingerTest\Mock\AddressDictionary',
                 ]
             ]
         ];

@@ -273,7 +273,7 @@ abstract class Process extends AggregateRoot
      */
     protected function performCollectData(CollectData $collectData, TaskListPosition $taskListPosition, WorkflowEngine $workflowEngine)
     {
-        $workflowMessage = WorkflowMessage::collectDataOf($collectData->prototype());
+        $workflowMessage = WorkflowMessage::collectDataOf($collectData->prototype(), $collectData->metadata());
 
         $workflowMessage->connectToProcessTask($taskListPosition);
 
@@ -294,7 +294,7 @@ abstract class Process extends AggregateRoot
      */
     protected function performProcessData(ProcessData $processData, TaskListPosition $taskListPosition, WorkflowMessage $previousMessage, WorkflowEngine $workflowEngine)
     {
-        $workflowMessage = $previousMessage->prepareDataProcessing($taskListPosition);
+        $workflowMessage = $previousMessage->prepareDataProcessing($taskListPosition, $processData->metadata());
 
         if (! in_array($workflowMessage->getPayload()->getTypeClass(), $processData->allowedTypes())) {
             $workflowMessage->changeGingerType($processData->preferredType());
