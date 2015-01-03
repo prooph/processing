@@ -35,21 +35,21 @@ class Prototype
     /**
      * @var PrototypeProperty[propertyName => PrototypeProperty]
      */
-    protected $propertiesOfType;
+    protected $typeProperties;
 
     /**
      * @param string $relatedTypeClass
      * @param Description $descriptionOfType
-     * @param PrototypeProperty[] $propertiesOfType
+     * @param PrototypeProperty[] $typeProperties
      */
-    public function __construct($relatedTypeClass, Description $descriptionOfType, array $propertiesOfType)
+    public function __construct($relatedTypeClass, Description $descriptionOfType, array $typeProperties)
     {
         Assertion::implementsInterface($relatedTypeClass, 'Ginger\Type\Type');
-        foreach($propertiesOfType as $propertyOfType) Assertion::isInstanceOf($propertyOfType, 'Ginger\Type\PrototypeProperty');
+        foreach($typeProperties as $propertyOfType) Assertion::isInstanceOf($propertyOfType, 'Ginger\Type\PrototypeProperty');
 
         $this->relatedTypeClass = $relatedTypeClass;
         $this->descriptionOfType = $descriptionOfType;
-        $this->propertiesOfType = $propertiesOfType;
+        $this->typeProperties = $typeProperties;
     }
 
     /**
@@ -71,9 +71,9 @@ class Prototype
     /**
      * @return PrototypeProperty[]
      */
-    public function propertiesOfType()
+    public function typeProperties()
     {
-        return $this->propertiesOfType;
+        return $this->typeProperties;
     }
 }
  

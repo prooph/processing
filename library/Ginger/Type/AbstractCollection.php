@@ -65,7 +65,7 @@ abstract class AbstractCollection implements CollectionType, \IteratorAggregate,
     {
         $itemsEncoded = json_decode($valueString, true);
 
-        $itemClass = static::prototype()->propertiesOfType()['item']->typePrototype()->of();
+        $itemClass = static::prototype()->typeProperties()['item']->typePrototype()->of();
 
         $items = array();
 
@@ -96,7 +96,7 @@ abstract class AbstractCollection implements CollectionType, \IteratorAggregate,
      */
     public static function fromJsonDecodedData($value)
     {
-        $itemClass = static::prototype()->propertiesOfType()['item']->typePrototype()->of();
+        $itemClass = static::prototype()->typeProperties()['item']->typePrototype()->of();
 
         $items = array();
 
@@ -113,7 +113,7 @@ abstract class AbstractCollection implements CollectionType, \IteratorAggregate,
      */
     protected function __construct(array $value)
     {
-        $itemClass = static::prototype()->propertiesOfType()['item']->typePrototype()->of();
+        $itemClass = static::prototype()->typeProperties()['item']->typePrototype()->of();
 
         try {
 
