@@ -27,7 +27,7 @@ use Rhumsaa\Uuid\Uuid;
  * @package Ginger\Message
  * @author Alexander Miertsch <kontakt@codeliner.ws>
  */
-final class LogMessage implements MessageNameProvider, ServiceBusTranslatableMessage
+final class LogMessage implements MessageNameProvider, GingerMessage
 {
     const LOG_LEVEL_DEBUG = "debug";
     const LOG_LEVEL_WARNING = "warning";
@@ -277,6 +277,16 @@ final class LogMessage implements MessageNameProvider, ServiceBusTranslatableMes
     public function messageName()
     {
         return MessageNameUtils::LOG_MESSAGE_NAME;
+    }
+
+    /**
+     * Target of the log message is always the workflow processor of the referenced task that should receive the message
+     *
+     * @return null|string
+     */
+    public function target()
+    {
+        return $this->processTaskListPosition()->taskListId()->nodeName()->toString();
     }
 
     /**

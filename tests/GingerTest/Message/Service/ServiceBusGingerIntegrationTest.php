@@ -166,7 +166,7 @@ class ServiceBusGingerIntegrationTest extends TestCase
     {
         $taskListPosition = TaskListPosition::at(TaskListId::linkWith(NodeName::defaultName(), ProcessId::generate()), 1);
 
-        $startSupProcess = StartSubProcess::at($taskListPosition, ['process_type' => 'faked'], true);
+        $startSupProcess = StartSubProcess::at($taskListPosition, ['process_type' => 'faked'], true, 'sub-processor');
 
         $commandBus = new CommandBus();
 
@@ -188,6 +188,7 @@ class ServiceBusGingerIntegrationTest extends TestCase
         $this->assertTrue($startSupProcess->uuid()->equals($receivedMessage->uuid()));
         $this->assertEquals($startSupProcess->payload(), $receivedMessage->payload());
         $this->assertEquals($startSupProcess->createdOn()->format('Y-m-d H:i:s'), $receivedMessage->createdOn()->format('Y-m-d H:i:s'));
+        $this->assertEquals($startSupProcess->target(), $receivedMessage->target());
     }
 
     /**

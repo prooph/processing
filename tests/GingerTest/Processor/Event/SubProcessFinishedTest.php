@@ -53,6 +53,7 @@ class SubProcessFinishedTest extends TestCase
 
         $this->assertTrue($nodeName->equals($event->processorNodeName()));
         $this->assertTrue($parentTaskListPosition->equals($event->parentTaskListPosition()));
+        $this->assertEquals($parentTaskListPosition->taskListId()->nodeName()->toString(), $event->target());
         $this->assertTrue($subProcessId->equals($event->subProcessId()));
         $this->assertTrue($event->succeed());
         $this->assertEquals($message->technicalMsg(), $event->lastMessage()->technicalMsg());

@@ -11,9 +11,9 @@
 
 namespace Ginger\Processor\Event;
 
+use Ginger\Message\GingerMessage;
 use Ginger\Message\LogMessage;
 use Ginger\Message\MessageNameUtils;
-use Ginger\Message\ProophPlugin\ServiceBusTranslatableMessage;
 use Ginger\Message\WorkflowMessage;
 use Ginger\Processor\NodeName;
 use Ginger\Processor\ProcessId;
@@ -29,7 +29,7 @@ use Prooph\ServiceBus\Message\StandardMessage;
  * @package Ginger\Processor\Event
  * @author Alexander Miertsch <kontakt@codeliner.ws>
  */
-class SubProcessFinished extends Event implements ServiceBusTranslatableMessage
+class SubProcessFinished extends Event implements GingerMessage
 {
     const MSG_NAME = "ginger-processor-event-sub-process-finished";
 
@@ -37,12 +37,12 @@ class SubProcessFinished extends Event implements ServiceBusTranslatableMessage
      * @param NodeName $nodeName
      * @param ProcessId $subProcessId
      * @param bool $succeed
-     * @param ServiceBusTranslatableMessage $lastReceivedMessage
+     * @param GingerMessage $lastReceivedMessage
      * @param TaskListPosition $parentTaskListPosition
      * @throws \InvalidArgumentException
      * @return SubProcessFinished
      */
-    public static function record(NodeName $nodeName, ProcessId $subProcessId, $succeed, ServiceBusTranslatableMessage $lastReceivedMessage, TaskListPosition $parentTaskListPosition)
+    public static function record(NodeName $nodeName, ProcessId $subProcessId, $succeed, GingerMessage $lastReceivedMessage, TaskListPosition $parentTaskListPosition)
     {
         if (! is_bool($succeed)) {
             throw new \InvalidArgumentException("Succeed must be a boolean");
@@ -65,6 +65,16 @@ class SubProcessFinished extends Event implements ServiceBusTranslatableMessage
     public function processorNodeName()
     {
         return NodeName::fromString($this->payload['processor_node_name']);
+    }
+
+    /**
+     * Target of the sub process finished event is always the parent processor
+     *
+     * @return null|string
+     */
+    public function target()
+    {
+        return $this->parentTaskListPosition()->taskListId()->nodeName()->toString();
     }
 
     /**

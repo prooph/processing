@@ -31,7 +31,7 @@ use Zend\Stdlib\ArrayUtils;
  * @package Ginger\Message
  * @author Alexander Miertsch <kontakt@codeliner.ws>
  */
-class WorkflowMessage implements MessageNameProvider, ServiceBusTranslatableMessage
+class WorkflowMessage implements MessageNameProvider, GingerMessage
 {
     /**
      * @var string

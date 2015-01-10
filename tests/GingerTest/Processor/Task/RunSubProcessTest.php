@@ -48,9 +48,9 @@ class RunSubProcessTest extends TestCase
 
         $task = RunSubProcess::setUp(NodeName::fromString('other_machine'), $subProcessDefinition);
 
-        $this->assertInstanceOf('Ginger\Processor\NodeName', $task->getTargetNodeName());
+        $this->assertInstanceOf('Ginger\Processor\NodeName', $task->targetNodeName());
 
-        $this->assertEquals('other_machine', $task->getTargetNodeName()->toString());
+        $this->assertEquals('other_machine', $task->targetNodeName()->toString());
     }
 
     /**

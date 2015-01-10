@@ -324,7 +324,7 @@ abstract class Process extends AggregateRoot
         try {
             $startSubProcessCommand = $task->generateStartCommandForSubProcess($taskListPosition, $previousMessage);
 
-            $workflowEngine->getCommandChannelFor($task->getTargetNodeName()->toString())->dispatch($startSubProcessCommand);
+            $workflowEngine->getCommandChannelFor($task->targetNodeName()->toString())->dispatch($startSubProcessCommand);
 
         } catch (CommandDispatchException $ex) {
             $this->receiveMessage(LogMessage::logException($ex->getPrevious(), $taskListPosition), $workflowEngine);

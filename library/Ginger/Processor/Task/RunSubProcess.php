@@ -93,7 +93,7 @@ class RunSubProcess implements Task
     /**
      * @return NodeName
      */
-    public function getTargetNodeName()
+    public function targetNodeName()
     {
         return $this->targetNodeName;
     }
@@ -117,7 +117,13 @@ class RunSubProcess implements Task
      */
     public function generateStartCommandForSubProcess(TaskListPosition $parentTaskListPosition, WorkflowMessage $previousMessage = null)
     {
-        return StartSubProcess::at($parentTaskListPosition, $this->processDefinition, $this->syncLogMessages, $previousMessage);
+        return StartSubProcess::at(
+            $parentTaskListPosition,
+            $this->processDefinition,
+            $this->syncLogMessages,
+            $this->targetNodeName()->toString(),
+            $previousMessage
+        );
     }
 
     /**

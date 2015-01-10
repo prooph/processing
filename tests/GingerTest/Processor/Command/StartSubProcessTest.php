@@ -59,7 +59,7 @@ class StartSubProcessTest extends TestCase
 
         $parentTaskListPosition = TaskListPosition::at(TaskListId::linkWith(NodeName::defaultName(), ProcessId::generate()), 1);
 
-        $command = StartSubProcess::at($parentTaskListPosition, $subProcessDefinition, true, $previousMessage);
+        $command = StartSubProcess::at($parentTaskListPosition, $subProcessDefinition, true, 'sub-processor', $previousMessage);
 
         $this->assertTrue($parentTaskListPosition->equals($command->parentTaskListPosition()));
 
@@ -68,6 +68,8 @@ class StartSubProcessTest extends TestCase
         $this->assertEquals($subProcessDefinition, $command->subProcessDefinition());
 
         $this->assertEquals($previousMessage->getMessageName(), $command->previousWorkflowMessage()->getMessageName());
+
+        $this->assertEquals('sub-processor', $command->target());
     }
 
     /**
@@ -75,8 +77,6 @@ class StartSubProcessTest extends TestCase
      */
     public function it_does_not_require_a_previous_message()
     {
-        $parentProcess = LinearProcess::setUp(NodeName::defaultName(), []);
-
         $subProcessDefinition = [
             "process_type" => Definition::PROCESS_LINEAR_MESSAGING,
             "tasks" => [
@@ -90,13 +90,15 @@ class StartSubProcessTest extends TestCase
 
         $parentTaskListPosition = TaskListPosition::at(TaskListId::linkWith(NodeName::defaultName(), ProcessId::generate()), 1);
 
-        $command = StartSubProcess::at($parentTaskListPosition, $subProcessDefinition, false);
+        $command = StartSubProcess::at($parentTaskListPosition, $subProcessDefinition, false, 'sub-processor');
 
         $this->assertTrue($parentTaskListPosition->equals($command->parentTaskListPosition()));
 
         $this->assertEquals($subProcessDefinition, $command->subProcessDefinition());
 
         $this->assertFalse($command->syncLogMessages());
+
+        $this->assertEquals('sub-processor', $command->target());
     }
 }
  

@@ -11,6 +11,7 @@
 
 namespace Ginger\Processor\Command;
 
+use Ginger\Message\GingerMessage;
 use Ginger\Message\ProophPlugin\ServiceBusTranslatableMessage;
 use Ginger\Message\WorkflowMessage;
 use Ginger\Processor\Task\TaskListPosition;
@@ -25,7 +26,7 @@ use Prooph\ServiceBus\Message\StandardMessage;
  * @package Ginger\Processor\Command
  * @author Alexander Miertsch <kontakt@codeliner.ws>
  */
-class StartSubProcess extends Command implements ServiceBusTranslatableMessage
+class StartSubProcess extends Command implements GingerMessage
 {
     const MSG_NAME = "ginger-processor-command-start-sub-process";
 
@@ -37,11 +38,14 @@ class StartSubProcess extends Command implements ServiceBusTranslatableMessage
      * @throws \InvalidArgumentException
      * @return StartSubProcess
      */
-    public static function at(TaskListPosition $parentTaskListPosition, array $processDefinition, $syncLogMessages, WorkflowMessage $previousMessage = null)
+    public static function at(TaskListPosition $parentTaskListPosition, array $processDefinition, $syncLogMessages, $target, WorkflowMessage $previousMessage = null)
     {
         if (! is_bool($syncLogMessages)) {
             throw new \InvalidArgumentException("Argument syncLogMessages must be of type boolean");
         }
+
+        if (! is_string($target)) throw new \InvalidArgumentException("Target must be string");
+        if (empty($target)) throw new \InvalidArgumentException('Target must be a non empty string');
 
         $previousMessageArrayOrNull = (is_null($previousMessage))? null : $previousMessage->toServiceBusMessage()->toArray();
 
@@ -49,10 +53,22 @@ class StartSubProcess extends Command implements ServiceBusTranslatableMessage
             'parent_task_list_position' => $parentTaskListPosition->toString(),
             'sync_log_messages' => $syncLogMessages,
             'sub_process_definition' => $processDefinition,
-            'previous_message' => $previousMessageArrayOrNull
+            'previous_message' => $previousMessageArrayOrNull,
+            'target' => $target
         ];
 
         return new self(self::MSG_NAME, $payload);
+    }
+
+    /**
+     * Target of the start sub process command is always the processor of the sub process.
+     * It is set on initialization by the RunSubProcess task
+     *
+     * @return null|string
+     */
+    public function target()
+    {
+        return $this->payload['target'];
     }
 
     /**
