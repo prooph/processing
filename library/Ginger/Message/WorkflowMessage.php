@@ -39,6 +39,17 @@ class WorkflowMessage implements MessageNameProvider, ServiceBusTranslatableMess
     protected $messageName;
 
     /**
+     * The target is either a workflow engine channel target or null
+     *
+     * By default target is null. In this case the message is addressed to the local ginger node.
+     * If the message is connected to a process task and target is null then the property getter target()
+     * returns the processor node name from the TaskListPosition as target.
+     *
+     * @var null|string
+     */
+    protected $target;
+
+    /**
      * @var Uuid
      */
     protected $uuid;
@@ -71,27 +82,29 @@ class WorkflowMessage implements MessageNameProvider, ServiceBusTranslatableMess
     /**
      * @param Prototype $aPrototype
      * @param array $metadata
+     * @param null|string $target
      * @return WorkflowMessage
      */
-    public static function collectDataOf(Prototype $aPrototype, array $metadata = [])
+    public static function collectDataOf(Prototype $aPrototype, array $metadata = [], $target = null)
     {
         $messageName = MessageNameUtils::getCollectDataCommandName($aPrototype->of());
 
-        return new static(Payload::fromPrototype($aPrototype), $messageName, $metadata);
+        return new static(Payload::fromPrototype($aPrototype), $messageName, $metadata, $target);
     }
 
     /**
      * @param \Ginger\Type\Type $data
      * @param array $metadata
+     * @param null|string $target
      * @return WorkflowMessage
      */
-    public static function newDataCollected(Type $data, array $metadata = [])
+    public static function newDataCollected(Type $data, array $metadata = [], $target = null)
     {
         $payload = Payload::fromType($data);
 
         $messageName = MessageNameUtils::getDataCollectedEventName($payload->getTypeClass());
 
-        return new static($payload, $messageName, $metadata);
+        return new static($payload, $messageName, $metadata, $target);
     }
 
     /**
@@ -105,6 +118,8 @@ class WorkflowMessage implements MessageNameProvider, ServiceBusTranslatableMess
 
         Assertion::keyExists($payload, 'json');
 
+        $target = (isset($payload['target']))? $payload['target'] : null;
+
         $taskListPosition = (isset($payload['processTaskListPosition']))?
             TaskListPosition::fromString($payload['processTaskListPosition']) : null;
 
@@ -116,6 +131,7 @@ class WorkflowMessage implements MessageNameProvider, ServiceBusTranslatableMess
             $messagePayload,
             $aMessage->name(),
             $metadata,
+            $target,
             $taskListPosition,
             $aMessage->header()->version(),
             $aMessage->header()->createdOn(),
@@ -127,6 +143,7 @@ class WorkflowMessage implements MessageNameProvider, ServiceBusTranslatableMess
      * @param Payload $payload
      * @param string $messageName
      * @param array|null $metadata
+     * @param string|null $target
      * @param TaskListPosition|null $taskListPosition
      * @param int $version
      * @param \DateTime|null $createdOn
@@ -136,6 +153,7 @@ class WorkflowMessage implements MessageNameProvider, ServiceBusTranslatableMess
         Payload $payload,
         $messageName,
         array $metadata,
+        $target = null,
         TaskListPosition $taskListPosition = null,
         $version = 1,
         \DateTime $createdOn = null,
@@ -146,7 +164,14 @@ class WorkflowMessage implements MessageNameProvider, ServiceBusTranslatableMess
         Assertion::notEmpty($messageName);
         Assertion::string($messageName);
 
+        if (!is_null($target)) {
+            Assertion::notEmpty($target);
+            Assertion::string($target);
+        }
+
         $this->messageName = $messageName;
+
+        $this->target = $target;
 
         $this->assertMetadata($metadata);
 
@@ -202,6 +227,7 @@ class WorkflowMessage implements MessageNameProvider, ServiceBusTranslatableMess
             $collectedPayload,
             MessageNameUtils::getDataCollectedEventName($type),
             $metadata,
+            null, //Target is not set, so it defaults to node name of TaskListPosition->TaskListId
             $this->processTaskListPosition,
             $this->version + 1
         );
@@ -212,9 +238,10 @@ class WorkflowMessage implements MessageNameProvider, ServiceBusTranslatableMess
      *
      * @param \Ginger\Processor\Task\TaskListPosition $newTaskListPosition
      * @param array $metadata
+     * @param null|string $target
      * @return WorkflowMessage
      */
-    public function prepareDataProcessing(TaskListPosition $newTaskListPosition, array $metadata = [])
+    public function prepareDataProcessing(TaskListPosition $newTaskListPosition, array $metadata = [], $target = null)
     {
         $type = MessageNameUtils::getTypePartOfMessageName($this->messageName);
 
@@ -224,6 +251,7 @@ class WorkflowMessage implements MessageNameProvider, ServiceBusTranslatableMess
             $this->payload,
             MessageNameUtils::getProcessDataCommandName($type),
             $metadata,
+            $target,
             $newTaskListPosition,
             $this->version + 1
         );
@@ -231,6 +259,9 @@ class WorkflowMessage implements MessageNameProvider, ServiceBusTranslatableMess
 
     /**
      * Transforms current message to a data processed event
+     *
+     * @param array $metadata
+     * @return WorkflowMessage
      */
     public function answerWithDataProcessingCompleted(array $metadata = [])
     {
@@ -242,6 +273,7 @@ class WorkflowMessage implements MessageNameProvider, ServiceBusTranslatableMess
             $this->payload,
             MessageNameUtils::getDataProcessedEventName($type),
             $metadata,
+            null, //Target is not set, so it defaults to node name of TaskListPosition->TaskListId
             $this->processTaskListPosition,
             $this->version + 1
         );
@@ -276,6 +308,7 @@ class WorkflowMessage implements MessageNameProvider, ServiceBusTranslatableMess
             $this->payload,
             $this->getMessageName(),
             $this->metadata,
+            $this->target,
             $taskListPosition,
             $this->version,
             $this->createdOn()
@@ -308,7 +341,17 @@ class WorkflowMessage implements MessageNameProvider, ServiceBusTranslatableMess
         return MessageNameUtils::getMessageSuffix($this->getMessageName());
     }
 
+    /**
+     * @return null|string
+     */
+    public function target()
+    {
+        if (is_null($this->target) && ! is_null($this->processTaskListPosition)) {
+            return $this->processTaskListPosition()->taskListId()->nodeName()->toString();
+        }
 
+        return $this->target;
+    }
 
     /**
      * @return Payload

@@ -61,6 +61,8 @@ class LinearProcessTest extends TestCase
 
         $this->assertEquals('GingerTest\Mock\UserDictionary', $collectDataMessage->payload()->getTypeClass());
 
+        $this->assertEquals('test-case', $collectDataMessage->target());
+
         $this->assertFalse($process->isSubProcess());
 
         $this->assertFalse($process->isFinished());
@@ -237,6 +239,39 @@ class LinearProcessTest extends TestCase
         $receivedMessage = $this->workflowMessageHandler->lastWorkflowMessage();
 
         $this->assertEquals('GingerTest\Mock\TargetUserDictionary', $receivedMessage->payload()->getTypeClass());
+    }
+
+    /**
+     * @test
+     */
+    public function it_sets_wf_message_target_to_target_defined_in_the_process_task()
+    {
+        $task = ProcessData::address('test-target', ['GingerTest\Mock\TargetUserDictionary']);
+
+        $process = LinearProcess::setUp(NodeName::defaultName(), [$task]);
+
+        $wfm = WorkflowMessage::collectDataOf(UserDictionary::prototype());
+
+        $answer = $wfm->answerWith(UserDictionary::fromNativeValue([
+            'id' => 1,
+            'name' => 'John Doe',
+            'address' => [
+                'street' => 'Main Street',
+                'streetNumber' => 10,
+                'zip' => '12345',
+                'city' => 'Test City'
+            ]
+        ]));
+
+        $this->commandRouter->route(
+            MessageNameUtils::getProcessDataCommandName('GingerTest\Mock\TargetUserDictionary')
+        )->to($this->workflowMessageHandler);
+
+        $process->perform($this->workflowEngine, $answer);
+
+        $receivedMessage = $this->workflowMessageHandler->lastWorkflowMessage();
+
+        $this->assertEquals('test-target', $receivedMessage->target());
     }
 }
  
