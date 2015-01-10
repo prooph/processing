@@ -195,7 +195,7 @@ final class LogMessage implements MessageNameProvider, GingerMessage
 
     /**
      * @param MessageInterface $aMessage
-     * @return WorkflowMessage
+     * @return LogMessage
      * @throws \RuntimeException
      */
     public static function fromServiceBusMessage(MessageInterface $aMessage)

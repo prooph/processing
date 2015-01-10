@@ -12,6 +12,7 @@
 namespace Ginger\Environment;
 
 use Codeliner\ArrayReader\ArrayReader;
+use Ginger\Processor\AbstractWorkflowEngine;
 use Ginger\Processor\Definition;
 use Ginger\Processor\WorkflowEngine;
 use Prooph\ServiceBus\CommandBus;
@@ -25,7 +26,7 @@ use Zend\ServiceManager\ServiceManager;
  * @package Ginger\Environment
  * @author Alexander Miertsch <kontakt@codeliner.ws>
  */
-class ServicesAwareWorkflowEngine implements WorkflowEngine
+class ServicesAwareWorkflowEngine extends AbstractWorkflowEngine
 {
     /**
      * @var ServiceManager

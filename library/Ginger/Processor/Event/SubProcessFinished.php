@@ -60,6 +60,14 @@ class SubProcessFinished extends Event implements GingerMessage
     }
 
     /**
+     * @return string
+     */
+    public function messageName()
+    {
+        return $this->getMessageName();
+    }
+
+    /**
      * @return NodeName
      */
     public function processorNodeName()
@@ -113,7 +121,7 @@ class SubProcessFinished extends Event implements GingerMessage
             return LogMessage::fromServiceBusMessage($sbMessage);
         }
 
-        if (MessageNameUtils::isGingerMessage($sbMessage->name())) {
+        if (MessageNameUtils::isWorkflowMessage($sbMessage->name())) {
             return WorkflowMessage::fromServiceBusMessage($sbMessage);
         }
 

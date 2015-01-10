@@ -209,5 +209,28 @@ class LogMessageTest extends TestCase
         $this->assertEquals('test-message-handler', $logMessage->msgParams()['workflow_message_handler']);
         $this->assertEquals($wfMessage->getMessageName(), $logMessage->msgParams()['message_name']);
     }
+
+    /**
+     * @test
+     */
+    public function it_translates_to_service_bus_message_and_back()
+    {
+        $taskListPosition = TaskListPosition::at(TaskListId::linkWith(NodeName::defaultName(), ProcessId::generate()), 1);
+
+        $logMessage = LogMessage::logWarningMsg("A simple warning msg", $taskListPosition);
+
+        $sbMessage = $logMessage->toServiceBusMessage();
+
+        $this->assertInstanceOf('Prooph\ServiceBus\Message\StandardMessage', $sbMessage);
+
+        $copyOfLogMessage = LogMessage::fromServiceBusMessage($sbMessage);
+
+        $this->assertInstanceOf('Ginger\Message\LogMessage', $copyOfLogMessage);
+
+        $this->assertEquals('A simple warning msg', $copyOfLogMessage->technicalMsg());
+        $this->assertTrue($copyOfLogMessage->isWarning());
+        $this->assertTrue($taskListPosition->equals($copyOfLogMessage->processTaskListPosition()));
+        $this->assertEquals(NodeName::defaultName()->toString(), $copyOfLogMessage->target());
+    }
 }
  

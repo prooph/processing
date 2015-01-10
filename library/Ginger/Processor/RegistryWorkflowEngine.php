@@ -24,7 +24,7 @@ use Zend\EventManager\ListenerAggregateInterface;
  * @package Ginger\Processor
  * @author Alexander Miertsch <kontakt@codeliner.ws>
  */
-class RegistryWorkflowEngine implements WorkflowEngine
+class RegistryWorkflowEngine extends AbstractWorkflowEngine
 {
     private $commandBusMap = array();
 
@@ -115,7 +115,7 @@ class RegistryWorkflowEngine implements WorkflowEngine
 
         if (! isset($this->commandBusMap[$target])) {
             throw new \RuntimeException(sprintf(
-                "Target %s is not connected with a command bus",
+                "Target %s is not connected with a command channel",
                 $target
             ));
         }
@@ -134,7 +134,7 @@ class RegistryWorkflowEngine implements WorkflowEngine
 
         if (! isset($this->eventBusMap[$target])) {
             throw new \RuntimeException(sprintf(
-                "Target %s is not connected with an event bus",
+                "Target %s is not connected with an event channel",
                 $target
             ));
         }

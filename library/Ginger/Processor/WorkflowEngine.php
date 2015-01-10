@@ -11,20 +11,36 @@
 
 namespace Ginger\Processor;
 
+use Ginger\Message\GingerMessage;
 use Prooph\ServiceBus\CommandBus;
 use Prooph\ServiceBus\EventBus;
+use Prooph\ServiceBus\Message\MessageInterface;
 use Zend\EventManager\ListenerAggregateInterface;
 
 /**
  * Class WorkflowEngine
  *
- * Provides necessary infrastructure for a Process to run accordingly.
+ * Provides communication layer for the ginger environment.
  *
  * @package Ginger\Processor
  * @author Alexander Miertsch <kontakt@codeliner.ws>
  */
 interface WorkflowEngine
 {
+    /**
+     * The workflow engine automatically detects the change channel for the message.
+     *
+     * It uses GingerMessage::target() to detect the right channel.
+     * If GingerMessage::target() returns null the "local" channel is used to dispatch the message.
+     * If a service bus message is given the workflow engine translates it to a ginger message first.
+     * If translation is not possible it should throw a InvalidArgumentException
+     *
+     * @param MessageInterface|GingerMessage $message
+     * @return void
+     * @throws \InvalidArgumentException
+     */
+    public function dispatch($message);
+
     /**
      * @param string $target
      * @return CommandBus

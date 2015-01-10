@@ -99,19 +99,19 @@ class MessageNameUtilsTest extends TestCase
      */
     public function it_detects_ginger_messages_by_name()
     {
-        $this->assertTrue(MessageNameUtils::isGingerMessage('ginger-message-gingertestmockuserdictionary-collect-data'));
+        $this->assertTrue(MessageNameUtils::isWorkflowMessage('ginger-message-gingertestmockuserdictionary-collect-data'));
         $this->assertTrue(MessageNameUtils::isGingerCommand('ginger-message-gingertestmockuserdictionary-collect-data'));
         $this->assertFalse(MessageNameUtils::isGingerEvent('ginger-message-gingertestmockuserdictionary-collect-data'));
 
-        $this->assertTrue(MessageNameUtils::isGingerMessage('ginger-message-gingertestmockuserdictionary-data-collected'));
+        $this->assertTrue(MessageNameUtils::isWorkflowMessage('ginger-message-gingertestmockuserdictionary-data-collected'));
         $this->assertFalse(MessageNameUtils::isGingerCommand('ginger-message-gingertestmockuserdictionary-data-collected'));
         $this->assertTrue(MessageNameUtils::isGingerEvent('ginger-message-gingertestmockuserdictionary-data-collected'));
 
-        $this->assertTrue(MessageNameUtils::isGingerMessage('ginger-message-gingertestmockuserdictionary-process-data'));
+        $this->assertTrue(MessageNameUtils::isWorkflowMessage('ginger-message-gingertestmockuserdictionary-process-data'));
         $this->assertTrue(MessageNameUtils::isGingerCommand('ginger-message-gingertestmockuserdictionary-process-data'));
         $this->assertFalse(MessageNameUtils::isGingerEvent('ginger-message-gingertesttypemockuserdictionary-process-data'));
 
-        $this->assertTrue(MessageNameUtils::isGingerMessage('ginger-message-gingertestmockuserdictionary-data-processed'));
+        $this->assertTrue(MessageNameUtils::isWorkflowMessage('ginger-message-gingertestmockuserdictionary-data-processed'));
         $this->assertFalse(MessageNameUtils::isGingerCommand('ginger-message-gingertestmockuserdictionary-data-processed'));
         $this->assertTrue(MessageNameUtils::isGingerEvent('ginger-message-gingertestmockuserdictionary-data-processed'));
     }

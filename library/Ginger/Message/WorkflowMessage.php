@@ -450,7 +450,11 @@ class WorkflowMessage implements MessageNameProvider, GingerMessage
             $messageType
         );
 
-        $msgPayload = array('json' => json_encode($this->payload()), 'metadata' => $this->metadata);
+        $msgPayload = array(
+            'json' => json_encode($this->payload()),
+            'metadata' => $this->metadata,
+            'target' => $this->target()
+        );
 
         if ($this->processTaskListPosition()) {
             $msgPayload['processTaskListPosition'] = $this->processTaskListPosition()->toString();

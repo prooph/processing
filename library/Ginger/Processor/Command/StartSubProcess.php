@@ -12,7 +12,6 @@
 namespace Ginger\Processor\Command;
 
 use Ginger\Message\GingerMessage;
-use Ginger\Message\ProophPlugin\ServiceBusTranslatableMessage;
 use Ginger\Message\WorkflowMessage;
 use Ginger\Processor\Task\TaskListPosition;
 use Prooph\ServiceBus\Command;
@@ -34,6 +33,7 @@ class StartSubProcess extends Command implements GingerMessage
      * @param TaskListPosition $parentTaskListPosition
      * @param array $processDefinition
      * @param bool $syncLogMessages
+     * @param string $target
      * @param WorkflowMessage $previousMessage
      * @throws \InvalidArgumentException
      * @return StartSubProcess
@@ -58,6 +58,14 @@ class StartSubProcess extends Command implements GingerMessage
         ];
 
         return new self(self::MSG_NAME, $payload);
+    }
+
+    /**
+     * @return string
+     */
+    public function messageName()
+    {
+        return $this->getMessageName();
     }
 
     /**
@@ -111,7 +119,7 @@ class StartSubProcess extends Command implements GingerMessage
 
     /**
      * @param MessageInterface $aMessage
-     * @return static
+     * @return StartSubProcess
      */
     public static function fromServiceBusMessage(MessageInterface $aMessage)
     {

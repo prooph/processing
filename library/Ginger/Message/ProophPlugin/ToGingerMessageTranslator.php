@@ -11,6 +11,7 @@
 
 namespace Ginger\Message\ProophPlugin;
 
+use Ginger\Message\GingerMessage;
 use Ginger\Message\LogMessage;
 use Ginger\Message\MessageNameUtils;
 use Ginger\Message\WorkflowMessage;
@@ -55,11 +56,11 @@ class ToGingerMessageTranslator extends AbstractListenerAggregate
         if (! $command instanceof MessageInterface) return;
 
         if (MessageNameUtils::isGingerCommand($command->name())) {
-            $commandDispatch->setCommand(WorkflowMessage::fromServiceBusMessage($command));
+            $commandDispatch->setCommand($this->translateToGingerMessage($command));
         }
 
         if ($command->name() === StartSubProcess::MSG_NAME) {
-            $commandDispatch->setCommand(StartSubProcess::fromServiceBusMessage($command));
+            $commandDispatch->setCommand($this->translateToGingerMessage($command));
         }
     }
 
@@ -70,14 +71,40 @@ class ToGingerMessageTranslator extends AbstractListenerAggregate
         if (! $event instanceof MessageInterface) return;
 
         if (MessageNameUtils::isGingerEvent($event->name())) {
-            $eventDispatch->setEvent(WorkflowMessage::fromServiceBusMessage($event));
+            $eventDispatch->setEvent($this->translateToGingerMessage($event));
         } else if (MessageNameUtils::isGingerLogMessage($event->name())) {
-            $eventDispatch->setEvent(LogMessage::fromServiceBusMessage($event));
+            $eventDispatch->setEvent($this->translateToGingerMessage($event));
         }
 
         if ($event->name() === SubProcessFinished::MSG_NAME) {
-            $eventDispatch->setEvent(SubProcessFinished::fromServiceBusMessage($event));
+            $eventDispatch->setEvent($this->translateToGingerMessage($event));
         }
+    }
+
+    /**
+     * @param MessageInterface $message
+     * @return GingerMessage
+     * @throws \InvalidArgumentException
+     */
+    public function translateToGingerMessage(MessageInterface $message)
+    {
+        if (MessageNameUtils::isWorkflowMessage($message->name())) {
+            return WorkflowMessage::fromServiceBusMessage($message);
+        }
+
+        if (MessageNameUtils::isGingerLogMessage($message->name())) {
+            return LogMessage::fromServiceBusMessage($message);
+        }
+
+        if (StartSubProcess::MSG_NAME === $message->name()) {
+            return StartSubProcess::fromServiceBusMessage($message);
+        }
+
+        if (SubProcessFinished::MSG_NAME === $message->name()) {
+            return SubProcessFinished::fromServiceBusMessage($message);
+        }
+
+        throw new \InvalidArgumentException(sprintf('Provided message %s can not be translated to a ginger message', $message->name()));
     }
 }
  

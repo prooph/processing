@@ -25,6 +25,11 @@ use Ginger\Message\ProophPlugin\ServiceBusTranslatableMessage;
 interface GingerMessage extends ServiceBusTranslatableMessage
 {
     /**
+     * @return string
+     */
+    public function messageName();
+    
+    /**
      * If target is null the workflow engine will use the local channel to send the message to the workflow processor.
      *
      * @return null|string

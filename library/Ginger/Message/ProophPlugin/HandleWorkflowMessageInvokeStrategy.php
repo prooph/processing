@@ -38,7 +38,7 @@ class HandleWorkflowMessageInvokeStrategy extends AbstractInvokeStrategy
 
         if (! $aHandler instanceof WorkflowMessageHandler) return false;
 
-        if (! MessageNameUtils::isGingerMessage($aCommandOrEvent->getMessageName())) return false;
+        if (! MessageNameUtils::isWorkflowMessage($aCommandOrEvent->getMessageName())) return false;
 
         return true;
     }

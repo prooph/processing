@@ -133,7 +133,7 @@ class MessageNameUtils
      * @param string $aMessageName
      * @return bool
      */
-    public static function isGingerMessage($aMessageName)
+    public static function isWorkflowMessage($aMessageName)
     {
         $match = array();
 

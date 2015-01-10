@@ -58,5 +58,43 @@ class SubProcessFinishedTest extends TestCase
         $this->assertTrue($event->succeed());
         $this->assertEquals($message->technicalMsg(), $event->lastMessage()->technicalMsg());
     }
+
+    /**
+     * @test
+     */
+    public function it_translates_to_service_bus_message_and_back()
+    {
+        $nodeName = NodeName::fromString('other_machine');
+        $subProcessId = ProcessId::generate();
+        $parentTaskListPosition = TaskListPosition::at(TaskListId::linkWith(NodeName::defaultName(), ProcessId::generate()), 1);
+
+        $message = LogMessage::logDebugMsg(
+            "Processing finished",
+            TaskListPosition::at(TaskListId::linkWith($nodeName, $subProcessId), 1)
+        );
+
+        $event = SubProcessFinished::record(
+            $nodeName,
+            $subProcessId,
+            true,
+            $message,
+            $parentTaskListPosition
+        );
+
+        $sbMessage = $event->toServiceBusMessage();
+
+        $this->assertInstanceOf('Prooph\ServiceBus\Message\StandardMessage', $sbMessage);
+
+        $copyOfEvent = SubProcessFinished::fromServiceBusMessage($sbMessage);
+
+        $this->assertInstanceOf('Ginger\Processor\Event\SubProcessFinished', $copyOfEvent);
+
+        $this->assertTrue($nodeName->equals($copyOfEvent->processorNodeName()));
+        $this->assertTrue($parentTaskListPosition->equals($copyOfEvent->parentTaskListPosition()));
+        $this->assertEquals($parentTaskListPosition->taskListId()->nodeName()->toString(), $copyOfEvent->target());
+        $this->assertTrue($subProcessId->equals($copyOfEvent->subProcessId()));
+        $this->assertTrue($copyOfEvent->succeed());
+        $this->assertEquals($message->technicalMsg(), $copyOfEvent->lastMessage()->technicalMsg());
+    }
 }
  

@@ -266,5 +266,31 @@ class WorkflowMessageTest extends TestCase
 
         $this->assertEquals('GingerTest\Mock\TargetUserDictionary', $wfMessage->payload()->getTypeClass());
     }
+
+    /**
+     * @test
+     */
+    public function it_translates_itself_to_service_bus_message_and_back()
+    {
+        $wfMessage = WorkflowMessage::collectDataOf(UserDictionary::prototype(), array('metadata' => true), NodeName::defaultName()->toString());
+
+        $sbMessage = $wfMessage->toServiceBusMessage();
+
+        $this->assertInstanceOf('Prooph\ServiceBus\Message\StandardMessage', $sbMessage);
+
+        $copyOfWfMessage = WorkflowMessage::fromServiceBusMessage($sbMessage);
+
+        $this->assertInstanceOf('Ginger\Message\WorkflowMessage', $copyOfWfMessage);
+
+        $this->assertEquals(
+            MessageNameUtils::MESSAGE_NAME_PREFIX . 'gingertestmockuserdictionary-collect-data',
+            $copyOfWfMessage->getMessageName()
+        );
+
+        $this->assertEquals(array(), $copyOfWfMessage->payload()->getData());
+        $this->assertEquals(array('metadata' => true), $copyOfWfMessage->metadata());
+        $this->assertEquals(MessageNameUtils::COLLECT_DATA, $copyOfWfMessage->messageType());
+        $this->assertEquals(NodeName::defaultName()->toString(), $copyOfWfMessage->target());
+    }
 }
  

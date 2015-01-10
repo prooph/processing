@@ -100,5 +100,42 @@ class StartSubProcessTest extends TestCase
 
         $this->assertEquals('sub-processor', $command->target());
     }
+
+    /**
+     * @test
+     */
+    public function it_translates_to_service_bus_message_and_back()
+    {
+        $subProcessDefinition = [
+            "process_type" => Definition::PROCESS_LINEAR_MESSAGING,
+            "tasks" => [
+                [
+                    "task_type"   => Definition::TASK_COLLECT_DATA,
+                    "source"      => 'test-case',
+                    "ginger_type" => 'GingerTest\Mock\UserDictionary'
+                ]
+            ],
+        ];
+
+        $parentTaskListPosition = TaskListPosition::at(TaskListId::linkWith(NodeName::defaultName(), ProcessId::generate()), 1);
+
+        $command = StartSubProcess::at($parentTaskListPosition, $subProcessDefinition, false, 'sub-processor');
+
+        $sbMessage = $command->toServiceBusMessage();
+
+        $this->assertInstanceOf('Prooph\ServiceBus\Message\StandardMessage', $sbMessage);
+
+        $copyOfCommand = StartSubProcess::fromServiceBusMessage($sbMessage);
+
+        $this->assertInstanceOf('Ginger\Processor\Command\StartSubProcess', $copyOfCommand);
+
+        $this->assertTrue($parentTaskListPosition->equals($copyOfCommand->parentTaskListPosition()));
+
+        $this->assertEquals($subProcessDefinition, $copyOfCommand->subProcessDefinition());
+
+        $this->assertFalse($copyOfCommand->syncLogMessages());
+
+        $this->assertEquals('sub-processor', $copyOfCommand->target());
+    }
 }
  
