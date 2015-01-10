@@ -52,7 +52,7 @@ class WorkflowProcessorTest extends TestCase
 
         $this->assertInstanceOf('Ginger\Message\WorkflowMessage', $receivedMessage);
 
-        $this->assertEquals('GingerTest\Mock\TargetUserDictionary', $receivedMessage->getPayload()->getTypeClass());
+        $this->assertEquals('GingerTest\Mock\TargetUserDictionary', $receivedMessage->payload()->getTypeClass());
 
         $this->assertNotNull($this->lastPostCommitEvent);
 
@@ -110,7 +110,7 @@ class WorkflowProcessorTest extends TestCase
 
         $receivedMessage = $this->workflowMessageHandler->lastWorkflowMessage();
 
-        $logMessage = LogMessage::logInfoDataProcessingStarted($receivedMessage->getProcessTaskListPosition());
+        $logMessage = LogMessage::logInfoDataProcessingStarted($receivedMessage->processTaskListPosition());
 
         //Set up EventBus
         $eventBus = new EventBus();
@@ -206,7 +206,7 @@ class WorkflowProcessorTest extends TestCase
 
         $this->assertNotNull($receivedMessage);
 
-        $logMessage = LogMessage::logInfoDataProcessingStarted($receivedMessage->getProcessTaskListPosition());
+        $logMessage = LogMessage::logInfoDataProcessingStarted($receivedMessage->processTaskListPosition());
 
         $this->getOtherMachineWorkflowProcessor()->receiveMessage($logMessage);
 
@@ -255,7 +255,7 @@ class WorkflowProcessorTest extends TestCase
 
         $this->assertNotNull($receivedMessage);
 
-        $error = LogMessage::logErrorMsg("Simulated error", $receivedMessage->getProcessTaskListPosition());
+        $error = LogMessage::logErrorMsg("Simulated error", $receivedMessage->processTaskListPosition());
 
         $this->getOtherMachineWorkflowProcessor()->receiveMessage($error);
 

@@ -103,14 +103,14 @@ class ForEachProcess extends Process
             return;
         }
 
-        $collection = $workflowMessage->getPayload()->toType();
+        $collection = $workflowMessage->payload()->toType();
 
         if (! $collection instanceof CollectionType) {
             $this->receiveMessage(
                 LogMessage::logErrorMsg(
                     sprintf(
                         'The ForEachProcess requires a Ginger\Type\CollectionType as payload of the incoming message, but it is a %s type given',
-                        $workflowMessage->getPayload()->getTypeClass()
+                        $workflowMessage->payload()->getTypeClass()
                     ),
                     $taskListEntry->taskListPosition()
                 ),

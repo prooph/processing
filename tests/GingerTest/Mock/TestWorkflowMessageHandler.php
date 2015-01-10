@@ -59,8 +59,8 @@ class TestWorkflowMessageHandler implements WorkflowMessageHandler
 
         if ($this->nextAnswer && $this->eventBus)
         {
-            if (is_null($this->nextAnswer->getProcessTaskListPosition())) {
-                $this->nextAnswer->connectToProcessTask($aWorkflowMessage->getProcessTaskListPosition());
+            if (is_null($this->nextAnswer->processTaskListPosition())) {
+                $this->nextAnswer->connectToProcessTask($aWorkflowMessage->processTaskListPosition());
             }
 
             $this->eventBus->dispatch($this->nextAnswer);

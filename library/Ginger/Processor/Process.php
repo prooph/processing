@@ -171,21 +171,21 @@ abstract class Process extends AggregateRoot
                 return;
             }
 
-            $this->assertTaskEntryExists($message->getProcessTaskListPosition());
+            $this->assertTaskEntryExists($message->processTaskListPosition());
 
-            $this->recordThat(TaskEntryMarkedAsDone::at($message->getProcessTaskListPosition()));
+            $this->recordThat(TaskEntryMarkedAsDone::at($message->processTaskListPosition()));
 
             $this->perform($workflowEngine, $message);
             return;
         }
 
         if ($message instanceof LogMessage) {
-            $this->assertTaskEntryExists($message->getProcessTaskListPosition());
+            $this->assertTaskEntryExists($message->processTaskListPosition());
 
             $this->recordThat(LogMessageReceived::record($message));
 
             if ($message->isError()) {
-                $this->recordThat(TaskEntryMarkedAsFailed::at($message->getProcessTaskListPosition()));
+                $this->recordThat(TaskEntryMarkedAsFailed::at($message->processTaskListPosition()));
             } elseif ($this->isSubProcess() && $this->syncLogMessages) {
                 //We only sync non error messages, because errors are always synced and then they would be received twice
                 $messageForParent = $message->reconnectToProcessTask($this->parentTaskListPosition);
@@ -280,9 +280,9 @@ abstract class Process extends AggregateRoot
         try {
             $workflowEngine->getCommandBusFor($collectData->source())->dispatch($workflowMessage);
         } catch (CommandDispatchException $ex) {
-            $this->receiveMessage(LogMessage::logException($ex->getPrevious(), $workflowMessage->getProcessTaskListPosition()), $workflowEngine);
+            $this->receiveMessage(LogMessage::logException($ex->getPrevious(), $workflowMessage->processTaskListPosition()), $workflowEngine);
         } catch (\Exception $ex) {
-            $this->receiveMessage(LogMessage::logException($ex, $workflowMessage->getProcessTaskListPosition()), $workflowEngine);
+            $this->receiveMessage(LogMessage::logException($ex, $workflowMessage->processTaskListPosition()), $workflowEngine);
         }
     }
 
@@ -296,16 +296,16 @@ abstract class Process extends AggregateRoot
     {
         $workflowMessage = $previousMessage->prepareDataProcessing($taskListPosition, $processData->metadata());
 
-        if (! in_array($workflowMessage->getPayload()->getTypeClass(), $processData->allowedTypes())) {
+        if (! in_array($workflowMessage->payload()->getTypeClass(), $processData->allowedTypes())) {
             $workflowMessage->changeGingerType($processData->preferredType());
         }
 
         try {
             $workflowEngine->getCommandBusFor($processData->target())->dispatch($workflowMessage);
         } catch (CommandDispatchException $ex) {
-            $this->receiveMessage(LogMessage::logException($ex->getPrevious(), $workflowMessage->getProcessTaskListPosition()), $workflowEngine);
+            $this->receiveMessage(LogMessage::logException($ex->getPrevious(), $workflowMessage->processTaskListPosition()), $workflowEngine);
         } catch (\Exception $ex) {
-            $this->receiveMessage(LogMessage::logException($ex, $workflowMessage->getProcessTaskListPosition()), $workflowEngine);
+            $this->receiveMessage(LogMessage::logException($ex, $workflowMessage->processTaskListPosition()), $workflowEngine);
         }
     }
 
@@ -354,7 +354,7 @@ abstract class Process extends AggregateRoot
             return;
         }
 
-        $payload = $previousMessage->getPayload();
+        $payload = $previousMessage->payload();
 
         try {
             $task->performManipulationOn($payload);

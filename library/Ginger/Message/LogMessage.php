@@ -158,12 +158,12 @@ final class LogMessage implements MessageNameProvider, ServiceBusTranslatableMes
     public static function logUnsupportedMessageReceived(WorkflowMessage $workflowMessage, $workflowMessageHandlerName)
     {
         return new self(
-            $workflowMessage->getProcessTaskListPosition(),
+            $workflowMessage->processTaskListPosition(),
             sprintf(
                 "Workflow message handler %s received wrong message with name %s for task %s",
                 (string)$workflowMessageHandlerName,
                 $workflowMessage->getMessageName(),
-                $workflowMessage->getProcessTaskListPosition()->toString()
+                $workflowMessage->processTaskListPosition()->toString()
             ),
             416,
             array(
@@ -262,9 +262,19 @@ final class LogMessage implements MessageNameProvider, ServiceBusTranslatableMes
     }
 
     /**
+     * Alias for messageName() method to fulfill the MessageNameProvider interface
+     *
      * @return string Name of the message
      */
     public function getMessageName()
+    {
+        return $this->messageName();
+    }
+
+    /**
+     * @return string Name of the message
+     */
+    public function messageName()
     {
         return MessageNameUtils::LOG_MESSAGE_NAME;
     }
@@ -275,8 +285,8 @@ final class LogMessage implements MessageNameProvider, ServiceBusTranslatableMes
     public function toServiceBusMessage()
     {
         $header = new MessageHeader(
-            $this->getUuid(),
-            $this->getCreatedOn(),
+            $this->uuid(),
+            $this->createdOn(),
             1,
             MessageHeader::TYPE_EVENT
         );
@@ -285,10 +295,10 @@ final class LogMessage implements MessageNameProvider, ServiceBusTranslatableMes
             $this->getMessageName(),
             $header,
             [
-                'processTaskListPosition' => $this->getProcessTaskListPosition()->toString(),
-                'technicalMsg' => $this->getTechnicalMsg(),
-                'msgParams' => $this->getMsgParams(),
-                 'msgCode' => $this->getMsgCode()
+                'processTaskListPosition' => $this->processTaskListPosition()->toString(),
+                'technicalMsg' => $this->technicalMsg(),
+                'msgParams' => $this->msgParams(),
+                 'msgCode' => $this->msgCode()
             ]
         );
     }
@@ -301,18 +311,18 @@ final class LogMessage implements MessageNameProvider, ServiceBusTranslatableMes
     {
         return new self(
             $taskListPosition,
-            $this->getTechnicalMsg(),
-            $this->getMsgCode(),
-            $this->getMsgParams(),
+            $this->technicalMsg(),
+            $this->msgCode(),
+            $this->msgParams(),
             null,
-            $this->getCreatedOn()
+            $this->createdOn()
         );
     }
 
     /**
      * @return int
      */
-    public function getMsgCode()
+    public function msgCode()
     {
         return $this->msgCode;
     }
@@ -320,7 +330,7 @@ final class LogMessage implements MessageNameProvider, ServiceBusTranslatableMes
     /**
      * @return array
      */
-    public function getMsgParams()
+    public function msgParams()
     {
         return $this->msgParams;
     }
@@ -328,7 +338,7 @@ final class LogMessage implements MessageNameProvider, ServiceBusTranslatableMes
     /**
      * @return TaskListPosition
      */
-    public function getProcessTaskListPosition()
+    public function processTaskListPosition()
     {
         return $this->processTaskListPosition;
     }
@@ -336,7 +346,7 @@ final class LogMessage implements MessageNameProvider, ServiceBusTranslatableMes
     /**
      * @return string
      */
-    public function getTechnicalMsg()
+    public function technicalMsg()
     {
         return $this->technicalMsg;
     }
@@ -344,7 +354,7 @@ final class LogMessage implements MessageNameProvider, ServiceBusTranslatableMes
     /**
      * @return Uuid
      */
-    public function getUuid()
+    public function uuid()
     {
         return $this->uuid;
     }
@@ -352,7 +362,7 @@ final class LogMessage implements MessageNameProvider, ServiceBusTranslatableMes
     /**
      * @return \DateTime
      */
-    public function getCreatedOn()
+    public function createdOn()
     {
         return $this->createdOn;
     }
@@ -360,7 +370,7 @@ final class LogMessage implements MessageNameProvider, ServiceBusTranslatableMes
     /**
      * @return string
      */
-    public function getLogLevel()
+    public function logLevel()
     {
         switch (true) {
             case $this->msgCode < 100:
@@ -379,7 +389,7 @@ final class LogMessage implements MessageNameProvider, ServiceBusTranslatableMes
      */
     public function isDebug()
     {
-        return $this->getLogLevel() === self::LOG_LEVEL_DEBUG;
+        return $this->logLevel() === self::LOG_LEVEL_DEBUG;
     }
 
     /**
@@ -387,7 +397,7 @@ final class LogMessage implements MessageNameProvider, ServiceBusTranslatableMes
      */
     public function isWarning()
     {
-        return $this->getLogLevel() === self::LOG_LEVEL_WARNING;
+        return $this->logLevel() === self::LOG_LEVEL_WARNING;
     }
 
     /**
@@ -395,7 +405,7 @@ final class LogMessage implements MessageNameProvider, ServiceBusTranslatableMes
      */
     public function isInfo()
     {
-        return $this->getLogLevel() === self::LOG_LEVEL_INFO;
+        return $this->logLevel() === self::LOG_LEVEL_INFO;
     }
 
     /**
@@ -403,7 +413,7 @@ final class LogMessage implements MessageNameProvider, ServiceBusTranslatableMes
      */
     public function isError()
     {
-        return $this->getLogLevel() === self::LOG_LEVEL_ERROR;
+        return $this->logLevel() === self::LOG_LEVEL_ERROR;
     }
 }
  

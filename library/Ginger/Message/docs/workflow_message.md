@@ -59,12 +59,12 @@ class WorkflowMessage implements MessageNameProvider
     /**
      * @return string Name of the message
      */
-    public function getMessageName();
+    public function messageName();
 
     /**
      * @return \Ginger\Message\Payload
      */
-    public function getPayload();
+    public function payload();
 
     /**
      * @return ProcessId|null
@@ -74,17 +74,17 @@ class WorkflowMessage implements MessageNameProvider
     /**
      * @return \Rhumsaa\Uuid\Uuid
      */
-    public function getUuid();
+    public function uuid();
 
     /**
      * @return int
      */
-    public function getVersion();
+    public function version();
 
     /**
      * @return \DateTime
      */
-    public function getCreatedOn();
+    public function createdOn();
 }
 ```
 

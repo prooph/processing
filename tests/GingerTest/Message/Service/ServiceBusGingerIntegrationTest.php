@@ -96,12 +96,12 @@ class ServiceBusGingerIntegrationTest extends TestCase
         $eventBus->dispatch($wfMessage);
 
         $this->assertInstanceOf('Ginger\Message\WorkflowMessage', $this->receivedMessage);
-        $this->assertTrue($taskListPosition->equals($this->receivedMessage->getProcessTaskListPosition()));
-        $this->assertTrue($wfMessage->getUuid()->equals($this->receivedMessage->getUuid()));
-        $this->assertEquals($wfMessage->getPayload()->getData(), $this->receivedMessage->getPayload()->getData());
-        $this->assertEquals($wfMessage->getVersion(), $this->receivedMessage->getVersion());
-        $this->assertEquals($wfMessage->getCreatedOn()->format('Y-m-d H:i:s'), $this->receivedMessage->getCreatedOn()->format('Y-m-d H:i:s'));
-        $this->assertEquals(array('metadata' => true), $this->receivedMessage->getMetadata());
+        $this->assertTrue($taskListPosition->equals($this->receivedMessage->processTaskListPosition()));
+        $this->assertTrue($wfMessage->uuid()->equals($this->receivedMessage->uuid()));
+        $this->assertEquals($wfMessage->payload()->getData(), $this->receivedMessage->payload()->getData());
+        $this->assertEquals($wfMessage->version(), $this->receivedMessage->version());
+        $this->assertEquals($wfMessage->createdOn()->format('Y-m-d H:i:s'), $this->receivedMessage->createdOn()->format('Y-m-d H:i:s'));
+        $this->assertEquals(array('metadata' => true), $this->receivedMessage->metadata());
     }
 
     /**
@@ -126,10 +126,10 @@ class ServiceBusGingerIntegrationTest extends TestCase
         $eventBus->dispatch($logMessage);
 
         $this->assertInstanceOf('Ginger\Message\LogMessage', $this->receivedMessage);
-        $this->assertTrue($taskListPosition->equals($this->receivedMessage->getProcessTaskListPosition()));
-        $this->assertTrue($logMessage->getUuid()->equals($this->receivedMessage->getUuid()));
-        $this->assertEquals($logMessage->getTechnicalMsg(), $this->receivedMessage->getTechnicalMsg());
-        $this->assertEquals($logMessage->getCreatedOn()->format('Y-m-d H:i:s'), $this->receivedMessage->getCreatedOn()->format('Y-m-d H:i:s'));
+        $this->assertTrue($taskListPosition->equals($this->receivedMessage->processTaskListPosition()));
+        $this->assertTrue($logMessage->uuid()->equals($this->receivedMessage->uuid()));
+        $this->assertEquals($logMessage->technicalMsg(), $this->receivedMessage->technicalMsg());
+        $this->assertEquals($logMessage->createdOn()->format('Y-m-d H:i:s'), $this->receivedMessage->createdOn()->format('Y-m-d H:i:s'));
     }
 }
  

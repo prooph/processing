@@ -96,13 +96,13 @@ class WorkflowProcessor
         }
 
         if ($message instanceof WorkflowMessage) {
-            if ($processTaskListPosition = $message->getProcessTaskListPosition()) {
+            if ($processTaskListPosition = $message->processTaskListPosition()) {
                 $this->continueProcessAt($processTaskListPosition, $message);
             } else {
                 $this->startProcessFromMessage($message);
             }
         } elseif ($message instanceof LogMessage) {
-            $this->continueProcessAt($message->getProcessTaskListPosition(), $message);
+            $this->continueProcessAt($message->processTaskListPosition(), $message);
         } elseif ($message instanceof StartSubProcess) {
             $this->startSubProcess($message);
         }elseif ($message instanceof SubProcessFinished) {
@@ -180,7 +180,7 @@ class WorkflowProcessor
             throw new \RuntimeException(sprintf(
                 "Last received message %s (%s) contains unknown processId. A process with id %s cannot be found!",
                 $lastAnswer->getMessageName(),
-                $lastAnswer->getUuid()->toString(),
+                $lastAnswer->uuid()->toString(),
                 $taskListPosition->taskListId()->processId()->toString()
             ));
         }
@@ -209,7 +209,7 @@ class WorkflowProcessor
                 }
 
                 if (! $lastAnswer->isError()) {
-                    $lastAnswer = LogMessage::logErrorMsg($lastAnswer->getTechnicalMsg(), $lastAnswer->getProcessTaskListPosition());
+                    $lastAnswer = LogMessage::logErrorMsg($lastAnswer->technicalMsg(), $lastAnswer->processTaskListPosition());
                 }
 
                 $this->informParentProcessAboutSubProcess($process, false, $lastAnswer);

@@ -17,7 +17,7 @@ class LogMessageReceived extends TaskEntryChanged
 {
     public static function record(LogMessage $logMessage)
     {
-        return self::at($logMessage->getProcessTaskListPosition(), array(
+        return self::at($logMessage->processTaskListPosition(), array(
             'message' => $logMessage->toServiceBusMessage()->toArray()
         ));
     }

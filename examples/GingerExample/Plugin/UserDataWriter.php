@@ -103,8 +103,8 @@ class UserDataWriter implements WorkflowMessageHandler, Connector
      */
     public function handleWorkflowMessage(WorkflowMessage $aWorkflowMessage)
     {
-        if (array_key_exists($aWorkflowMessage->getPayload()->getTypeClass(), $this->getSupportedMessagesByTypeMap())) {
-            $dataAsJsonString = json_encode($aWorkflowMessage->getPayload());
+        if (array_key_exists($aWorkflowMessage->payload()->getTypeClass(), $this->getSupportedMessagesByTypeMap())) {
+            $dataAsJsonString = json_encode($aWorkflowMessage->payload());
 
             $answer = $aWorkflowMessage->answerWithDataProcessingCompleted();
 
@@ -116,15 +116,15 @@ class UserDataWriter implements WorkflowMessageHandler, Connector
                 }
 
             } catch (\Exception $ex) {
-                $answer = \Ginger\Message\LogMessage::logException($ex, $aWorkflowMessage->getProcessTaskListPosition());
+                $answer = \Ginger\Message\LogMessage::logException($ex, $aWorkflowMessage->processTaskListPosition());
             }
 
             $this->eventBus->dispatch($answer);
         } else {
             $this->eventBus->dispatch(LogMessage::logErrorMsg(
                     sprintf(
-                        '%s: Unknown type %s received', __CLASS__, $aWorkflowMessage->getPayload()->getTypeClass()),
-                    $aWorkflowMessage->getProcessTaskListPosition()
+                        '%s: Unknown type %s received', __CLASS__, $aWorkflowMessage->payload()->getTypeClass()),
+                    $aWorkflowMessage->processTaskListPosition()
                 )
             );
         }

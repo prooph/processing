@@ -258,7 +258,7 @@ class WorkflowMessage implements MessageNameProvider, ServiceBusTranslatableMess
                 sprintf(
                     "WorkflowMessage %s (%s) is already connected to a process task",
                     $this->getMessageName(),
-                    $this->getUuid()->toString()
+                    $this->uuid()->toString()
                 )
             );
         }
@@ -278,30 +278,42 @@ class WorkflowMessage implements MessageNameProvider, ServiceBusTranslatableMess
             $this->metadata,
             $taskListPosition,
             $this->version,
-            $this->getCreatedOn()
+            $this->createdOn()
         );
+    }
+
+    /**
+     * Alias for messageName() method to fulfill the MessageNameProvider interface
+     *
+     * @return string Name of the message
+     */
+    public function getMessageName()
+    {
+        return $this->messageName();
     }
 
     /**
      * @return string Name of the message
      */
-    public function getMessageName()
+    public function messageName()
     {
         return $this->messageName;
     }
 
     /**
-     * @return string
+     * @return string Type fof the message
      */
-    public function getMessageType()
+    public function messageType()
     {
         return MessageNameUtils::getMessageSuffix($this->getMessageName());
     }
 
+
+
     /**
      * @return Payload
      */
-    public function getPayload()
+    public function payload()
     {
         return $this->payload;
     }
@@ -309,7 +321,7 @@ class WorkflowMessage implements MessageNameProvider, ServiceBusTranslatableMess
     /**
      * @return TaskListPosition|null
      */
-    public function getProcessTaskListPosition()
+    public function processTaskListPosition()
     {
         return $this->processTaskListPosition;
     }
@@ -317,7 +329,7 @@ class WorkflowMessage implements MessageNameProvider, ServiceBusTranslatableMess
     /**
      * @return Uuid
      */
-    public function getUuid()
+    public function uuid()
     {
         return $this->uuid;
     }
@@ -325,7 +337,7 @@ class WorkflowMessage implements MessageNameProvider, ServiceBusTranslatableMess
     /**
      * @return int
      */
-    public function getVersion()
+    public function version()
     {
         return $this->version;
     }
@@ -333,7 +345,7 @@ class WorkflowMessage implements MessageNameProvider, ServiceBusTranslatableMess
     /**
      * @return \DateTime
      */
-    public function getCreatedOn()
+    public function createdOn()
     {
         return $this->createdOn;
     }
@@ -349,13 +361,13 @@ class WorkflowMessage implements MessageNameProvider, ServiceBusTranslatableMess
 
         $this->messageName = str_replace($oldGingerType, MessageNameUtils::normalize($newGingerType), $this->messageName);
 
-        $this->getPayload()->changeTypeClass($newGingerType);
+        $this->payload()->changeTypeClass($newGingerType);
     }
 
     /**
      * @return array|null
      */
-    public function getMetadata()
+    public function metadata()
     {
         return $this->metadata;
     }
@@ -389,16 +401,16 @@ class WorkflowMessage implements MessageNameProvider, ServiceBusTranslatableMess
             ));
 
         $messageHeader = new MessageHeader(
-            $this->getUuid(),
-            $this->getCreatedOn(),
-            $this->getVersion(),
+            $this->uuid(),
+            $this->createdOn(),
+            $this->version(),
             $messageType
         );
 
-        $msgPayload = array('json' => json_encode($this->getPayload()), 'metadata' => $this->metadata);
+        $msgPayload = array('json' => json_encode($this->payload()), 'metadata' => $this->metadata);
 
-        if ($this->getProcessTaskListPosition()) {
-            $msgPayload['processTaskListPosition'] = $this->getProcessTaskListPosition()->toString();
+        if ($this->processTaskListPosition()) {
+            $msgPayload['processTaskListPosition'] = $this->processTaskListPosition()->toString();
         }
 
         return new StandardMessage(

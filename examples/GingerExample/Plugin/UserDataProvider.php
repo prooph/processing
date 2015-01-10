@@ -45,14 +45,14 @@ class UserDataProvider implements WorkflowMessageHandler, Connector
      */
     public function handleWorkflowMessage(WorkflowMessage $aWorkflowMessage)
     {
-        if ($aWorkflowMessage->getPayload()->getTypeClass() === 'GingerExample\Type\SourceUser') {
+        if ($aWorkflowMessage->payload()->getTypeClass() === 'GingerExample\Type\SourceUser') {
             $userData = include __DIR__ . '/../../data/user-source-data.php';
 
             if (! $userData) {
                 $this->eventBus->dispatch(
                     LogMessage::logErrorMsg(
                         "Could not read user data from examples/data/user-source-data.php. Please check the permissions",
-                        $aWorkflowMessage->getProcessTaskListPosition()
+                        $aWorkflowMessage->processTaskListPosition()
                     )
                 );
             }
@@ -63,8 +63,8 @@ class UserDataProvider implements WorkflowMessageHandler, Connector
         } else {
             $this->eventBus->dispatch(LogMessage::logErrorMsg(
                 sprintf(
-                    '%s: Unknown type %s received', __CLASS__, $aWorkflowMessage->getPayload()->getTypeClass()),
-                    $aWorkflowMessage->getProcessTaskListPosition()
+                    '%s: Unknown type %s received', __CLASS__, $aWorkflowMessage->payload()->getTypeClass()),
+                    $aWorkflowMessage->processTaskListPosition()
                 )
             );
         }

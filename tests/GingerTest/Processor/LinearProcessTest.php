@@ -59,7 +59,7 @@ class LinearProcessTest extends TestCase
 
         $this->assertInstanceOf('Ginger\Message\WorkflowMessage', $collectDataMessage);
 
-        $this->assertEquals('GingerTest\Mock\UserDictionary', $collectDataMessage->getPayload()->getTypeClass());
+        $this->assertEquals('GingerTest\Mock\UserDictionary', $collectDataMessage->payload()->getTypeClass());
 
         $this->assertFalse($process->isSubProcess());
 
@@ -236,7 +236,7 @@ class LinearProcessTest extends TestCase
 
         $receivedMessage = $this->workflowMessageHandler->lastWorkflowMessage();
 
-        $this->assertEquals('GingerTest\Mock\TargetUserDictionary', $receivedMessage->getPayload()->getTypeClass());
+        $this->assertEquals('GingerTest\Mock\TargetUserDictionary', $receivedMessage->payload()->getTypeClass());
     }
 }
  

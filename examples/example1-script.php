@@ -187,7 +187,7 @@ function _set_up_workflow_engine() {
     $commandRouter->route(\Ginger\Message\MessageNameUtils::getProcessDataCommandName('GingerExample\Type\SourceUser'))
         ->to(function (\Ginger\Message\WorkflowMessage $message) use ($eventBus) {
 
-            $dataAsJsonString = json_encode($message->getPayload());
+            $dataAsJsonString = json_encode($message->payload());
 
             $answer = $message->answerWithDataProcessingCompleted();
 
@@ -199,7 +199,7 @@ function _set_up_workflow_engine() {
                 }
 
             } catch (\Exception $ex) {
-                $answer = \Ginger\Message\LogMessage::logException($ex, $message->getProcessTaskListPosition());
+                $answer = \Ginger\Message\LogMessage::logException($ex, $message->processTaskListPosition());
             }
 
             $eventBus->dispatch($answer);

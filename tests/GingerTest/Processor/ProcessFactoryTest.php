@@ -79,9 +79,9 @@ class ProcessFactoryTest extends TestCase
 
         $this->assertInstanceOf('Ginger\Message\WorkflowMessage', $collectDataMessage);
 
-        $this->assertEquals('GingerTest\Mock\UserDictionary', $collectDataMessage->getPayload()->getTypeClass());
+        $this->assertEquals('GingerTest\Mock\UserDictionary', $collectDataMessage->payload()->getTypeClass());
 
-        $this->assertEquals(['filter' => ['name' => 'John']], $collectDataMessage->getMetadata());
+        $this->assertEquals(['filter' => ['name' => 'John']], $collectDataMessage->metadata());
     }
 
     /**
@@ -155,7 +155,7 @@ class ProcessFactoryTest extends TestCase
 
         $receivedMessage = $this->workflowMessageHandler->lastWorkflowMessage();
 
-        $this->assertEquals('GingerTest\Mock\AddressDictionary', $receivedMessage->getPayload()->getTypeClass());
+        $this->assertEquals('GingerTest\Mock\AddressDictionary', $receivedMessage->payload()->getTypeClass());
     }
 
     /**
@@ -240,7 +240,7 @@ class ProcessFactoryTest extends TestCase
 
         $this->assertTrue($process->isSuccessfulDone());
 
-        $this->assertEquals('Hello World', $message->getPayload()->getData());
+        $this->assertEquals('Hello World', $message->payload()->getData());
     }
 }
  

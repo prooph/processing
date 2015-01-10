@@ -38,9 +38,9 @@ class LogMessageTest extends TestCase
 
         $message = LogMessage::logWarningMsg("A simple warning msg", $taskListPosition);
 
-        $this->assertEquals('A simple warning msg', $message->getTechnicalMsg());
+        $this->assertEquals('A simple warning msg', $message->technicalMsg());
         $this->assertTrue($message->isWarning());
-        $this->assertTrue($taskListPosition->equals($message->getProcessTaskListPosition()));
+        $this->assertTrue($taskListPosition->equals($message->processTaskListPosition()));
     }
 
     /**
@@ -52,9 +52,9 @@ class LogMessageTest extends TestCase
 
         $message = LogMessage::logDebugMsg("A simple debug msg", $taskListPosition);
 
-        $this->assertEquals('A simple debug msg', $message->getTechnicalMsg());
+        $this->assertEquals('A simple debug msg', $message->technicalMsg());
         $this->assertTrue($message->isDebug());
-        $this->assertTrue($taskListPosition->equals($message->getProcessTaskListPosition()));
+        $this->assertTrue($taskListPosition->equals($message->processTaskListPosition()));
     }
 
     /**
@@ -66,9 +66,9 @@ class LogMessageTest extends TestCase
 
         $message = LogMessage::logInfoDataProcessingStarted($taskListPosition);
 
-        $this->assertEquals('Data processing was started', $message->getTechnicalMsg());
+        $this->assertEquals('Data processing was started', $message->technicalMsg());
         $this->assertTrue($message->isInfo());
-        $this->assertTrue($taskListPosition->equals($message->getProcessTaskListPosition()));
+        $this->assertTrue($taskListPosition->equals($message->processTaskListPosition()));
     }
 
     /**
@@ -82,11 +82,11 @@ class LogMessageTest extends TestCase
 
         $message = LogMessage::logException($exception, $taskListPosition);
 
-        $this->assertEquals('Internal error', $message->getTechnicalMsg());
+        $this->assertEquals('Internal error', $message->technicalMsg());
         $this->assertTrue($message->isError());
-        $this->assertEquals(500, $message->getMsgCode());
-        $this->assertTrue($taskListPosition->equals($message->getProcessTaskListPosition()));
-        $this->assertTrue(isset($message->getMsgParams()['trace']));
+        $this->assertEquals(500, $message->msgCode());
+        $this->assertTrue($taskListPosition->equals($message->processTaskListPosition()));
+        $this->assertTrue(isset($message->msgParams()['trace']));
     }
 
     /**
@@ -100,11 +100,11 @@ class LogMessageTest extends TestCase
 
         $message = LogMessage::logException($exception, $taskListPosition);
 
-        $this->assertEquals('Data cannot be found', $message->getTechnicalMsg());
+        $this->assertEquals('Data cannot be found', $message->technicalMsg());
         $this->assertTrue($message->isError());
-        $this->assertEquals(404, $message->getMsgCode());
-        $this->assertTrue($taskListPosition->equals($message->getProcessTaskListPosition()));
-        $this->assertTrue(isset($message->getMsgParams()['trace']));
+        $this->assertEquals(404, $message->msgCode());
+        $this->assertTrue($taskListPosition->equals($message->processTaskListPosition()));
+        $this->assertTrue(isset($message->msgParams()['trace']));
     }
 
     /**
@@ -118,11 +118,11 @@ class LogMessageTest extends TestCase
 
         $message = LogMessage::logException($exception, $taskListPosition);
 
-        $this->assertEquals('Data cannot be found', $message->getTechnicalMsg());
+        $this->assertEquals('Data cannot be found', $message->technicalMsg());
         $this->assertTrue($message->isError());
-        $this->assertEquals(500, $message->getMsgCode());
-        $this->assertTrue($taskListPosition->equals($message->getProcessTaskListPosition()));
-        $this->assertTrue(isset($message->getMsgParams()['trace']));
+        $this->assertEquals(500, $message->msgCode());
+        $this->assertTrue($taskListPosition->equals($message->processTaskListPosition()));
+        $this->assertTrue(isset($message->msgParams()['trace']));
     }
 
     /**
@@ -137,17 +137,17 @@ class LogMessageTest extends TestCase
         $message = LogMessage::logNoMessageReceivedFor($task, $taskListPosition);
 
         $this->assertTrue($message->isError());
-        $this->assertEquals(412, $message->getMsgCode());
-        $this->assertTrue($taskListPosition->equals($message->getProcessTaskListPosition()));
-        $this->assertTrue(isset($message->getMsgParams()['task_class']));
-        $this->assertTrue(isset($message->getMsgParams()['task_as_json']));
-        $this->assertTrue(isset($message->getMsgParams()['task_list_position']));
-        $this->assertTrue(isset($message->getMsgParams()['process_id']));
+        $this->assertEquals(412, $message->msgCode());
+        $this->assertTrue($taskListPosition->equals($message->processTaskListPosition()));
+        $this->assertTrue(isset($message->msgParams()['task_class']));
+        $this->assertTrue(isset($message->msgParams()['task_as_json']));
+        $this->assertTrue(isset($message->msgParams()['task_list_position']));
+        $this->assertTrue(isset($message->msgParams()['process_id']));
 
-        $this->assertEquals($taskListPosition->taskListId()->processId()->toString(), $message->getMsgParams()['process_id']);
-        $this->assertEquals($taskListPosition->position(), $message->getMsgParams()['task_list_position']);
-        $this->assertEquals(get_class($task), $message->getMsgParams()['task_class']);
-        $this->assertEquals(json_encode($task->getArrayCopy()), $message->getMsgParams()['task_as_json']);
+        $this->assertEquals($taskListPosition->taskListId()->processId()->toString(), $message->msgParams()['process_id']);
+        $this->assertEquals($taskListPosition->position(), $message->msgParams()['task_list_position']);
+        $this->assertEquals(get_class($task), $message->msgParams()['task_class']);
+        $this->assertEquals(json_encode($task->getArrayCopy()), $message->msgParams()['task_as_json']);
     }
 
     /**
@@ -164,19 +164,19 @@ class LogMessageTest extends TestCase
         $logMessage = LogMessage::logWrongMessageReceivedFor($task, $taskListPosition, $wfMessage);
 
         $this->assertTrue($logMessage->isError());
-        $this->assertEquals(415, $logMessage->getMsgCode());
-        $this->assertTrue($taskListPosition->equals($logMessage->getProcessTaskListPosition()));
-        $this->assertTrue(isset($logMessage->getMsgParams()['task_class']));
-        $this->assertTrue(isset($logMessage->getMsgParams()['task_as_json']));
-        $this->assertTrue(isset($logMessage->getMsgParams()['task_list_position']));
-        $this->assertTrue(isset($logMessage->getMsgParams()['process_id']));
-        $this->assertTrue(isset($logMessage->getMsgParams()['message_name']));
+        $this->assertEquals(415, $logMessage->msgCode());
+        $this->assertTrue($taskListPosition->equals($logMessage->processTaskListPosition()));
+        $this->assertTrue(isset($logMessage->msgParams()['task_class']));
+        $this->assertTrue(isset($logMessage->msgParams()['task_as_json']));
+        $this->assertTrue(isset($logMessage->msgParams()['task_list_position']));
+        $this->assertTrue(isset($logMessage->msgParams()['process_id']));
+        $this->assertTrue(isset($logMessage->msgParams()['message_name']));
 
-        $this->assertEquals($taskListPosition->taskListId()->processId()->toString(), $logMessage->getMsgParams()['process_id']);
-        $this->assertEquals($taskListPosition->position(), $logMessage->getMsgParams()['task_list_position']);
-        $this->assertEquals(get_class($task), $logMessage->getMsgParams()['task_class']);
-        $this->assertEquals(json_encode($task->getArrayCopy()), $logMessage->getMsgParams()['task_as_json']);
-        $this->assertEquals($wfMessage->getMessageName(), $logMessage->getMsgParams()['message_name']);
+        $this->assertEquals($taskListPosition->taskListId()->processId()->toString(), $logMessage->msgParams()['process_id']);
+        $this->assertEquals($taskListPosition->position(), $logMessage->msgParams()['task_list_position']);
+        $this->assertEquals(get_class($task), $logMessage->msgParams()['task_class']);
+        $this->assertEquals(json_encode($task->getArrayCopy()), $logMessage->msgParams()['task_as_json']);
+        $this->assertEquals($wfMessage->getMessageName(), $logMessage->msgParams()['message_name']);
     }
 
     /**
@@ -193,13 +193,13 @@ class LogMessageTest extends TestCase
         $logMessage = LogMessage::logUnsupportedMessageReceived($wfMessage, 'test-message-handler');
 
         $this->assertTrue($logMessage->isError());
-        $this->assertEquals(416, $logMessage->getMsgCode());
-        $this->assertTrue($taskListPosition->equals($logMessage->getProcessTaskListPosition()));
-        $this->assertTrue(isset($logMessage->getMsgParams()['workflow_message_handler']));
-        $this->assertTrue(isset($logMessage->getMsgParams()['message_name']));
+        $this->assertEquals(416, $logMessage->msgCode());
+        $this->assertTrue($taskListPosition->equals($logMessage->processTaskListPosition()));
+        $this->assertTrue(isset($logMessage->msgParams()['workflow_message_handler']));
+        $this->assertTrue(isset($logMessage->msgParams()['message_name']));
 
-        $this->assertEquals('test-message-handler', $logMessage->getMsgParams()['workflow_message_handler']);
-        $this->assertEquals($wfMessage->getMessageName(), $logMessage->getMsgParams()['message_name']);
+        $this->assertEquals('test-message-handler', $logMessage->msgParams()['workflow_message_handler']);
+        $this->assertEquals($wfMessage->getMessageName(), $logMessage->msgParams()['message_name']);
     }
 }
  

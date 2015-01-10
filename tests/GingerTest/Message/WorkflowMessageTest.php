@@ -43,9 +43,9 @@ class WorkflowMessageTest extends TestCase
             $wfMessage->getMessageName()
         );
 
-        $this->assertEquals(array(), $wfMessage->getPayload()->getData());
-        $this->assertEquals(array('metadata' => true), $wfMessage->getMetadata());
-        $this->assertEquals(MessageNameUtils::COLLECT_DATA, $wfMessage->getMessageType());
+        $this->assertEquals(array(), $wfMessage->payload()->getData());
+        $this->assertEquals(array('metadata' => true), $wfMessage->metadata());
+        $this->assertEquals(MessageNameUtils::COLLECT_DATA, $wfMessage->messageType());
     }
 
     /**
@@ -75,9 +75,9 @@ class WorkflowMessageTest extends TestCase
             $wfMessage->getMessageName()
         );
 
-        $this->assertEquals($userData, $wfMessage->getPayload()->getData());
-        $this->assertEquals(array('metadata' => true), $wfMessage->getMetadata());
-        $this->assertEquals(MessageNameUtils::DATA_COLLECTED, $wfMessage->getMessageType());
+        $this->assertEquals($userData, $wfMessage->payload()->getData());
+        $this->assertEquals(array('metadata' => true), $wfMessage->metadata());
+        $this->assertEquals(MessageNameUtils::DATA_COLLECTED, $wfMessage->messageType());
     }
 
     /**
@@ -109,16 +109,16 @@ class WorkflowMessageTest extends TestCase
             $wfAnswer->getMessageName()
         );
 
-        $this->assertEquals($userData, $wfAnswer->getPayload()->getData());
+        $this->assertEquals($userData, $wfAnswer->payload()->getData());
 
-        $this->assertFalse($wfMessage->getUuid()->equals($wfAnswer->getUuid()));
+        $this->assertFalse($wfMessage->uuid()->equals($wfAnswer->uuid()));
 
-        $this->assertEquals(1, $wfMessage->getVersion());
-        $this->assertEquals(2, $wfAnswer->getVersion());
+        $this->assertEquals(1, $wfMessage->version());
+        $this->assertEquals(2, $wfAnswer->version());
 
-        $this->assertTrue($wfMessage->getProcessTaskListPosition()->equals($wfAnswer->getProcessTaskListPosition()));
+        $this->assertTrue($wfMessage->processTaskListPosition()->equals($wfAnswer->processTaskListPosition()));
 
-        $this->assertEquals(array('metadata' => true, 'success' => true), $wfAnswer->getMetadata());
+        $this->assertEquals(array('metadata' => true, 'success' => true), $wfAnswer->metadata());
     }
 
     /**
@@ -169,16 +169,16 @@ class WorkflowMessageTest extends TestCase
             $wfCommand->getMessageName()
         );
 
-        $this->assertEquals($userData, $wfCommand->getPayload()->getData());
+        $this->assertEquals($userData, $wfCommand->payload()->getData());
 
-        $this->assertFalse($wfMessage->getUuid()->equals($wfCommand->getUuid()));
+        $this->assertFalse($wfMessage->uuid()->equals($wfCommand->uuid()));
 
-        $this->assertEquals(1, $wfMessage->getVersion());
-        $this->assertEquals(2, $wfCommand->getVersion());
+        $this->assertEquals(1, $wfMessage->version());
+        $this->assertEquals(2, $wfCommand->version());
 
-        $this->assertTrue($taskListPosition->equals($wfCommand->getProcessTaskListPosition()));
+        $this->assertTrue($taskListPosition->equals($wfCommand->processTaskListPosition()));
 
-        $this->assertEquals(array('metadata' => true, 'count' => 1), $wfCommand->getMetadata());
+        $this->assertEquals(array('metadata' => true, 'count' => 1), $wfCommand->metadata());
     }
 
     /**
@@ -212,18 +212,18 @@ class WorkflowMessageTest extends TestCase
             $wfAnswer->getMessageName()
         );
 
-        $this->assertEquals($userData, $wfAnswer->getPayload()->getData());
+        $this->assertEquals($userData, $wfAnswer->payload()->getData());
 
-        $this->assertFalse($wfCommand->getUuid()->equals($wfAnswer->getUuid()));
+        $this->assertFalse($wfCommand->uuid()->equals($wfAnswer->uuid()));
 
-        $this->assertEquals(1, $wfMessage->getVersion());
-        $this->assertEquals(2, $wfCommand->getVersion());
-        $this->assertEquals(3, $wfAnswer->getVersion());
+        $this->assertEquals(1, $wfMessage->version());
+        $this->assertEquals(2, $wfCommand->version());
+        $this->assertEquals(3, $wfAnswer->version());
 
-        $this->assertTrue($taskListPosition->equals($wfCommand->getProcessTaskListPosition()));
-        $this->assertTrue($wfCommand->getProcessTaskListPosition()->equals($wfAnswer->getProcessTaskListPosition()));
+        $this->assertTrue($taskListPosition->equals($wfCommand->processTaskListPosition()));
+        $this->assertTrue($wfCommand->processTaskListPosition()->equals($wfAnswer->processTaskListPosition()));
 
-        $this->assertEquals(array('metadata' => true, 'prepared' => true, 'processed' => true), $wfAnswer->getMetadata());
+        $this->assertEquals(array('metadata' => true, 'prepared' => true, 'processed' => true), $wfAnswer->metadata());
     }
 
     /**
@@ -253,7 +253,7 @@ class WorkflowMessageTest extends TestCase
             $wfMessage->getMessageName()
         );
 
-        $this->assertEquals('GingerTest\Mock\TargetUserDictionary', $wfMessage->getPayload()->getTypeClass());
+        $this->assertEquals('GingerTest\Mock\TargetUserDictionary', $wfMessage->payload()->getTypeClass());
     }
 }
  

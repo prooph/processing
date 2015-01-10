@@ -281,11 +281,11 @@ class TaskListEntry
      */
     public function logMessage(LogMessage $message)
     {
-        if (! $this->taskListPosition()->equals($message->getProcessTaskListPosition())) {
+        if (! $this->taskListPosition()->equals($message->processTaskListPosition())) {
             throw new \InvalidArgumentException(sprintf(
                 "Cannot log message %s. TaskListPosition of message does not match with position of the TaskListEntry: %s != %s",
-                $message->getUuid()->toString(),
-                $message->getProcessTaskListPosition()->toString(),
+                $message->uuid()->toString(),
+                $message->processTaskListPosition()->toString(),
                 $this->taskListPosition()->toString()
             ));
         }
