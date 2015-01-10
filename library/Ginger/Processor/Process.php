@@ -15,7 +15,7 @@ use Codeliner\ArrayReader\ArrayReader;
 use Ginger\Message\LogMessage;
 use Ginger\Message\MessageNameUtils;
 use Ginger\Message\WorkflowMessage;
-use Ginger\Processor\Event\ProcessSetUp;
+use Ginger\Processor\Event\ProcessWasSetUp;
 use Ginger\Processor\Task\CollectData;
 use Ginger\Processor\Task\Event\LogMessageReceived;
 use Ginger\Processor\Task\Event\TaskEntryMarkedAsDone;
@@ -108,7 +108,7 @@ abstract class Process extends AggregateRoot
 
         $taskList = TaskList::scheduleTasks(TaskListId::linkWith($nodeName, $processId), $tasks);
 
-        $instance->recordThat(ProcessSetUp::with($processId, $taskList, $config));
+        $instance->recordThat(ProcessWasSetUp::with($processId, $taskList, $config));
 
         return $instance;
     }
@@ -142,7 +142,7 @@ abstract class Process extends AggregateRoot
             throw new \InvalidArgumentException("Argument syncLogMessages must be of type boolean");
         }
 
-        $instance->recordThat(ProcessSetUp::asSubProcess($processId, $parentTaskListPosition, $taskList, $config, $syncLogMessages));
+        $instance->recordThat(ProcessWasSetUp::asSubProcess($processId, $parentTaskListPosition, $taskList, $config, $syncLogMessages));
 
         return $instance;
     }
@@ -385,9 +385,9 @@ abstract class Process extends AggregateRoot
     }
 
     /**
-     * @param ProcessSetUp $event
+     * @param ProcessWasSetUp $event
      */
-    protected function whenProcessSetUp(ProcessSetUp $event)
+    protected function whenProcessWasSetUp(ProcessWasSetUp $event)
     {
         $this->processId = $event->processId();
         $this->parentTaskListPosition = $event->parentTaskListPosition();

@@ -64,7 +64,7 @@ class WorkflowProcessorTest extends TestCase
             $eventNames[] = $recordedEvent->eventName()->toString();
         }
 
-        $expectedEventNames = ['Ginger\Processor\Event\ProcessSetUp', 'Ginger\Processor\Task\Event\TaskEntryMarkedAsRunning'];
+        $expectedEventNames = ['Ginger\Processor\Event\ProcessWasSetUp', 'Ginger\Processor\Task\Event\TaskEntryMarkedAsRunning'];
 
         $this->assertEquals($expectedEventNames, $eventNames);
     }
@@ -217,14 +217,14 @@ class WorkflowProcessorTest extends TestCase
         $this->assertNotNull($this->lastPostCommitEvent);
 
         $expectedEventNamesOnLocalhost = [
-            'Ginger\Processor\Event\ProcessSetUp',
+            'Ginger\Processor\Event\ProcessWasSetUp',
             'Ginger\Processor\Task\Event\TaskEntryMarkedAsRunning',
             'Ginger\Processor\Task\Event\LogMessageReceived',
             'Ginger\Processor\Task\Event\TaskEntryMarkedAsDone'
         ];
 
         $expectedEventNamesOnOtherMachine = [
-            'Ginger\Processor\Event\ProcessSetUp',
+            'Ginger\Processor\Event\ProcessWasSetUp',
             'Ginger\Processor\Task\Event\TaskEntryMarkedAsRunning',
             'Ginger\Processor\Task\Event\LogMessageReceived',
             'Ginger\Processor\Task\Event\TaskEntryMarkedAsDone',
@@ -262,14 +262,14 @@ class WorkflowProcessorTest extends TestCase
         $this->assertNotNull($this->lastPostCommitEvent);
 
         $expectedEventNamesLocalhost = [
-            'Ginger\Processor\Event\ProcessSetUp',
+            'Ginger\Processor\Event\ProcessWasSetUp',
             'Ginger\Processor\Task\Event\TaskEntryMarkedAsRunning',
             'Ginger\Processor\Task\Event\LogMessageReceived',
             'Ginger\Processor\Task\Event\TaskEntryMarkedAsFailed'
         ];
 
         $expectedEventNamesOtherMachine = [
-            'Ginger\Processor\Event\ProcessSetUp',
+            'Ginger\Processor\Event\ProcessWasSetUp',
             'Ginger\Processor\Task\Event\TaskEntryMarkedAsRunning',
             'Ginger\Processor\Task\Event\LogMessageReceived',
             'Ginger\Processor\Task\Event\TaskEntryMarkedAsFailed',

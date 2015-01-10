@@ -17,12 +17,12 @@ use Ginger\Processor\Task\TaskListPosition;
 use Prooph\EventSourcing\AggregateChanged;
 
 /**
- * Class ProcessSetUp Event
+ * Class ProcessWasSetUp Event
  *
  * @package Ginger\Processor\Event
  * @author Alexander Miertsch <kontakt@codeliner.ws>
  */
-class ProcessSetUp extends AggregateChanged
+class ProcessWasSetUp extends AggregateChanged
 {
     /**
      * @var ProcessId
@@ -38,7 +38,7 @@ class ProcessSetUp extends AggregateChanged
      * @param ProcessId $processId
      * @param TaskList $taskList
      * @param array $config
-     * @return ProcessSetUp
+     * @return ProcessWasSetUp
      */
     public static function with(ProcessId $processId, TaskList $taskList, array $config)
     {
