@@ -19,6 +19,8 @@ use Ginger\Processor\NodeName;
 use Ginger\Processor\ProcessId;
 use Ginger\Processor\Task\TaskListPosition;
 use Prooph\ServiceBus\Event;
+use Prooph\ServiceBus\Message\MessageHeader;
+use Prooph\ServiceBus\Message\MessageInterface;
 use Prooph\ServiceBus\Message\StandardMessage;
 
 /**
@@ -27,7 +29,7 @@ use Prooph\ServiceBus\Message\StandardMessage;
  * @package Ginger\Processor\Event
  * @author Alexander Miertsch <kontakt@codeliner.ws>
  */
-class SubProcessFinished extends Event
+class SubProcessFinished extends Event implements ServiceBusTranslatableMessage
 {
     const MSG_NAME = "ginger-processor-event-sub-process-finished";
 
@@ -112,6 +114,31 @@ class SubProcessFinished extends Event
                 $sbMessage->name()
             )
         );
+    }
+
+    /**
+     * @param MessageInterface $aMessage
+     * @return static
+     */
+    public static function fromServiceBusMessage(MessageInterface $aMessage)
+    {
+        return new self(
+            self::MSG_NAME,
+            $aMessage->payload(),
+            $aMessage->header()->version(),
+            $aMessage->header()->uuid(),
+            $aMessage->header()->createdOn()
+        );
+    }
+
+    /**
+     * @return MessageInterface
+     */
+    public function toServiceBusMessage()
+    {
+        $header = new MessageHeader($this->uuid(), $this->occurredOn(), $this->version(), MessageHeader::TYPE_EVENT);
+
+        return new StandardMessage(self::MSG_NAME, $header, $this->payload());
     }
 }
  

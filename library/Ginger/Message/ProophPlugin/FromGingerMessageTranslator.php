@@ -27,19 +27,12 @@ use Prooph\ServiceBus\Message\ToMessageTranslatorInterface;
 class FromGingerMessageTranslator implements ToMessageTranslatorInterface
 {
     /**
-     * @var ToMessageTranslator
-     */
-    private $psbToMessageTranslator;
-
-    /**
      * @param $aCommandOrEvent
      * @return bool
      */
     public function canTranslateToMessage($aCommandOrEvent)
     {
-        return $aCommandOrEvent instanceof ServiceBusTranslatableMessage
-            || $aCommandOrEvent instanceof StartSubProcess
-            || $aCommandOrEvent instanceof SubProcessFinished;
+        return $aCommandOrEvent instanceof ServiceBusTranslatableMessage;
     }
 
     /**
@@ -49,27 +42,7 @@ class FromGingerMessageTranslator implements ToMessageTranslatorInterface
      */
     public function translateToMessage($aCommandOrEvent)
     {
-        if ($aCommandOrEvent instanceof ServiceBusTranslatableMessage)
-        {
-            return $aCommandOrEvent->toServiceBusMessage();
-        }
-
-        if ($aCommandOrEvent instanceof StartSubProcess || $aCommandOrEvent instanceof SubProcessFinished) {
-            return $this->getPSBToMessageTranslator()->translateToMessage($aCommandOrEvent);
-        }
+        return $aCommandOrEvent->toServiceBusMessage();
     }
-
-    /**
-     * @return ToMessageTranslator
-     */
-    private function getPSBToMessageTranslator()
-    {
-        if (is_null($this->psbToMessageTranslator)) {
-            $this->psbToMessageTranslator = new ToMessageTranslator();
-        }
-
-        return $this->psbToMessageTranslator;
-    }
-
 }
  

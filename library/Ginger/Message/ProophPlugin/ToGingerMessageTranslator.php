@@ -59,13 +59,7 @@ class ToGingerMessageTranslator extends AbstractListenerAggregate
         }
 
         if ($command->name() === StartSubProcess::MSG_NAME) {
-            $commandDispatch->setCommand(new StartSubProcess(
-                StartSubProcess::MSG_NAME,
-                $command->payload(),
-                $command->header()->version(),
-                $command->header()->uuid(),
-                $command->header()->createdOn()
-            ));
+            $commandDispatch->setCommand(StartSubProcess::fromServiceBusMessage($command));
         }
     }
 
@@ -82,13 +76,7 @@ class ToGingerMessageTranslator extends AbstractListenerAggregate
         }
 
         if ($event->name() === SubProcessFinished::MSG_NAME) {
-            $eventDispatch->setEvent(new SubProcessFinished(
-                SubProcessFinished::MSG_NAME,
-                $event->payload(),
-                $event->header()->version(),
-                $event->header()->uuid(),
-                $event->header()->createdOn()
-            ));
+            $eventDispatch->setEvent(SubProcessFinished::fromServiceBusMessage($event));
         }
     }
 }

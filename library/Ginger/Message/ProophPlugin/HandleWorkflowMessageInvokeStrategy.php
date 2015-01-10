@@ -20,6 +20,8 @@ use Prooph\ServiceBus\Message\MessageNameProvider;
 /**
  * Class HandleWorkflowMessageInvokeStrategy
  *
+ * This invoke strategy calls the handleWorkflowMessage() method of a WorkflowMessageHandler aka a connector
+ *
  * @package Ginger\Message\Service
  * @author Alexander Miertsch <kontakt@codeliner.ws>
  */

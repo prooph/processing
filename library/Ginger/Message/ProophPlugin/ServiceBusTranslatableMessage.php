@@ -16,6 +16,9 @@ use Prooph\ServiceBus\Message\MessageInterface;
 /**
  * Interface ServiceBusTranslatableMessage
  *
+ * This interface tells the FromGingerMessageTranslator and ToGingerMessageTranslator that the message
+ * can itself translate from and to a service bus message.
+ *
  * @package Ginger\Message\ProophPlugin
  * @author Alexander Miertsch <kontakt@codeliner.ws>
  */
