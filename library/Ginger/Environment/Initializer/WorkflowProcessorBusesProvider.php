@@ -40,13 +40,7 @@ class WorkflowProcessorBusesProvider implements InitializerInterface
             /** @var $env Environment */
             $env = $serviceLocator->get(Definition::SERVICE_ENVIRONMENT);
 
-            $instance->useCommandBus(
-                $env->getWorkflowEngine()->getCommandChannelFor($env->getNodeName())
-            );
-
-            $instance->useEventBus(
-                $env->getWorkflowEngine()->getEventChannelFor($env->getNodeName())
-            );
+            $instance->useWorkflowEngine($env->getWorkflowEngine());
         }
     }
 }

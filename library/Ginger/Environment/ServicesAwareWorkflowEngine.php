@@ -14,6 +14,7 @@ namespace Ginger\Environment;
 use Codeliner\ArrayReader\ArrayReader;
 use Ginger\Processor\AbstractWorkflowEngine;
 use Ginger\Processor\Definition;
+use Ginger\Processor\NodeName;
 use Ginger\Processor\WorkflowEngine;
 use Prooph\ServiceBus\CommandBus;
 use Prooph\ServiceBus\EventBus;
@@ -42,13 +43,17 @@ class ServicesAwareWorkflowEngine extends AbstractWorkflowEngine
     }
 
     /**
-     * @param string $target
-     * @return CommandBus
+     * @param null|string $target
      * @throws \RuntimeException
+     * @return CommandBus
      */
     public function getCommandChannelFor($target)
     {
-        $commandBus = $this->services->get('ginger.command_bus.' . (string)$target);
+        if (is_null($target)) $target = Definition::SERVICE_WORKFLOW_PROCESSOR;
+
+        if (! is_string($target) || empty($target)) throw new \RuntimeException('Target must be a non empty string');
+
+        $commandBus = $this->services->get('ginger.command_bus.' . $target);
 
         if (! $commandBus instanceof CommandBus) throw new \RuntimeException(sprintf(
             "CommandBus for target %s must be of type Prooph\ServiceBus\CommandBus but type of %s given!",
@@ -66,7 +71,11 @@ class ServicesAwareWorkflowEngine extends AbstractWorkflowEngine
      */
     public function getEventChannelFor($target)
     {
-        $eventBus = $this->services->get('ginger.event_bus.' . (string)$target);
+        if (is_null($target)) $target = Definition::SERVICE_WORKFLOW_PROCESSOR;
+
+        if (! is_string($target) || empty($target)) throw new \RuntimeException('Target must be a non empty string');
+
+        $eventBus = $this->services->get('ginger.event_bus.' . $target);
 
         if (! $eventBus instanceof EventBus) throw new \RuntimeException(sprintf(
             "CommandBus for target %s must be of type Prooph\ServiceBus\EventBus but type of %s given!",

@@ -39,6 +39,19 @@ class ServicesAwareWorkflowEngineTest extends TestCase
     /**
      * @test
      */
+    public function it_derives_local_command_bus_when_target_is_null()
+    {
+        $env = Environment::setUp();
+
+        $commandBus = $env->getWorkflowEngine()->getCommandChannelFor(Definition::SERVICE_WORKFLOW_PROCESSOR);
+        $localBus = $env->getWorkflowEngine()->getCommandChannelFor(null);
+
+        $this->assertSame($commandBus, $localBus);
+    }
+
+    /**
+     * @test
+     */
     public function it_derives_event_bus_for_target_from_services()
     {
         $env = Environment::setUp();
@@ -46,6 +59,19 @@ class ServicesAwareWorkflowEngineTest extends TestCase
         $eventBus = $env->getWorkflowEngine()->getEventChannelFor(Definition::SERVICE_WORKFLOW_PROCESSOR);
 
         $this->assertInstanceOf('Prooph\ServiceBus\EventBus', $eventBus);
+    }
+
+    /**
+     * @test
+     */
+    public function it_derives_local_event_bus_when_target_is_null()
+    {
+        $env = Environment::setUp();
+
+        $eventBus = $env->getWorkflowEngine()->getEventChannelFor(Definition::SERVICE_WORKFLOW_PROCESSOR);
+        $localBus = $env->getWorkflowEngine()->getEventChannelFor(null);
+
+        $this->assertSame($eventBus, $localBus);
     }
 
     /**

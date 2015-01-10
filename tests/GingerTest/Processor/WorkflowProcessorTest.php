@@ -16,6 +16,7 @@ use Ginger\Processor\NodeName;
 use Ginger\Processor\ProcessId;
 use Ginger\Processor\ProophPlugin\SingleTargetMessageRouter;
 use Ginger\Processor\ProophPlugin\WorkflowProcessorInvokeStrategy;
+use Ginger\Processor\RegistryWorkflowEngine;
 use Ginger\Processor\Task\TaskListId;
 use Ginger\Processor\Task\TaskListPosition;
 use GingerTest\TestCase;
@@ -150,7 +151,11 @@ class WorkflowProcessorTest extends TestCase
 
         $eventBus->utilize(new WorkflowProcessorInvokeStrategy());
 
-        $this->workflowMessageHandler->useEventBus($eventBus);
+        $workflowEngine = new RegistryWorkflowEngine();
+
+        $workflowEngine->registerEventBus($eventBus, [NodeName::defaultName()->toString()]);
+
+        $this->workflowMessageHandler->useWorkflowEngine($workflowEngine);
 
         $nextAnswer = $wfMessage->prepareDataProcessing(
             TaskListPosition::at(TaskListId::linkWith(NodeName::defaultName(), ProcessId::generate()), 1)

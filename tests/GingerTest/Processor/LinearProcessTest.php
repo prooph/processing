@@ -13,9 +13,11 @@ namespace GingerTest\Processor;
 
 use Ginger\Message\MessageNameUtils;
 use Ginger\Message\WorkflowMessage;
+use Ginger\Processor\AbstractWorkflowEngine;
 use Ginger\Processor\LinearProcess;
 use Ginger\Processor\NodeName;
 use Ginger\Processor\ProcessId;
+use Ginger\Processor\RegistryWorkflowEngine;
 use Ginger\Processor\Task\CollectData;
 use Ginger\Processor\Task\ProcessData;
 use Ginger\Processor\Task\TaskListId;
@@ -109,7 +111,11 @@ class LinearProcessTest extends TestCase
             ]
         ]))->utilize(new CallbackStrategy());
 
-        $this->workflowMessageHandler->useEventBus($eventBus);
+        $workflowEngine = new RegistryWorkflowEngine();
+
+        $workflowEngine->registerEventBus($eventBus, [NodeName::defaultName()->toString()]);
+
+        $this->workflowMessageHandler->useWorkflowEngine($workflowEngine);
 
         $process->perform($this->workflowEngine);
 
@@ -199,7 +205,11 @@ class LinearProcessTest extends TestCase
 
         $eventBus->utilize($eventRouter)->utilize(new CallbackStrategy());
 
-        $this->workflowMessageHandler->useEventBus($eventBus);
+        $workflowEngine = new RegistryWorkflowEngine();
+
+        $workflowEngine->registerEventBus($eventBus, [NodeName::defaultName()->toString()]);
+
+        $this->workflowMessageHandler->useWorkflowEngine($workflowEngine);
 
         $process->perform($this->workflowEngine);
 

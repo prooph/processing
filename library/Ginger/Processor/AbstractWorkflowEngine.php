@@ -67,10 +67,8 @@ abstract class AbstractWorkflowEngine implements WorkflowEngine
             throw new \InvalidArgumentException(sprintf('Channel detection for message %s was not possible', $message->messageName()));
         }
 
-        $target = $message->target()? : self::LOCAL_CHANNEL;
-
         /** @var $channelBus CommandBus|EventBus */
-        $channelBus = $this->{$channelGetter}($target);
+        $channelBus = $this->{$channelGetter}($message->target());
 
         $channelBus->dispatch($message);
     }

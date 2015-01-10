@@ -42,7 +42,9 @@ interface WorkflowEngine
     public function dispatch($message);
 
     /**
-     * @param string $target
+     * If target is null, the local channel is returned
+     *
+     * @param null|string $target
      * @return CommandBus
      * @throws \RuntimeException
      */
@@ -50,7 +52,9 @@ interface WorkflowEngine
 
 
     /**
-     * @param $target
+     * If target is null, the local channel is returned
+     *
+     * @param null|string $target
      * @return EventBus
      * @throws \RuntimeException
      */

@@ -14,6 +14,8 @@ namespace GingerExample\Plugin;
 use Ginger\Environment\Connector;
 use Ginger\Environment\Environment;
 use Ginger\Environment\Plugin;
+use Ginger\Message\AbstractWorkflowMessageHandler;
+use Ginger\Message\GingerMessage;
 use Ginger\Message\LogMessage;
 use Ginger\Message\WorkflowMessage;
 use Ginger\Message\WorkflowMessageHandler;
@@ -26,17 +28,56 @@ use Prooph\ServiceBus\EventBus;
  * @package GingerExample\Plugin
  * @author Alexander Miertsch <kontakt@codeliner.ws>
  */
-class UserDataWriter implements WorkflowMessageHandler, Connector
+class UserDataWriter extends AbstractWorkflowMessageHandler implements Connector
 {
     /**
-     * @var CommandBus
+     * If workflow message handler receives a collect-data message it forwards the message to this
+     * method and uses the returned GingerMessage as response
+     *
+     * @param WorkflowMessage $workflowMessage
+     * @throws \BadMethodCallException
+     * @return GingerMessage
      */
-    private $commandBus;
+    protected function handleCollectData(WorkflowMessage $workflowMessage)
+    {
+        throw new \BadMethodCallException(__METHOD__ . " not supported by " . __CLASS__);
+    }
 
     /**
-     * @var EventBus
+     * If workflow message handler receives a process-data message it forwards the message to this
+     * method and uses the returned GingerMessage as response
+     *
+     * @param WorkflowMessage $workflowMessage
+     * @return GingerMessage
      */
-    private $eventBus;
+    protected function handleProcessData(WorkflowMessage $workflowMessage)
+    {
+        if (array_key_exists($workflowMessage->payload()->getTypeClass(), $this->getSupportedMessagesByTypeMap())) {
+            $dataAsJsonString = json_encode($workflowMessage->payload());
+
+            $answer = $workflowMessage->answerWithDataProcessingCompleted();
+
+            try {
+                \Zend\Stdlib\ErrorHandler::start();
+
+                if (!file_put_contents(__DIR__ . '/../../data/target-data.txt', $dataAsJsonString)) {
+                    \Zend\Stdlib\ErrorHandler::stop(true);
+                }
+
+            } catch (\Exception $ex) {
+                $answer = \Ginger\Message\LogMessage::logException($ex, $workflowMessage->processTaskListPosition());
+            }
+
+            return $answer;
+        } else {
+            return LogMessage::logErrorMsg(
+                sprintf(
+                    '%s: Unknown type %s received', __CLASS__, $workflowMessage->payload()->getTypeClass()
+                ),
+                $workflowMessage->processTaskListPosition()
+            );
+        }
+    }
 
     /**
      * Return the name of the plugin
@@ -95,61 +136,6 @@ class UserDataWriter implements WorkflowMessageHandler, Connector
         return [
             'GingerExample\Type\SourceUser' => ['process-data']
         ];
-    }
-
-    /**
-     * @param WorkflowMessage $aWorkflowMessage
-     * @return void
-     */
-    public function handleWorkflowMessage(WorkflowMessage $aWorkflowMessage)
-    {
-        if (array_key_exists($aWorkflowMessage->payload()->getTypeClass(), $this->getSupportedMessagesByTypeMap())) {
-            $dataAsJsonString = json_encode($aWorkflowMessage->payload());
-
-            $answer = $aWorkflowMessage->answerWithDataProcessingCompleted();
-
-            try {
-                \Zend\Stdlib\ErrorHandler::start();
-
-                if (!file_put_contents(__DIR__ . '/../../data/target-data.txt', $dataAsJsonString)) {
-                    \Zend\Stdlib\ErrorHandler::stop(true);
-                }
-
-            } catch (\Exception $ex) {
-                $answer = \Ginger\Message\LogMessage::logException($ex, $aWorkflowMessage->processTaskListPosition());
-            }
-
-            $this->eventBus->dispatch($answer);
-        } else {
-            $this->eventBus->dispatch(LogMessage::logErrorMsg(
-                    sprintf(
-                        '%s: Unknown type %s received', __CLASS__, $aWorkflowMessage->payload()->getTypeClass()),
-                    $aWorkflowMessage->processTaskListPosition()
-                )
-            );
-        }
-    }
-
-    /**
-     * Register command bus that can be used to send new commands to the workflow processor
-     *
-     * @param CommandBus $commandBus
-     * @return void
-     */
-    public function useCommandBus(CommandBus $commandBus)
-    {
-        $this->commandBus = $commandBus;
-    }
-
-    /**
-     * Register event bus that can be used to send events to the workflow processor
-     *
-     * @param EventBus $eventBus
-     * @return void
-     */
-    public function useEventBus(EventBus $eventBus)
-    {
-        $this->eventBus = $eventBus;
     }
 }
  

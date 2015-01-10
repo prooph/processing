@@ -210,8 +210,7 @@ class EnvironmentTest extends TestCase
         /** @var $messageHandler TestWorkflowMessageHandler */
         $messageHandler = $env->services()->get('test_workflow_message_handler');
 
-        $this->assertInstanceOf('Prooph\ServiceBus\CommandBus', $messageHandler->getCommandBus());
-        $this->assertInstanceOf('Prooph\ServiceBus\EventBus', $messageHandler->getEventBus());
+        $this->assertInstanceOf('Ginger\Processor\WorkflowEngine', $messageHandler->getWorkflowEngine());
     }
 
     /**

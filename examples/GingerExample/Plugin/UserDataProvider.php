@@ -14,6 +14,8 @@ namespace GingerExample\Plugin;
 use Ginger\Environment\Connector;
 use Ginger\Environment\Environment;
 use Ginger\Environment\Plugin;
+use Ginger\Message\AbstractWorkflowMessageHandler;
+use Ginger\Message\GingerMessage;
 use Ginger\Message\LogMessage;
 use Ginger\Message\WorkflowMessage;
 use Ginger\Message\WorkflowMessageHandler;
@@ -27,69 +29,50 @@ use Prooph\ServiceBus\EventBus;
  * @package GingerExample\Plugin
  * @author Alexander Miertsch <kontakt@codeliner.ws>
  */
-class UserDataProvider implements WorkflowMessageHandler, Connector
+class UserDataProvider extends AbstractWorkflowMessageHandler implements Connector
 {
     /**
-     * @var CommandBus
+     * If workflow message handler receives a collect-data message it forwards the message to this
+     * method and uses the returned GingerMessage as response
+     *
+     * @param WorkflowMessage $workflowMessage
+     * @return GingerMessage
      */
-    private $commandBus;
-
-    /**
-     * @var EventBus
-     */
-    private $eventBus;
-
-    /**
-     * @param WorkflowMessage $aWorkflowMessage
-     * @return void
-     */
-    public function handleWorkflowMessage(WorkflowMessage $aWorkflowMessage)
+    protected function handleCollectData(WorkflowMessage $workflowMessage)
     {
-        if ($aWorkflowMessage->payload()->getTypeClass() === 'GingerExample\Type\SourceUser') {
+        if ($workflowMessage->payload()->getTypeClass() === 'GingerExample\Type\SourceUser') {
             $userData = include __DIR__ . '/../../data/user-source-data.php';
 
             if (! $userData) {
-                $this->eventBus->dispatch(
-                    LogMessage::logErrorMsg(
-                        "Could not read user data from examples/data/user-source-data.php. Please check the permissions",
-                        $aWorkflowMessage->processTaskListPosition()
-                    )
+                return LogMessage::logErrorMsg(
+                    "Could not read user data from examples/data/user-source-data.php. Please check the permissions",
+                    $workflowMessage->processTaskListPosition()
                 );
             }
 
             $sourceUser = SourceUser::fromNativeValue($userData);
 
-            $this->eventBus->dispatch($aWorkflowMessage->answerWith($sourceUser));
+            return $workflowMessage->answerWith($sourceUser);
         } else {
-            $this->eventBus->dispatch(LogMessage::logErrorMsg(
+            return LogMessage::logErrorMsg(
                 sprintf(
-                    '%s: Unknown type %s received', __CLASS__, $aWorkflowMessage->payload()->getTypeClass()),
-                    $aWorkflowMessage->processTaskListPosition()
-                )
+                    '%s: Unknown type %s received', __CLASS__, $workflowMessage->payload()->getTypeClass()),
+                $workflowMessage->processTaskListPosition()
             );
         }
     }
 
     /**
-     * Register command bus that can be used to send new commands to the workflow processor
+     * If workflow message handler receives a process-data message it forwards the message to this
+     * method and uses the returned GingerMessage as response
      *
-     * @param CommandBus $commandBus
-     * @return void
+     * @param WorkflowMessage $workflowMessage
+     * @throws \BadMethodCallException
+     * @return GingerMessage
      */
-    public function useCommandBus(CommandBus $commandBus)
+    protected function handleProcessData(WorkflowMessage $workflowMessage)
     {
-        $this->commandBus = $commandBus;
-    }
-
-    /**
-     * Register event bus that can be used to send events to the workflow processor
-     *
-     * @param EventBus $eventBus
-     * @return void
-     */
-    public function useEventBus(EventBus $eventBus)
-    {
-        $this->eventBus = $eventBus;
+        throw new \BadMethodCallException(__METHOD__ . " not supported by " . __CLASS__);
     }
 
     /**

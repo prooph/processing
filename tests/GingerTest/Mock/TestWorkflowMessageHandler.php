@@ -11,8 +11,10 @@
 
 namespace GingerTest\Mock;
 
+use Ginger\Message\AbstractWorkflowMessageHandler;
 use Ginger\Message\WorkflowMessage;
 use Ginger\Message\WorkflowMessageHandler;
+use Ginger\Processor\WorkflowEngine;
 use Prooph\ServiceBus\CommandBus;
 use Prooph\ServiceBus\EventBus;
 
@@ -35,14 +37,10 @@ class TestWorkflowMessageHandler implements WorkflowMessageHandler
     protected $nextAnswer;
 
     /**
-     * @var CommandBus
+     * @var WorkflowEngine
      */
-    protected $commandBus;
+    protected $workflowEngine;
 
-    /**
-     * @var EventBus
-     */
-    protected $eventBus;
 
     public function reset()
     {
@@ -57,13 +55,13 @@ class TestWorkflowMessageHandler implements WorkflowMessageHandler
     {
         $this->lastWorkflowMessage = $aWorkflowMessage;
 
-        if ($this->nextAnswer && $this->eventBus)
+        if ($this->nextAnswer && $this->workflowEngine)
         {
             if (is_null($this->nextAnswer->processTaskListPosition())) {
                 $this->nextAnswer->connectToProcessTask($aWorkflowMessage->processTaskListPosition());
             }
 
-            $this->eventBus->dispatch($this->nextAnswer);
+            $this->workflowEngine->dispatch($this->nextAnswer);
 
             $this->nextAnswer = null;
         }
@@ -77,41 +75,27 @@ class TestWorkflowMessageHandler implements WorkflowMessageHandler
         return $this->lastWorkflowMessage;
     }
 
-    /**
-     * Register command bus that can be used to send new commands to the workflow processor
-     *
-     * @param CommandBus $commandBus
-     * @return void
-     */
-    public function useCommandBus(CommandBus $commandBus)
-    {
-        $this->commandBus = $commandBus;
-    }
-
-    public function getCommandBus()
-    {
-        return $this->commandBus;
-    }
-
-    /**
-     * Register event bus that can be used to send events to the workflow processor
-     *
-     * @param EventBus $eventBus
-     * @return void
-     */
-    public function useEventBus(EventBus $eventBus)
-    {
-        $this->eventBus = $eventBus;
-    }
-
-    public function getEventBus()
-    {
-        return $this->eventBus;
-    }
-
     public function setNextAnswer(WorkflowMessage $workflowMessage)
     {
         $this->nextAnswer = $workflowMessage;
+    }
+
+    /**
+     * @param WorkflowEngine $workflowEngine
+     * @throws \BadMethodCallException
+     * @return void
+     */
+    public function useWorkflowEngine(WorkflowEngine $workflowEngine)
+    {
+        $this->workflowEngine = $workflowEngine;
+    }
+
+    /**
+     * @return WorkflowEngine
+     */
+    public function getWorkflowEngine()
+    {
+        return $this->workflowEngine;
     }
 }
  
