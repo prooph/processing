@@ -11,6 +11,7 @@
 
 namespace Ginger\Environment\Initializer;
 
+use Ginger\Environment\Environment;
 use Ginger\Message\WorkflowMessageHandler;
 use Ginger\Processor\Definition;
 use Zend\ServiceManager\InitializerInterface;
@@ -36,14 +37,15 @@ class WorkflowProcessorBusesProvider implements InitializerInterface
     public function initialize($instance, ServiceLocatorInterface $serviceLocator)
     {
         if ($instance instanceof WorkflowMessageHandler) {
+            /** @var $env Environment */
             $env = $serviceLocator->get(Definition::SERVICE_ENVIRONMENT);
 
             $instance->useCommandBus(
-                $env->getWorkflowEngine()->getCommandBusFor($env->getNodeName())
+                $env->getWorkflowEngine()->getCommandChannelFor($env->getNodeName())
             );
 
             $instance->useEventBus(
-                $env->getWorkflowEngine()->getEventBusFor($env->getNodeName())
+                $env->getWorkflowEngine()->getEventChannelFor($env->getNodeName())
             );
         }
     }

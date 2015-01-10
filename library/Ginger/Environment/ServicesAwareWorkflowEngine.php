@@ -45,7 +45,7 @@ class ServicesAwareWorkflowEngine implements WorkflowEngine
      * @return CommandBus
      * @throws \RuntimeException
      */
-    public function getCommandBusFor($target)
+    public function getCommandChannelFor($target)
     {
         $commandBus = $this->services->get('ginger.command_bus.' . (string)$target);
 
@@ -63,7 +63,7 @@ class ServicesAwareWorkflowEngine implements WorkflowEngine
      * @return EventBus
      * @throws \RuntimeException
      */
-    public function getEventBusFor($target)
+    public function getEventChannelFor($target)
     {
         $eventBus = $this->services->get('ginger.event_bus.' . (string)$target);
 
@@ -89,8 +89,8 @@ class ServicesAwareWorkflowEngine implements WorkflowEngine
             $channelConfig = new ArrayReader($channelConfig);
 
             foreach ($channelConfig->arrayValue('targets') as $target) {
-                $this->getCommandBusFor($target)->utilize($plugin);
-                $this->getEventBusFor($target)->utilize($plugin);
+                $this->getCommandChannelFor($target)->utilize($plugin);
+                $this->getEventChannelFor($target)->utilize($plugin);
             }
 
         }

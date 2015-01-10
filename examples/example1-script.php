@@ -113,7 +113,7 @@ function set_up_workflow_environment() {
         $processFactory
     );
 
-    $eventBus = $workflowEngine->getEventBusFor(\Ginger\Processor\Definition::SERVICE_WORKFLOW_PROCESSOR);
+    $eventBus = $workflowEngine->getEventChannelFor(\Ginger\Processor\Definition::SERVICE_WORKFLOW_PROCESSOR);
 
     //Ginger provides a special ProophServiceBus plugin that can route all incoming messages to a single target
     //in this case we want to route every message to the workflow processor

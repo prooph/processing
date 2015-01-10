@@ -31,7 +31,7 @@ class ServicesAwareWorkflowEngineTest extends TestCase
     {
         $env = Environment::setUp();
 
-        $commandBus = $env->getWorkflowEngine()->getCommandBusFor(Definition::SERVICE_WORKFLOW_PROCESSOR);
+        $commandBus = $env->getWorkflowEngine()->getCommandChannelFor(Definition::SERVICE_WORKFLOW_PROCESSOR);
 
         $this->assertInstanceOf('Prooph\ServiceBus\CommandBus', $commandBus);
     }
@@ -43,7 +43,7 @@ class ServicesAwareWorkflowEngineTest extends TestCase
     {
         $env = Environment::setUp();
 
-        $eventBus = $env->getWorkflowEngine()->getEventBusFor(Definition::SERVICE_WORKFLOW_PROCESSOR);
+        $eventBus = $env->getWorkflowEngine()->getEventChannelFor(Definition::SERVICE_WORKFLOW_PROCESSOR);
 
         $this->assertInstanceOf('Prooph\ServiceBus\EventBus', $eventBus);
     }

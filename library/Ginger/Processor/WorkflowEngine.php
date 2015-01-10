@@ -30,7 +30,7 @@ interface WorkflowEngine
      * @return CommandBus
      * @throws \RuntimeException
      */
-    public function getCommandBusFor($target);
+    public function getCommandChannelFor($target);
 
 
     /**
@@ -38,7 +38,7 @@ interface WorkflowEngine
      * @return EventBus
      * @throws \RuntimeException
      */
-    public function getEventBusFor($target);
+    public function getEventChannelFor($target);
 
     /**
      * @param ListenerAggregateInterface $plugin

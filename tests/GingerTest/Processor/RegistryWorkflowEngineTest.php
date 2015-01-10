@@ -31,7 +31,7 @@ class RegistryWorkflowEngineTest extends TestCase
      */
     public function it_provides_command_bus_for_target()
     {
-        $commandBus = $this->getTestWorkflowEngine()->getCommandBusFor('crm');
+        $commandBus = $this->getTestWorkflowEngine()->getCommandChannelFor('crm');
 
         $this->assertInstanceOf('Prooph\ServiceBus\CommandBus', $commandBus);
     }
@@ -41,7 +41,7 @@ class RegistryWorkflowEngineTest extends TestCase
      */
     public function it_provides_event_bus_for_target()
     {
-        $eventBus = $this->getTestWorkflowEngine()->getEventBusFor('wawi');
+        $eventBus = $this->getTestWorkflowEngine()->getEventChannelFor('wawi');
 
         $this->assertInstanceOf('Prooph\ServiceBus\EventBus', $eventBus);
     }
@@ -73,7 +73,7 @@ class RegistryWorkflowEngineTest extends TestCase
     {
         $this->setExpectedException('\RuntimeException');
 
-        $this->getTestWorkflowEngine()->getCommandBusFor('unknown');
+        $this->getTestWorkflowEngine()->getCommandChannelFor('unknown');
     }
 
     /**
@@ -83,7 +83,7 @@ class RegistryWorkflowEngineTest extends TestCase
     {
         $this->setExpectedException('\RuntimeException');
 
-        $this->getTestWorkflowEngine()->getEventBusFor('unknown');
+        $this->getTestWorkflowEngine()->getEventChannelFor('unknown');
     }
 
     /**

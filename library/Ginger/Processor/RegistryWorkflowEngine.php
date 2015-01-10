@@ -109,7 +109,7 @@ class RegistryWorkflowEngine implements WorkflowEngine
      * @return CommandBus
      * @throws \RuntimeException
      */
-    public function getCommandBusFor($target)
+    public function getCommandChannelFor($target)
     {
         Assertion::string($target);
 
@@ -128,7 +128,7 @@ class RegistryWorkflowEngine implements WorkflowEngine
      * @return EventBus
      * @throws \RuntimeException
      */
-    public function getEventBusFor($target)
+    public function getEventChannelFor($target)
     {
         Assertion::string($target);
 

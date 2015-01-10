@@ -128,7 +128,7 @@ class LinearProcessTest extends TestCase
         $process = LinearProcess::setUp(NodeName::defaultName(), [$task]);
 
         //We deactivate the router so message cannot be dispatched
-        $this->workflowEngine->getCommandBusFor('test-case')->deactivate($this->commandRouter);
+        $this->workflowEngine->getCommandChannelFor('test-case')->deactivate($this->commandRouter);
 
         $process->perform($this->workflowEngine);
 

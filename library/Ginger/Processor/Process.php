@@ -189,7 +189,7 @@ abstract class Process extends AggregateRoot
             } elseif ($this->isSubProcess() && $this->syncLogMessages) {
                 //We only sync non error messages, because errors are always synced and then they would be received twice
                 $messageForParent = $message->reconnectToProcessTask($this->parentTaskListPosition);
-                $workflowEngine->getEventBusFor($this->parentTaskListPosition->taskListId()->nodeName()->toString())
+                $workflowEngine->getEventChannelFor($this->parentTaskListPosition->taskListId()->nodeName()->toString())
                     ->dispatch($messageForParent);
             }
         }
@@ -278,7 +278,7 @@ abstract class Process extends AggregateRoot
         $workflowMessage->connectToProcessTask($taskListPosition);
 
         try {
-            $workflowEngine->getCommandBusFor($collectData->source())->dispatch($workflowMessage);
+            $workflowEngine->getCommandChannelFor($collectData->source())->dispatch($workflowMessage);
         } catch (CommandDispatchException $ex) {
             $this->receiveMessage(LogMessage::logException($ex->getPrevious(), $workflowMessage->processTaskListPosition()), $workflowEngine);
         } catch (\Exception $ex) {
@@ -301,7 +301,7 @@ abstract class Process extends AggregateRoot
         }
 
         try {
-            $workflowEngine->getCommandBusFor($processData->target())->dispatch($workflowMessage);
+            $workflowEngine->getCommandChannelFor($processData->target())->dispatch($workflowMessage);
         } catch (CommandDispatchException $ex) {
             $this->receiveMessage(LogMessage::logException($ex->getPrevious(), $workflowMessage->processTaskListPosition()), $workflowEngine);
         } catch (\Exception $ex) {
@@ -324,7 +324,7 @@ abstract class Process extends AggregateRoot
         try {
             $startSubProcessCommand = $task->generateStartCommandForSubProcess($taskListPosition, $previousMessage);
 
-            $workflowEngine->getCommandBusFor($task->getTargetNodeName()->toString())->dispatch($startSubProcessCommand);
+            $workflowEngine->getCommandChannelFor($task->getTargetNodeName()->toString())->dispatch($startSubProcessCommand);
 
         } catch (CommandDispatchException $ex) {
             $this->receiveMessage(LogMessage::logException($ex->getPrevious(), $taskListPosition), $workflowEngine);

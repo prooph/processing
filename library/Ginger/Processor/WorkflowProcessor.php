@@ -227,7 +227,7 @@ class WorkflowProcessor
             $subProcess->parentTaskListPosition()
         );
 
-        $eventBus = $this->workflowEngine->getEventBusFor(
+        $eventBus = $this->workflowEngine->getEventChannelFor(
             $subProcess->parentTaskListPosition()->taskListId()->nodeName()->toString()
         );
 
