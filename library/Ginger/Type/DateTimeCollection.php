@@ -12,6 +12,7 @@
 namespace Ginger\Type;
 
 use Ginger\Type\Description\Description;
+use Ginger\Type\Description\DescriptionRegistry;
 use Ginger\Type\Description\NativeType;
 
 class DateTimeCollection extends AbstractCollection
@@ -34,7 +35,13 @@ class DateTimeCollection extends AbstractCollection
      */
     public static function buildDescription()
     {
-        return new Description('DateTimeCollection', NativeType::COLLECTION, false);
+        if (DescriptionRegistry::hasDescription(__CLASS__)) return DescriptionRegistry::getDescription(__CLASS__);
+
+        $desc = new Description('DateTimeCollection', NativeType::COLLECTION, false);
+
+        DescriptionRegistry::registerDescriptionFor(__CLASS__, $desc);
+
+        return $desc;
     }
 }
  

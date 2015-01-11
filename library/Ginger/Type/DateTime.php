@@ -13,6 +13,7 @@ namespace Ginger\Type;
 
 use Assert\Assertion;
 use Ginger\Type\Description\Description;
+use Ginger\Type\Description\DescriptionRegistry;
 use Ginger\Type\Description\NativeType;
 
 /**
@@ -53,7 +54,13 @@ class DateTime extends SingleValue
      */
     public static function buildDescription()
     {
-        return new Description('DateTime', NativeType::DATETIME, false);
+        if (DescriptionRegistry::hasDescription(__CLASS__)) return DescriptionRegistry::getDescription(__CLASS__);
+
+        $desc = new Description('DateTime', NativeType::DATETIME, false);
+
+        DescriptionRegistry::registerDescriptionFor(__CLASS__, $desc);
+
+        return $desc;
     }
 
     /**

@@ -12,6 +12,7 @@
 namespace Ginger\Type;
 
 use Ginger\Type\Description\Description;
+use Ginger\Type\Description\DescriptionRegistry;
 use Ginger\Type\Description\NativeType;
 use Ginger\Type\Exception\InvalidTypeException;
 
@@ -32,7 +33,13 @@ class String extends SingleValue
      */
     public static function buildDescription()
     {
-        return new Description('String', NativeType::STRING, false);
+        if (DescriptionRegistry::hasDescription(__CLASS__)) return DescriptionRegistry::getDescription(__CLASS__);
+
+        $desc = new Description('String', NativeType::STRING, false);
+
+        DescriptionRegistry::registerDescriptionFor(__CLASS__, $desc);
+
+        return $desc;
     }
 
     /**

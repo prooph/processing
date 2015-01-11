@@ -50,6 +50,8 @@ class Prototype
         $this->relatedTypeClass = $relatedTypeClass;
         $this->descriptionOfType = $descriptionOfType;
         $this->typeProperties = $typeProperties;
+
+        PrototypeRegistry::registerPrototype($this);
     }
 
     /**
