@@ -92,5 +92,16 @@ class StringTest extends TestCase
         $this->assertEquals('string', $description->nativeType());
         $this->assertFalse($description->hasIdentifier());
     }
+
+    /**
+     * @test
+     * @expectedException \Ginger\Type\Exception\InvalidTypeException
+     */
+    public function it_only_allows_utf8_encoded_string()
+    {
+        $nonUtf8 = mb_convert_encoding("Ü", "ISO-8859-1", "UTF-8");
+
+        String::fromString($nonUtf8);
+    }
 }
  

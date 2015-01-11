@@ -48,6 +48,10 @@ class String extends SingleValue
             throw InvalidTypeException::fromMessageAndPrototype("Value must be a string", static::prototype());
         }
 
+        if(!mb_check_encoding($value, 'UTF-8')) {
+            throw InvalidTypeException::fromMessageAndPrototype("Value must be a UTF-8 encoded", static::prototype());
+        }
+
         $this->value = $value;
     }
 
