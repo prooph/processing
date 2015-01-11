@@ -17,6 +17,8 @@ use Ginger\Processor\Command\StartSubProcess;
 use Ginger\Processor\Event\SubProcessFinished;
 use Ginger\Processor\Task\TaskListPosition;
 use Prooph\EventStore\EventStore;
+use Zend\EventManager\EventManager;
+use Zend\EventManager\EventManagerInterface;
 
 /**
  * Class WorkflowProcessor
@@ -60,6 +62,11 @@ class WorkflowProcessor
      * @var \SplQueue
      */
     private $messageQueue;
+
+    /**
+     * @var EventManagerInterface
+     */
+    private $events;
 
     /**
      * @param NodeName $nodeName
@@ -132,8 +139,26 @@ class WorkflowProcessor
             $this->processRepository->add($process);
 
             $this->commitTransaction();
+
+            $this->events()->trigger(
+                "process_was_started_by_message",
+                $this,
+                [
+                    "message_id" => $workflowMessage->uuid()->toString(),
+                    "process_id" => $process->processId()->toString()
+                ]
+            );
         } catch (\Exception $ex) {
             $this->rollbackTransaction();
+
+            $this->events()->trigger(
+                "start_process_from_message_failed",
+                $this,
+                [
+                    "message_id" => $workflowMessage->uuid()->toString(),
+                    "process_id" => $process->processId()->toString()
+                ]
+            );
 
             throw $ex;
         }
@@ -255,6 +280,21 @@ class WorkflowProcessor
             ->reconnectToProcessTask($subProcessFinished->parentTaskListPosition());
 
         $this->continueProcessAt($subProcessFinished->parentTaskListPosition(), $lastAnswerReceivedForSubProcess);
+    }
+
+    /**
+     * @return EventManagerInterface
+     */
+    public function events()
+    {
+        if (is_null($this->events)) {
+            $this->events = new EventManager([
+                __CLASS__,
+                'ginger_workflow_processor'
+            ]);
+        }
+
+        return $this->events;
     }
 
     private function beginTransaction()

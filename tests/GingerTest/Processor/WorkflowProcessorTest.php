@@ -21,6 +21,7 @@ use Ginger\Processor\Task\TaskListId;
 use Ginger\Processor\Task\TaskListPosition;
 use GingerTest\TestCase;
 use Prooph\ServiceBus\EventBus;
+use Zend\EventManager\Event;
 
 /**
  * Class WorkflowProcessorTest
@@ -47,6 +48,15 @@ class WorkflowProcessorTest extends TestCase
     {
         $wfMessage = $this->getUserDataCollectedTestMessage();
 
+        $processStartedByMessageId = null;
+
+        $this->getTestWorkflowProcessor()->events()->attach(
+            "process_was_started_by_message",
+            function (Event $e) use (&$processStartedByMessageId) {
+                $processStartedByMessageId = $e->getParam("message_id");
+            }
+        );
+
         $this->getTestWorkflowProcessor()->receiveMessage($wfMessage);
 
         $receivedMessage = $this->workflowMessageHandler->lastWorkflowMessage();
@@ -68,6 +78,7 @@ class WorkflowProcessorTest extends TestCase
         $expectedEventNames = ['Ginger\Processor\Event\ProcessWasSetUp', 'Ginger\Processor\Task\Event\TaskEntryMarkedAsRunning'];
 
         $this->assertEquals($expectedEventNames, $eventNames);
+        $this->assertEquals($wfMessage->uuid()->toString(), $processStartedByMessageId);
     }
 
     /**
