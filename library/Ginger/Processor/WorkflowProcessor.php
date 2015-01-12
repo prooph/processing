@@ -140,28 +140,20 @@ class WorkflowProcessor
 
             $this->commitTransaction();
 
-            $this->events()->trigger(
-                "process_was_started_by_message",
-                $this,
-                [
-                    "message_id" => $workflowMessage->uuid()->toString(),
-                    "process_id" => $process->processId()->toString()
-                ]
-            );
         } catch (\Exception $ex) {
             $this->rollbackTransaction();
 
-            $this->events()->trigger(
-                "start_process_from_message_failed",
-                $this,
-                [
-                    "message_id" => $workflowMessage->uuid()->toString(),
-                    "process_id" => $process->processId()->toString()
-                ]
-            );
-
             throw $ex;
         }
+
+        $this->events()->trigger(
+            "process_was_started_by_message",
+            $this,
+            [
+                "message_id" => $workflowMessage->uuid()->toString(),
+                "process_id" => $process->processId()->toString()
+            ]
+        );
     }
 
     /**
