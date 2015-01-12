@@ -77,7 +77,7 @@ class ServicesAwareWorkflowEngineTest extends TestCase
     /**
      * @test
      */
-    public function it_attaches_plugin_to_configured_channel_of_each_target()
+    public function it_lazy_attaches_plugin_to_configured_channel_of_each_target()
     {
         $env = Environment::setUp([
             "ginger" => [
@@ -92,11 +92,26 @@ class ServicesAwareWorkflowEngineTest extends TestCase
 
         $plugin = new SimpleBusPlugin();
 
+        //Preload channels to check if plugin is added to them
+        $env->getWorkflowEngine()->getCommandChannelFor("target1");
+        $env->getWorkflowEngine()->getEventChannelFor("target1");
+
         $env->getWorkflowEngine()->attachPluginToAllChannels($plugin);
 
-        //It should be attached two times to the node name channel and two times for each target bus
-        //Two times because for every target the workflow engine creates a command bus and an event bus
-        $this->assertEquals(6, $plugin->getAttachCount());
+        $this->assertEquals(2, $plugin->getAttachCount());
+
+        //Request channels again to check that plugin is not attached twice
+        $env->getWorkflowEngine()->getCommandChannelFor("target1");
+        $env->getWorkflowEngine()->getEventChannelFor("target1");
+
+        $this->assertEquals(2, $plugin->getAttachCount());
+
+        //Load next channels to check if plugin is attached to them, too
+        $env->getWorkflowEngine()->getCommandChannelFor("target2");
+        $env->getWorkflowEngine()->getEventChannelFor("target2");
+
+
+        $this->assertEquals(4, $plugin->getAttachCount());
     }
 }
  
