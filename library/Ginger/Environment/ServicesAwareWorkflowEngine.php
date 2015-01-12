@@ -35,6 +35,16 @@ class ServicesAwareWorkflowEngine extends AbstractWorkflowEngine
     private $services;
 
     /**
+     * @var array
+     */
+    private $cachedChannels = [];
+
+    /**
+     * @var array
+     */
+    private $cachedPlugins = [];
+
+    /**
      * @param ServiceManager $serviceManager
      */
     public function __construct(ServiceManager $serviceManager)
@@ -53,13 +63,23 @@ class ServicesAwareWorkflowEngine extends AbstractWorkflowEngine
 
         if (! is_string($target) || empty($target)) throw new \RuntimeException('Target must be a non empty string');
 
-        $commandBus = $this->services->get('ginger.command_bus.' . $target);
+        $channelName = 'ginger.command_bus.' . $target;
+
+        if (isset($this->cachedChannels[$channelName])) return $this->cachedChannels[$channelName];
+
+        $commandBus = $this->services->get($channelName);
 
         if (! $commandBus instanceof CommandBus) throw new \RuntimeException(sprintf(
             "CommandBus for target %s must be of type Prooph\ServiceBus\CommandBus but type of %s given!",
             (string)$target,
             (is_object($commandBus))? get_class($commandBus) : gettype($commandBus)
         ));
+
+        foreach ($this->cachedPlugins as $plugin) {
+            $commandBus->utilize($plugin);
+        }
+
+        $this->cachedChannels[$channelName] = $commandBus;
 
         return $commandBus;
     }
@@ -75,13 +95,23 @@ class ServicesAwareWorkflowEngine extends AbstractWorkflowEngine
 
         if (! is_string($target) || empty($target)) throw new \RuntimeException('Target must be a non empty string');
 
-        $eventBus = $this->services->get('ginger.event_bus.' . $target);
+        $channelName = 'ginger.event_bus.' . $target;
+
+        if (isset($this->cachedChannels[$channelName])) return $this->cachedChannels[$channelName];
+
+        $eventBus = $this->services->get($channelName);
 
         if (! $eventBus instanceof EventBus) throw new \RuntimeException(sprintf(
-            "CommandBus for target %s must be of type Prooph\ServiceBus\EventBus but type of %s given!",
+            "EventBu for target %s must be of type Prooph\ServiceBus\EventBus but type of %s given!",
             (string)$target,
             (is_object($eventBus))? get_class($eventBus) : gettype($eventBus)
         ));
+
+        foreach ($this->cachedPlugins as $plugin) {
+            $eventBus->utilize($plugin);
+        }
+
+        $this->cachedChannels[$channelName] = $eventBus;
 
         return $eventBus;
     }
@@ -92,18 +122,12 @@ class ServicesAwareWorkflowEngine extends AbstractWorkflowEngine
      */
     public function attachPluginToAllChannels(ListenerAggregateInterface $plugin)
     {
-        /** @var $env Environment */
-        $env = $this->services->get(Definition::SERVICE_ENVIRONMENT);
-
-        foreach ($env->getConfig()->arrayValue('channels') as $channelConfig) {
-            $channelConfig = new ArrayReader($channelConfig);
-
-            foreach ($channelConfig->arrayValue('targets') as $target) {
-                $this->getCommandChannelFor($target)->utilize($plugin);
-                $this->getEventChannelFor($target)->utilize($plugin);
-            }
-
+        /** @var $channel CommandBus|EventBus */
+        foreach ($this->cachedChannels as $channel) {
+            $channel->utilize($plugin);
         }
+
+        $this->cachedPlugins[] = $plugin;
     }
 }
  
