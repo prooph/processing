@@ -14,7 +14,7 @@
         "beberlei/assert": "~2.0",
         "codeliner/php-equalsbuilder": "~1.1",
         "codeliner/array-reader": "~1.1",
-        "prooph/service-bus" : "~1.0",
+        "prooph/service-bus" : "~2.0",
         "prooph/event-store" : "~1.0",
         "prooph/event-sourcing" : "~1.0",
         "prooph/prooph-event-store-module" : "~1.0",
