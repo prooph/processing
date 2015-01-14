@@ -16,6 +16,7 @@ use Prooph\EventStore\Aggregate\AggregateRepository;
 use Prooph\EventStore\Aggregate\AggregateType;
 use Prooph\EventStore\EventStore;
 use Prooph\EventStore\Stream\MappedSuperclassStreamStrategy;
+use Prooph\EventStore\Stream\SingleStreamStrategy;
 
 /**
  * Class ProcessRepository
@@ -32,10 +33,13 @@ class ProcessRepository extends AggregateRepository
         EventStore $eventStore
     )
     {
+        $aggregateType = AggregateType::fromAggregateRootClass('Ginger\Processor\Process');
+
         parent::__construct(
             $eventStore,
             new AggregateTranslator(),
-            new MappedSuperclassStreamStrategy($eventStore, new AggregateType('Ginger\Processor\Process'))
+            new SingleStreamStrategy($eventStore, 'process_stream'),
+            $aggregateType
         );
     }
 
@@ -53,7 +57,7 @@ class ProcessRepository extends AggregateRepository
      */
     public function get(ProcessId $processId)
     {
-        return $this->getAggregateRoot(new AggregateType('Ginger\Processor\Process'), $processId->toString());
+        return $this->getAggregateRoot($processId->toString());
     }
 }
  

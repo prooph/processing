@@ -329,7 +329,15 @@ class TestCase extends \PHPUnit_Framework_TestCase
                     $this->eventNameLog[] = $event->eventName()->toString();
                 }
             });
+
+            $this->eventStore->beginTransaction();
+
+            $this->eventStore->create(new Stream(new StreamName('process_stream'), []));
+
+            $this->eventStore->commit();
         }
+
+
 
         return $this->eventStore;
     }
@@ -355,6 +363,12 @@ class TestCase extends \PHPUnit_Framework_TestCase
                     $this->otherMachineEventNameLog[] = $event->eventName()->toString();
                 }
             });
+
+            $this->otherMachineEventStore->beginTransaction();
+
+            $this->otherMachineEventStore->create(new Stream(new StreamName('process_stream'), []));
+
+            $this->otherMachineEventStore->commit();
         }
 
         return $this->otherMachineEventStore;

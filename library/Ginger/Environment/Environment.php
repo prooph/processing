@@ -51,14 +51,9 @@ class Environment
             Definition::SERVICE_PROCESS_REPOSITORY       => 'Ginger\Environment\Factory\ProcessRepositoryFactory',
 
             //ProophEventStore section
-            'prooph.event_store' => 'ProophEventStoreModule\Factory\EventStoreFactory',
-            'prooph.event_store.aggregate_stream_strategy'      => 'ProophEventStoreModule\Factory\AggregateStreamStrategyFactory',
-            'prooph.event_store.aggregate_type_stream_strategy' => 'ProophEventStoreModule\Factory\AggregateTypeStreamStrategyFactory',
-            'prooph.event_store.single_stream_strategy'         => 'ProophEventStoreModule\Factory\SingleStreamStrategyFactory',
+            'prooph.event_store' => 'Ginger\Environment\Factory\EventStoreFactory',
         ],
         'abstract_factories' => [
-            //ProophEventStore section
-            'ProophEventStoreModule\Factory\AbstractRepositoryFactory',
             //ProophServiceBus section
             'Ginger\Environment\Factory\AbstractServiceBusFactory'
         ],
@@ -97,19 +92,6 @@ class Environment
         'prooph.event_store' => [
             'adapter' => [
                 'type' => 'Prooph\EventStore\Adapter\InMemoryAdapter',
-            ],
-            'repository_map' => [
-                //See ProophEventStoreModule\Factory\AbstractRepositoryFactory for details about the repository map
-            ],
-            'aggregate_type_stream_map' => [
-                //Define a custom mapping for aggregate classes and stream names (when using a Aggregate(Type)StreamStrategy)
-                //'My\Aggregate' => 'my_aggregate_stream'
-            ],
-            'features' => [
-                //List of event store features,must be aliases resolvable by Prooph\EventStore\Feature\FeatureManager
-            ],
-            'feature_manager' => [
-                //Services config for Prooph\EventStore\Feature\FeatureManager
             ]
         ]
     ];

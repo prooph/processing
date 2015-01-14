@@ -15,9 +15,8 @@
         "codeliner/php-equalsbuilder": "~1.1",
         "codeliner/array-reader": "~1.1",
         "prooph/service-bus" : "~2.0",
-        "prooph/event-store" : "~1.0",
+        "prooph/event-store" : "~2.0",
         "prooph/event-sourcing" : "~1.0",
-        "prooph/prooph-event-store-module" : "~1.0",
         "zendframework/zend-stdlib" : "~2.3",
         "zendframework/zend-servicemanager" : "~2.3",
         "zendframework/zend-eventmanager" : "~2.3",
@@ -25,7 +24,8 @@
         "rhumsaa/uuid" : "~2.7"
     },
     "require-dev": {
-        "phpunit/phpunit": "~3.7"
+        "phpunit/phpunit": "~3.7",
+        "prooph/event-store-zf2-adapter" : "~0.3"
     },
     "suggest": {
     },
