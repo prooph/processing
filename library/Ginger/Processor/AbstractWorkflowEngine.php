@@ -55,6 +55,8 @@ abstract class AbstractWorkflowEngine implements WorkflowEngine
             $message = $this->getToGingerMessageTranslator()->translateToGingerMessage($message);
         }
 
+        if (! $message instanceof GingerMessage) throw new \InvalidArgumentException(sprintf('Message can not be dispatched. Unknown type provided: %s', ((is_object($message))? get_class($message) : gettype($message))));
+
         $channelGetter = null;
 
         if (MessageNameUtils::isGingerCommand($message->messageName()))    $channelGetter = "getCommandChannelFor";
@@ -64,7 +66,7 @@ abstract class AbstractWorkflowEngine implements WorkflowEngine
         if (SubProcessFinished::MSG_NAME === $message->messageName())      $channelGetter = "getEventChannelFor";
 
         if (is_null($channelGetter)) {
-            throw new \InvalidArgumentException(sprintf('Channel detection for message %s was not possible', $message->messageName()));
+            throw new \InvalidArgumentException(sprintf('Channel detection for message %s was not possible', $messageName));
         }
 
         /** @var $channelBus CommandBus|EventBus */

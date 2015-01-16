@@ -12,10 +12,7 @@
 namespace Ginger\Message\ProophPlugin;
 
 use Ginger\Message\WorkflowMessage;
-use Ginger\Processor\Command\StartSubProcess;
-use Ginger\Processor\Event\SubProcessFinished;
 use Prooph\ServiceBus\Message\MessageInterface;
-use Prooph\ServiceBus\Message\ToMessageTranslator;
 use Prooph\ServiceBus\Message\ToMessageTranslatorInterface;
 
 /**

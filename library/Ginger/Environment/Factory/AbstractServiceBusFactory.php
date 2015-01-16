@@ -19,7 +19,6 @@ use Ginger\Message\ProophPlugin\HandleWorkflowMessageInvokeStrategy;
 use Ginger\Message\ProophPlugin\ToGingerMessageTranslator;
 use Ginger\Processor\Definition;
 use Ginger\Processor\ProophPlugin\SingleTargetMessageRouter;
-use Ginger\Processor\ProophPlugin\WorkflowEventRouter;
 use Ginger\Processor\ProophPlugin\WorkflowProcessorInvokeStrategy;
 use Prooph\ServiceBus\CommandBus;
 use Prooph\ServiceBus\EventBus;
@@ -83,7 +82,7 @@ class AbstractServiceBusFactory implements AbstractFactoryInterface
 
         $target = implode('.', $nameParts);
 
-        $busConfig = $this->getBusConfigFor($env, $target, $busType);
+        $busConfig = $this->getBusConfigFor($env, $target);
 
         $bus = ($busType === "command_bus")? new CommandBus() : new EventBus();
 
@@ -166,10 +165,9 @@ class AbstractServiceBusFactory implements AbstractFactoryInterface
     /**
      * @param Environment $env
      * @param string $target
-     * @param string $busType
      * @return \Codeliner\ArrayReader\ArrayReader
      */
-    private function getBusConfigFor(Environment $env, $target, $busType)
+    private function getBusConfigFor(Environment $env, $target)
     {
         foreach ($env->getConfig()->arrayValue('channels') as $busConfig) {
             if (is_array($busConfig)

@@ -20,6 +20,7 @@ use Ginger\Processor\Event\SubProcessFinished;
 use Prooph\ServiceBus\Message\MessageInterface;
 use Prooph\ServiceBus\Process\CommandDispatch;
 use Prooph\ServiceBus\Process\EventDispatch;
+use Prooph\ServiceBus\Process\MessageDispatch;
 use Zend\EventManager\AbstractListenerAggregate;
 use Zend\EventManager\EventManagerInterface;
 
@@ -31,6 +32,15 @@ use Zend\EventManager\EventManagerInterface;
  */
 class ToGingerMessageTranslator extends AbstractListenerAggregate
 {
+    public function __invoke(MessageDispatch $messageDispatch)
+    {
+        $message = $messageDispatch->getMessage();
+
+        if (! $message instanceof MessageInterface) return;
+
+        $messageDispatch->setMessage($this->translateToGingerMessage($message));
+    }
+
     /**
      * @param EventManagerInterface $events
      *
@@ -38,73 +48,27 @@ class ToGingerMessageTranslator extends AbstractListenerAggregate
      */
     public function attach(EventManagerInterface $events)
     {
-        $identifiers = $events->getIdentifiers();
-
-        if (in_array('command_bus', $identifiers)) {
-            $this->listeners[] = $events->attach(CommandDispatch::INITIALIZE, array($this, 'onInitializeCommandDispatch'), 100);
-        }
-
-        if (in_array('event_bus', $identifiers)) {
-            $this->listeners[] = $events->attach(EventDispatch::INITIALIZE, array($this, 'onInitializeEventDispatch'), 100);
-        }
-    }
-
-    public function onInitializeCommandDispatch(CommandDispatch $commandDispatch)
-    {
-        $command = $commandDispatch->getCommand();
-
-        if (! $command instanceof MessageInterface) return;
-
-        if (MessageNameUtils::isGingerCommand($command->name())) {
-            $commandDispatch->setCommand($this->translateToGingerMessage($command));
-        }
-
-        if ($command->name() === StartSubProcess::MSG_NAME) {
-            $commandDispatch->setCommand($this->translateToGingerMessage($command));
-        }
-    }
-
-    public function onInitializeEventDispatch(EventDispatch $eventDispatch)
-    {
-        $event = $eventDispatch->getEvent();
-
-        if (! $event instanceof MessageInterface) return;
-
-        if (MessageNameUtils::isGingerEvent($event->name())) {
-            $eventDispatch->setEvent($this->translateToGingerMessage($event));
-        } else if (MessageNameUtils::isGingerLogMessage($event->name())) {
-            $eventDispatch->setEvent($this->translateToGingerMessage($event));
-        }
-
-        if ($event->name() === SubProcessFinished::MSG_NAME) {
-            $eventDispatch->setEvent($this->translateToGingerMessage($event));
-        }
+        $this->listeners[] = $events->attach(MessageDispatch::INITIALIZE, $this);
     }
 
     /**
      * @param MessageInterface $message
-     * @return GingerMessage
+     * @return LogMessage|WorkflowMessage|StartSubProcess|SubProcessFinished
      * @throws \InvalidArgumentException
      */
     public function translateToGingerMessage(MessageInterface $message)
     {
         if (MessageNameUtils::isWorkflowMessage($message->name())) {
             return WorkflowMessage::fromServiceBusMessage($message);
-        }
-
-        if (MessageNameUtils::isGingerLogMessage($message->name())) {
+        } else if (MessageNameUtils::isGingerLogMessage($message->name())) {
             return LogMessage::fromServiceBusMessage($message);
-        }
-
-        if (StartSubProcess::MSG_NAME === $message->name()) {
+        } else if (StartSubProcess::MSG_NAME === $message->name()) {
             return StartSubProcess::fromServiceBusMessage($message);
-        }
-
-        if (SubProcessFinished::MSG_NAME === $message->name()) {
+        } else if (SubProcessFinished::MSG_NAME === $message->name()) {
             return SubProcessFinished::fromServiceBusMessage($message);
         }
 
-        throw new \InvalidArgumentException(sprintf('Provided message %s can not be translated to a ginger message', $message->name()));
+        throw new \InvalidArgumentException(sprintf('Message with name %s can not be translated. Unknown type provided.', $message->name()));
     }
 }
  

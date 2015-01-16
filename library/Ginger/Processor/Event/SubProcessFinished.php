@@ -136,7 +136,7 @@ class SubProcessFinished extends Event implements GingerMessage
 
     /**
      * @param MessageInterface $aMessage
-     * @return static
+     * @return SubProcessFinished
      */
     public static function fromServiceBusMessage(MessageInterface $aMessage)
     {
