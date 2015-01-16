@@ -33,6 +33,7 @@ use Prooph\EventSourcing\AggregateRoot;
 use Prooph\ServiceBus\Exception\CommandDispatchException;
 use Prooph\ServiceBus\Exception\EventDispatchException;
 use Prooph\ServiceBus\Message\StandardMessage;
+use Zend\Stdlib\ArrayUtils;
 
 /**
  * Abstract Class Process
@@ -245,7 +246,7 @@ abstract class Process extends AggregateRoot
     protected function performTask(Task $task, TaskListPosition $taskListPosition, WorkflowEngine $workflowEngine, WorkflowMessage $previousMessage = null)
     {
         if ($task instanceof CollectData) {
-            $this->performCollectData($task, $taskListPosition, $workflowEngine);
+            $this->performCollectData($task, $taskListPosition, $workflowEngine, $previousMessage);
             return;
         }
 
@@ -270,10 +271,17 @@ abstract class Process extends AggregateRoot
      * @param CollectData $collectData
      * @param TaskListPosition $taskListPosition
      * @param WorkflowEngine $workflowEngine
+     * @param WorkflowMessage $previousMessage
      */
-    protected function performCollectData(CollectData $collectData, TaskListPosition $taskListPosition, WorkflowEngine $workflowEngine)
+    protected function performCollectData(CollectData $collectData, TaskListPosition $taskListPosition, WorkflowEngine $workflowEngine, WorkflowMessage $previousMessage = null)
     {
-        $workflowMessage = WorkflowMessage::collectDataOf($collectData->prototype(), $collectData->metadata(), $collectData->source());
+        $metadata = $collectData->metadata();
+
+        if (! is_null($previousMessage)) {
+            $metadata = ArrayUtils::merge($previousMessage->metadata(), $collectData->metadata());
+        }
+
+        $workflowMessage = WorkflowMessage::collectDataOf($collectData->prototype(), $metadata, $collectData->source());
 
         $workflowMessage->connectToProcessTask($taskListPosition);
 
