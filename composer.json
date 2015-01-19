@@ -1,13 +1,13 @@
 {
-    "name": "gingerframework/gingerframework",
+    "name": "gingerwork/gingerframework",
     "description": "Ginger Workflow Framework",
     "type": "library",
     "keywords": [
         "framework",
-        "gingerframework",
+        "prooph",
         "workflow engine"
     ],
-    "homepage": "https://github.com/gingerframework",
+    "homepage": "https://github.com/gingerwork",
     "license": "BSD-3-Clause",
     "require": {
         "php": ">=5.4.8",
@@ -41,8 +41,8 @@
         }
     },
     "replace": {
-        "gingerframework/ginger-type": "self.version",
-        "gingerframework/ginger-message": "self.version"
+        "gingerwork/ginger-type": "self.version",
+        "gingerwork/ginger-message": "self.version"
     },
     "bin": ["./library/Ginger/Console/bin/ginger"]
 }
