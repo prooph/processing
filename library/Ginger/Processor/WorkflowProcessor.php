@@ -151,7 +151,8 @@ class WorkflowProcessor
             $this,
             [
                 "message_id" => $workflowMessage->uuid()->toString(),
-                "process_id" => $process->processId()->toString()
+                "message_name" => $workflowMessage->messageName(),
+                "process_id" => $process->processId()->toString(),
             ]
         );
     }

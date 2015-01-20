@@ -48,12 +48,17 @@ class WorkflowProcessorTest extends TestCase
     {
         $wfMessage = $this->getUserDataCollectedTestMessage();
 
-        $processStartedByMessageId = null;
+        $processStartedByMessageId  = null;
+        $processStartedByMessageName = null;
+        $startedProcessId            = null;
 
         $this->getTestWorkflowProcessor()->events()->attach(
             "process_was_started_by_message",
-            function (Event $e) use (&$processStartedByMessageId) {
+            function (Event $e) use (&$processStartedByMessageId, &$processStartedByMessageName, &$startedProcessId) {
                 $processStartedByMessageId = $e->getParam("message_id");
+                $processStartedByMessageName = $e->getParam("message_name");
+                $startedProcessId = $e->getParam("process_id");
+
             }
         );
 
@@ -71,14 +76,23 @@ class WorkflowProcessorTest extends TestCase
 
         $eventNames = [];
 
+        $recordedProcessId = null;
+
         foreach($recordedEvents as $recordedEvent) {
             $eventNames[] = $recordedEvent->eventName()->toString();
+
+            if ($recordedEvent->eventName()->toString() == 'Ginger\Processor\Event\ProcessWasSetUp') {
+                $recordedProcessId = $recordedEvent->payload()['aggregate_id'];
+            }
         }
 
         $expectedEventNames = ['Ginger\Processor\Event\ProcessWasSetUp', 'Ginger\Processor\Task\Event\TaskEntryMarkedAsRunning'];
 
         $this->assertEquals($expectedEventNames, $eventNames);
         $this->assertEquals($wfMessage->uuid()->toString(), $processStartedByMessageId);
+        $this->assertEquals($wfMessage->messageName(), $processStartedByMessageName);
+        $this->assertNotNull($startedProcessId);
+        $this->assertEquals($recordedProcessId, $startedProcessId);
     }
 
     /**
