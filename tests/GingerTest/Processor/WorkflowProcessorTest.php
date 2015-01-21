@@ -48,9 +48,9 @@ class WorkflowProcessorTest extends TestCase
     {
         $wfMessage = $this->getUserDataCollectedTestMessage();
 
-        $processStartedByMessageId  = null;
-        $processStartedByMessageName = null;
-        $startedProcessId            = null;
+        $processStartedByMessageId    = null;
+        $processStartedByMessageName  = null;
+        $startedProcessId             = null;
 
         $this->getTestWorkflowProcessor()->events()->attach(
             "process_was_started_by_message",
@@ -61,6 +61,8 @@ class WorkflowProcessorTest extends TestCase
 
             }
         );
+
+
 
         $this->getTestWorkflowProcessor()->receiveMessage($wfMessage);
 
@@ -100,6 +102,19 @@ class WorkflowProcessorTest extends TestCase
      */
     public function it_continues_process_when_receiving_answer_message_from_workflow_message_handler()
     {
+        $processDidFinishId           = null;
+        $processDidFinishAt           = null;
+        $processDidSuccessfullyFinish = null;
+
+        $this->getTestWorkflowProcessor()->events()->attach(
+            "process_did_finish",
+            function (Event $e) use (&$processDidFinishId, &$processDidFinishAt, &$processDidSuccessfullyFinish) {
+                $processDidFinishId = $e->getParam('process_id');
+                $processDidFinishAt = $e->getParam('finished_at');
+                $processDidSuccessfullyFinish = $e->getParam('succeed');
+            }
+        );
+
         $wfMessage = $this->getUserDataCollectedTestMessage();
 
         $this->getTestWorkflowProcessor()->receiveMessage($wfMessage);
@@ -115,14 +130,23 @@ class WorkflowProcessorTest extends TestCase
         $recordedEvents = $this->lastPostCommitEvent->getRecordedEvents();
 
         $eventNames = [];
+        $recordedProcessId = null;
 
         foreach($recordedEvents as $recordedEvent) {
             $eventNames[] = $recordedEvent->eventName()->toString();
+
+            if ($recordedEvent->eventName()->toString() == 'Ginger\Processor\Task\Event\TaskEntryMarkedAsDone') {
+                $recordedProcessId = $recordedEvent->payload()['aggregate_id'];
+            }
         }
 
         $expectedEventNames = ['Ginger\Processor\Task\Event\TaskEntryMarkedAsDone'];
 
         $this->assertEquals($expectedEventNames, $eventNames);
+        $this->assertNotNull($processDidFinishId);
+        $this->assertEquals($recordedProcessId, $processDidFinishId);
+        $this->assertEquals($wfMessage->createdOn()->format(\DateTime::ISO8601), $processDidFinishAt);
+        $this->assertTrue($processDidSuccessfullyFinish);
     }
 
     /**

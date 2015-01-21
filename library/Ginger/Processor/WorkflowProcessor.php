@@ -215,6 +215,18 @@ class WorkflowProcessor
             throw $ex;
         }
 
+        if ($process->isFinished()) {
+            $this->events()->trigger(
+                'process_did_finish',
+                $this,
+                [
+                    'process_id' => $process->processId()->toString(),
+                    'finished_at' => $lastAnswer->createdOn()->format(\DateTime::ISO8601),
+                    'succeed' => $process->isSuccessfulDone()
+                ]
+            );
+        }
+
         if ($process->isSubProcess() && $process->isFinished()) {
             if ($process->isSuccessfulDone()) {
                 $this->informParentProcessAboutSubProcess($process, true, $lastAnswer);
