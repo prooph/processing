@@ -69,6 +69,8 @@ class WorkflowProcessor
      */
     private $processorEventQueue;
 
+    private $receivedMessageNestingLevel = 0;
+
     /**
      * @var EventManagerInterface
      */
@@ -109,6 +111,8 @@ class WorkflowProcessor
             return;
         }
 
+        $this->receivedMessageNestingLevel++;
+
         if ($message instanceof WorkflowMessage) {
             if ($processTaskListPosition = $message->processTaskListPosition()) {
                 $this->continueProcessAt($processTaskListPosition, $message);
@@ -128,7 +132,9 @@ class WorkflowProcessor
             ));
         }
 
-        if ($this->messageQueue->isEmpty()) {
+        $this->receivedMessageNestingLevel--;
+
+        if (! $this->receivedMessageNestingLevel) {
             while (! $this->processorEventQueue->isEmpty()) {
                 $this->events()->trigger($this->processorEventQueue->dequeue());
             }
