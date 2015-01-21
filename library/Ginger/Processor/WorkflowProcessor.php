@@ -17,6 +17,7 @@ use Ginger\Processor\Command\StartSubProcess;
 use Ginger\Processor\Event\SubProcessFinished;
 use Ginger\Processor\Task\TaskListPosition;
 use Prooph\EventStore\EventStore;
+use Zend\EventManager\Event;
 use Zend\EventManager\EventManager;
 use Zend\EventManager\EventManagerInterface;
 
@@ -64,6 +65,11 @@ class WorkflowProcessor
     private $messageQueue;
 
     /**
+     * @var \SplQueue
+     */
+    private $processorEventQueue;
+
+    /**
      * @var EventManagerInterface
      */
     private $events;
@@ -83,12 +89,13 @@ class WorkflowProcessor
         ProcessFactory $processFactory
     )
     {
-        $this->nodeName          = $nodeName;
-        $this->eventStore        = $eventStore;
-        $this->processRepository = $processRepository;
-        $this->workflowEngine    = $workflowEngine;
-        $this->processFactory    = $processFactory;
-        $this->messageQueue      = new \SplQueue();
+        $this->nodeName            = $nodeName;
+        $this->eventStore          = $eventStore;
+        $this->processRepository   = $processRepository;
+        $this->workflowEngine      = $workflowEngine;
+        $this->processFactory      = $processFactory;
+        $this->messageQueue        = new \SplQueue();
+        $this->processorEventQueue = new \SplQueue();
     }
 
     /**
@@ -121,6 +128,9 @@ class WorkflowProcessor
             ));
         }
 
+        while (! $this->processorEventQueue->isEmpty()) {
+            $this->events()->trigger($this->processorEventQueue->dequeue());
+        }
     }
 
     /**
@@ -146,14 +156,16 @@ class WorkflowProcessor
             throw $ex;
         }
 
-        $this->events()->trigger(
-            "process_was_started_by_message",
-            $this,
-            [
-                "message_id" => $workflowMessage->uuid()->toString(),
-                "message_name" => $workflowMessage->messageName(),
-                "process_id" => $process->processId()->toString(),
-            ]
+        $this->processorEventQueue->enqueue(
+            new Event(
+                "process_was_started_by_message",
+                $this,
+                [
+                    "message_id" => $workflowMessage->uuid()->toString(),
+                    "message_name" => $workflowMessage->messageName(),
+                    "process_id" => $process->processId()->toString(),
+                ]
+            )
         );
     }
 
@@ -215,8 +227,8 @@ class WorkflowProcessor
             throw $ex;
         }
 
-        if ($process->isFinished()) {
-            $this->events()->trigger(
+        $this->processorEventQueue->enqueue(
+            new Event(
                 'process_did_finish',
                 $this,
                 [
@@ -224,8 +236,8 @@ class WorkflowProcessor
                     'finished_at' => $lastAnswer->createdOn()->format(\DateTime::ISO8601),
                     'succeed' => $process->isSuccessfulDone()
                 ]
-            );
-        }
+            )
+        );
 
         if ($process->isSubProcess() && $process->isFinished()) {
             if ($process->isSuccessfulDone()) {
