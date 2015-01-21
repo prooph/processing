@@ -128,8 +128,10 @@ class WorkflowProcessor
             ));
         }
 
-        while (! $this->processorEventQueue->isEmpty()) {
-            $this->events()->trigger($this->processorEventQueue->dequeue());
+        if ($this->messageQueue->isEmpty()) {
+            while (! $this->processorEventQueue->isEmpty()) {
+                $this->events()->trigger($this->processorEventQueue->dequeue());
+            }
         }
     }
 
