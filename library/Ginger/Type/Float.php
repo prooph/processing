@@ -66,5 +66,14 @@ class Float extends SingleValue
     {
         return new static((float)$valueString);
     }
+
+    /**
+     * @param mixed $value
+     * @return Type
+     */
+    public static function fromJsonDecodedData($value)
+    {
+        return static::fromNativeValue((float)$value);
+    }
 }
  

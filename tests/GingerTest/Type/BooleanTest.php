@@ -37,7 +37,7 @@ class BooleanTest extends TestCase
     /**
      * @test
      */
-    public function it_constructs_new_instance_from_string_representing_of_a_boolean()
+    public function it_constructs_new_instance_from_string_representing_a_boolean()
     {
         $boolTrue = Boolean::fromString("1");
 

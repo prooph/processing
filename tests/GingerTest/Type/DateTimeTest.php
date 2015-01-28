@@ -68,7 +68,7 @@ class DateTimeTest extends TestCase
     /**
      * @test
      */
-    public function it_rejects_value_if_it_is_not_an_integer()
+    public function it_rejects_value_if_it_is_not_a_date_time()
     {
         $this->setExpectedException('Ginger\Type\Exception\InvalidTypeException');
 
