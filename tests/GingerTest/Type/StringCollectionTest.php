@@ -116,14 +116,15 @@ class StringCollectionTest extends TestCase
         $prototype = null;
 
         try {
-            StringCollection::fromNativeValue(array("Apple", 123, "Strawberry"));
+            $collection = StringCollection::fromNativeValue(array("Apple", 123, "Strawberry"));
+            $collection->value();
         } catch (InvalidTypeException $invalidTypeException) {
             $prototype = $invalidTypeException->getPrototypeOfRelatedType();
         }
 
         $this->assertInstanceOf('Ginger\Type\Prototype', $prototype);
 
-        $this->assertEquals('Ginger\Type\StringCollection', $prototype->of());
+        $this->assertEquals('Ginger\Type\String', $prototype->of());
     }
 
     /**
@@ -158,7 +159,7 @@ class StringCollectionTest extends TestCase
     {
         $stringCol = StringCollection::fromNativeValue(array("Apple", "Banana"));
 
-        $this->assertEquals('Ginger\Type\String',get_class($stringCol->property('item')->type()));
+        $this->assertEquals('Ginger\Type\String',$stringCol->property('item')->value());
         $this->assertNull($stringCol->property('Apple'));
     }
 }

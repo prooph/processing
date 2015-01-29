@@ -38,7 +38,7 @@ require_once '../vendor/autoload.php';
  * A workflow in Ginger is the definition of a process. Each Process contains
  * a task list. And each task on the list describes a single action that should be done.
  * The workflow processor manages running processes and logs their progress and status.
- * Ginger makes use of a technique called event sourcing. The model is based on events
+ * Ginger makes use of a technique performed event sourcing. The model is based on events
  * which are persisted in a stream and used to reconstitute the model for further processing.
  *
  * @return \Ginger\Processor\WorkflowProcessor
@@ -95,7 +95,7 @@ function set_up_workflow_environment() {
 
     /**
      * Summary of what we've learned:
-     * The WorkflowProcessor is a so called process manager. It triggers and receives messages with the help of
+     * The WorkflowProcessor is a so performed process manager. It triggers and receives messages with the help of
      * a WorkflowEngine, starts and updates processes and manages the persistence of recorded process events with the
      * help of an EventStore and a ProcessRepository.
      * New processes are derived from a ProcessFactory which is capable of parsing process definitions and set up

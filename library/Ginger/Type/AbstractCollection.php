@@ -20,13 +20,8 @@ use Ginger\Type\Exception\InvalidTypeException;
  * @package Ginger\Type
  * @author Alexander Miertsch <kontakt@codeliner.ws>
  */
-abstract class AbstractCollection implements CollectionType, \IteratorAggregate, \Countable
+abstract class AbstractCollection extends \IteratorIterator implements CollectionType
 {
-    /**
-     * @var array
-     */
-    protected $value = array();
-
     /**
      * @var Description
      */
@@ -36,6 +31,12 @@ abstract class AbstractCollection implements CollectionType, \IteratorAggregate,
      * @var Property
      */
     protected $itemProperty;
+
+    /**
+     * @var string
+     */
+    protected $itemTypeClass;
+
 
     /**
      * Provides access to a prototype of the Ginger\Type\Type (empty Object, with a Description and PrototypeProperties)
@@ -73,7 +74,7 @@ abstract class AbstractCollection implements CollectionType, \IteratorAggregate,
             $items[] = $itemClass::fromJsonDecodedData($encodedItem);
         }
 
-        return new static($items);
+        return new static(new \ArrayIterator($items));
     }
 
     /**
@@ -83,8 +84,12 @@ abstract class AbstractCollection implements CollectionType, \IteratorAggregate,
      */
     public static function fromNativeValue($value)
     {
-        if (! is_array($value)) {
-            throw InvalidTypeException::fromMessageAndPrototype("Value must be an array", static::prototype());
+        if (is_array($value)) {
+            $value = new \ArrayIterator($value);
+        }
+
+        if (! $value instanceof \Traversable) {
+            throw InvalidTypeException::fromMessageAndPrototype("Value must be traversable", static::prototype());
         }
 
         return new static($value);
@@ -104,34 +109,40 @@ abstract class AbstractCollection implements CollectionType, \IteratorAggregate,
             $items[] = $itemClass::fromJsonDecodedData($encodedItem);
         }
 
-        return new static($items);
+        return new static(new \ArrayIterator($items));
     }
 
     /**
-     * @param array $value
+     * @param \Traversable $value
      * @throws Exception\InvalidTypeException If value is not an array containing only items of related Ginger\Type
      */
-    protected function __construct(array $value)
+    public function __construct(\Traversable $value)
     {
-        $itemClass = static::prototype()->typeProperties()['item']->typePrototype()->of();
+        parent::__construct($value);
 
-        try {
-
-            foreach ($value as $index => $itemOrNativeValue) {
-                if (! $itemOrNativeValue instanceof $itemClass) {
-                    $value[$index] = $itemClass::fromNativeValue($itemOrNativeValue);
-                }
-            }
-
-        } catch (\InvalidArgumentException $ex) {
-            throw InvalidTypeException::fromInvalidArgumentExceptionAndPrototype($ex, static::prototype());
-        }
+        $this->itemTypeClass = static::prototype()->typeProperties()['item']->typePrototype()->of();
 
         $this->value = $value;
 
-        $refItem = new \ReflectionClass($itemClass);
+        $this->itemProperty = new Property("item", ItemClass::fromNativeValue($this->itemTypeClass));
+    }
 
-        $this->itemProperty = new Property("item", $refItem->newInstanceWithoutConstructor());
+    /**
+     * @return Type
+     */
+    public function current()
+    {
+        $currentItem = parent::current();
+
+        if (is_null($currentItem)) return null;
+
+        $itemClass = $this->itemTypeClass;
+
+        if (! $currentItem instanceof $itemClass) {
+            $currentItem = $itemClass::fromNativeValue($currentItem);
+        }
+
+        return $currentItem;
     }
 
     /**
@@ -184,7 +195,7 @@ abstract class AbstractCollection implements CollectionType, \IteratorAggregate,
      */
     public function value()
     {
-        return $this->value;
+        return iterator_to_array($this);
     }
 
     /**
@@ -201,28 +212,14 @@ abstract class AbstractCollection implements CollectionType, \IteratorAggregate,
     }
 
     /**
-     * @return int
-     */
-    public function count()
-    {
-        return count($this->value());
-    }
-
-    /**
-     * @return \ArrayIterator
-     */
-    public function getIterator()
-    {
-        return new \ArrayIterator($this->value());
-    }
-
-    /**
      * @param Type $other
      * @return boolean
      */
     public function sameAs(Type $other)
     {
-        return $this->toString() === $other->toString();
+        if (! $other instanceof AbstractCollection) return false;
+
+        return $this->getInnerIterator() === $other->getInnerIterator();
     }
 }
  

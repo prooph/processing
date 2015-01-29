@@ -34,13 +34,13 @@ final class UnknownCollectionTest extends TestCase
 
         $unknownCollectionFromString = UnknownCollection::fromString($unknownCollectionString);
 
-        $this->assertTrue($unknownCollection->sameAs($unknownCollectionFromString));
+        $this->assertEquals($unknownCollection->value(), $unknownCollectionFromString->value());
 
         $unknownCollectionJson = json_encode($unknownCollection);
 
         $unknownCollectionFromJson = UnknownCollection::fromJsonDecodedData(json_decode($unknownCollectionJson, true));
 
-        $this->assertTrue($unknownCollection->sameAs($unknownCollectionFromJson));
+        $this->assertEquals($unknownCollection->value(), $unknownCollectionFromJson->value());
     }
 
     /**

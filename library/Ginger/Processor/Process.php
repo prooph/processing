@@ -190,8 +190,7 @@ abstract class Process extends AggregateRoot
             } elseif ($this->isSubProcess() && $this->syncLogMessages) {
                 //We only sync non error messages, because errors are always synced and then they would be received twice
                 $messageForParent = $message->reconnectToProcessTask($this->parentTaskListPosition);
-                $workflowEngine->getEventChannelFor($this->parentTaskListPosition->taskListId()->nodeName()->toString())
-                    ->dispatch($messageForParent);
+                $workflowEngine->dispatch($messageForParent);
             }
         }
     }

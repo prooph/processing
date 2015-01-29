@@ -13,10 +13,18 @@ namespace Ginger\Processor;
 use Ginger\Message\LogMessage;
 use Ginger\Message\MessageNameUtils;
 use Ginger\Message\WorkflowMessage;
+use Ginger\Processor\Task\Event\LogMessageReceived;
+use Ginger\Processor\Task\Event\MultiPerformTaskFailed;
+use Ginger\Processor\Task\Event\MultiPerformTaskSucceed;
+use Ginger\Processor\Task\Event\MultiPerformTaskWasStarted;
+use Ginger\Processor\Task\Event\TaskEntryMarkedAsDone;
+use Ginger\Processor\Task\Event\TaskEntryMarkedAsFailed;
 use Ginger\Processor\Task\Event\TaskEntryMarkedAsRunning;
 use Ginger\Processor\Task\Event\TaskListWasRescheduled;
+use Ginger\Processor\Task\MultiPerformTask;
 use Ginger\Processor\Task\RunSubProcess;
 use Ginger\Processor\Task\TaskList;
+use Ginger\Processor\Task\TaskListEntry;
 use Ginger\Processor\Task\TaskListId;
 use Ginger\Type\AbstractCollection;
 use Ginger\Type\CollectionType;
@@ -36,6 +44,61 @@ use Zend\Validator\Exception\BadMethodCallException;
 class ForEachProcess extends Process
 {
     /**
+     * @var bool
+     */
+    private $processingCollection = false;
+
+    private $performedTasks = 0;
+
+    private $performedSuccessful = 0;
+
+    private $performedWithError = 0;
+
+    /**
+     * @param LogMessage|WorkflowMessage $message
+     * @param WorkflowEngine $workflowEngine
+     */
+    public function receiveMessage($message, WorkflowEngine $workflowEngine)
+    {
+        if (! $this->taskList->isStarted()) {
+            parent::receiveMessage($message, $workflowEngine);
+            return;
+        }
+        $this->assertTaskEntryExists($message->processTaskListPosition());
+
+        $taskListEntry = $this->taskList->getTaskListEntryAtPosition($message->processTaskListPosition());
+
+        if ($message instanceof WorkflowMessage) {
+            if (! MessageNameUtils::isGingerEvent($message->messageName())) {
+
+                $this->receiveMessage(
+                    LogMessage::logWrongMessageReceivedFor(
+                        $taskListEntry->task(),
+                        $taskListEntry->taskListPosition(),
+                        $message
+                    ),
+                    $workflowEngine
+                );
+
+                return;
+            }
+
+            $this->recordThat(MultiPerformTaskSucceed::at($taskListEntry->taskListPosition()));
+        }
+
+        if ($message instanceof LogMessage) {
+
+            $this->recordThat(LogMessageReceived::record($message));
+
+            if ($message->isError()) {
+                $this->recordThat(MultiPerformTaskFailed::at($taskListEntry->taskListPosition()));
+            }
+        }
+
+        $this->checkFinished($taskListEntry);
+    }
+
+    /**
      * Start or continue the process with the help of given WorkflowEngine and optionally with given WorkflowMessage
      *
      * @param WorkflowEngine $workflowEngine
@@ -46,11 +109,6 @@ class ForEachProcess extends Process
      */
     public function perform(WorkflowEngine $workflowEngine, WorkflowMessage $workflowMessage = null)
     {
-        if ($this->taskList->isStarted()) {
-            $this->checkFinished();
-            return;
-        }
-
         $taskListEntry = $this->taskList->getNextNotStartedTaskListEntry();
 
         if (is_null($taskListEntry)) {
@@ -119,34 +177,7 @@ class ForEachProcess extends Process
             return;
         }
 
-        //Pre conditions are met so we can prepare the perform
-        $this->rescheduleTasksBasedOnCollection(
-            $collection,
-            $taskListEntry->task(),
-            $taskListEntry->taskListPosition()->taskListId()->nodeName()
-        );
-
         $this->startSubProcessForEachItem($collection, $workflowEngine);
-    }
-
-    /**
-     * @param CollectionType $collection
-     * @param RunSubProcess $task
-     * @param NodeName $nodeName
-     */
-    private function rescheduleTasksBasedOnCollection(CollectionType $collection, RunSubProcess $task, NodeName $nodeName)
-    {
-        $taskCollection = [];
-
-        $elementsCount = count($collection);
-
-        for($i=1;$i<=$elementsCount;$i++) {
-            $taskCollection[] = RunSubProcess::reconstituteFromArray($task->getArrayCopy());
-        }
-
-        $taskList = TaskList::scheduleTasks(TaskListId::linkWith($nodeName, $this->processId()), $taskCollection);
-
-        $this->recordThat(TaskListWasRescheduled::with($taskList, $this->processId()));
     }
 
     /**
@@ -155,31 +186,77 @@ class ForEachProcess extends Process
      */
     private function startSubProcessForEachItem(CollectionType $collection, WorkflowEngine $workflowEngine)
     {
-        foreach ($collection as $item) {
-            $taskListEntry = $this->taskList->getNextNotStartedTaskListEntry();
+        $taskListEntry = $this->taskList->getNextNotStartedTaskListEntry();
 
-            $task = $taskListEntry->task();
+        $this->recordThat(TaskEntryMarkedAsRunning::at($taskListEntry->taskListPosition()));
+
+        $this->processingCollection = true;
+
+        foreach ($collection as $item) {
 
             $message = WorkflowMessage::newDataCollected($item);
 
             $message->connectToProcessTask($taskListEntry->taskListPosition());
 
-            $this->recordThat(TaskEntryMarkedAsRunning::at($taskListEntry->taskListPosition()));
+            $this->recordThat(MultiPerformTaskWasStarted::at($taskListEntry->taskListPosition()));
 
-            $this->performRunSubProcess($task, $taskListEntry->taskListPosition(), $workflowEngine, $message);
+            $this->performRunSubProcess(
+                $taskListEntry->task(),
+                $taskListEntry->taskListPosition(),
+                $workflowEngine,
+                $message
+            );
         }
+
+        $this->processingCollection = false;
     }
 
     /**
-     * @param TaskListWasRescheduled $taskListWasRescheduled
+     * @param MultiPerformTaskWasStarted $event
      */
-    protected function whenTaskListWasRescheduled(TaskListWasRescheduled $taskListWasRescheduled)
+    public function whenMultiPerformTaskWasStarted(MultiPerformTaskWasStarted $event)
     {
-        $this->taskList = $taskListWasRescheduled->newTaskList();
+        $this->performedTasks++;
     }
 
-    private function checkFinished()
+    /**
+     * @param MultiPerformTaskSucceed $event
+     */
+    public function whenMultiPerformTaskSucceed(MultiPerformTaskSucceed $event)
     {
-        //@TODO record a ProcessFinished event
+        $this->performedSuccessful++;
+    }
+
+    /**
+     * @param MultiPerformTaskFailed $event
+     */
+    public function whenMultiPerformTaskFailed(MultiPerformTaskFailed $event)
+    {
+        $this->performedWithError++;
+    }
+
+    /**
+     * @param TaskListEntry $taskListEntry
+     */
+    private function checkFinished(TaskListEntry $taskListEntry)
+    {
+        if ($this->processingCollection) return;
+
+        if ($this->performedTasks == ($this->performedSuccessful + $this->performedWithError)) {
+
+            if ($this->performedWithError > 0) {
+                $this->recordThat(
+                    TaskEntryMarkedAsFailed::at(
+                        $taskListEntry->taskListPosition()
+                    )
+                );
+            } else {
+                $this->recordThat(
+                    TaskEntryMarkedAsDone::at(
+                        $taskListEntry->taskListPosition()
+                    )
+                );
+            }
+        }
     }
 }

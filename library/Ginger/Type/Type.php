@@ -62,8 +62,8 @@ interface Type extends \JsonSerializable
      *
      * A Ginger\Type\SingleValue has no properties, so you'll get an empty list
      * A Ginger\Type\Collection has a numeric index but all elements are of the same type
-     * so properties() returns a list containing one property with name item that describes the elements
-     * but has no value.
+     * so properties() returns a list containing one property with name item
+     * which itself is of type Ginger\Type\ItemClass
      *
      * @return Property[]
      */
