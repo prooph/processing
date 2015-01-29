@@ -12,6 +12,7 @@
 namespace Ginger\Message;
 
 use Ginger\Message\ProophPlugin\ServiceBusTranslatableMessage;
+use Rhumsaa\Uuid\Uuid;
 
 /**
  * Interface GingerMessage
@@ -24,6 +25,11 @@ use Ginger\Message\ProophPlugin\ServiceBusTranslatableMessage;
  */
 interface GingerMessage extends ServiceBusTranslatableMessage
 {
+    /**
+     * @return Uuid
+     */
+    public function uuid();
+    
     /**
      * @return string
      */
