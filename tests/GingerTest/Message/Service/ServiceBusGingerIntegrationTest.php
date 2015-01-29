@@ -122,7 +122,7 @@ class ServiceBusGingerIntegrationTest extends TestCase
         $this->assertInstanceOf('Ginger\Message\WorkflowMessage', $receivedMessage);
         $this->assertTrue($taskListPosition->equals($receivedMessage->processTaskListPosition()));
         $this->assertTrue($wfMessage->uuid()->equals($receivedMessage->uuid()));
-        $this->assertEquals($wfMessage->payload()->getData(), $receivedMessage->payload()->getData());
+        $this->assertEquals($wfMessage->payload()->extractTypeData(), $receivedMessage->payload()->extractTypeData());
         $this->assertEquals($wfMessage->version(), $receivedMessage->version());
         $this->assertEquals($wfMessage->createdOn()->format('Y-m-d H:i:s'), $receivedMessage->createdOn()->format('Y-m-d H:i:s'));
         $this->assertEquals(array('metadata' => true), $receivedMessage->metadata());

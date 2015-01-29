@@ -49,11 +49,6 @@ class Payload implements \JsonSerializable
     public function replaceData($newData);
 
     /**
-     * @return \Codeliner\ArrayReader\ArrayReader
-     */
-    public function toPayloadReader();
-
-    /**
      * @return string
      */
     public function getTypeClass();

@@ -11,6 +11,7 @@
 
 namespace GingerTest\Message;
 
+use Codeliner\ArrayReader\ArrayReader;
 use Ginger\Message\Payload;
 use GingerTest\TestCase;
 use GingerTest\Mock\UserDictionary;
@@ -47,7 +48,7 @@ class PayloadTest extends TestCase
 
         $this->assertEquals('GingerTest\Mock\UserDictionary', $payload->getTypeClass());
 
-        $this->assertEquals($userData, $payload->getData());
+        $this->assertEquals($userData, $payload->extractTypeData());
     }
 
     /**
@@ -80,35 +81,7 @@ class PayloadTest extends TestCase
 
         $this->assertEquals('GingerTest\Mock\UserDictionary', $decodedPayload->getTypeClass());
 
-        $this->assertEquals($userData, $decodedPayload->getData());
-    }
-
-    /**
-     * @test
-     */
-    public function it_is_possible_to_partially_change_data()
-    {
-        $userData = array(
-            'id' => 1,
-            'name' => 'Alex',
-            'address' => array(
-                'street' => 'Main Street',
-                'streetNumber' => 10,
-                'zip' => '12345',
-                'city' => 'Test City'
-            )
-        );
-
-        $user = UserDictionary::fromNativeValue($userData);
-
-        $payload = Payload::fromType($user);
-
-        $payload->changeData(array('address' => array('street' => 'Highway')));
-
-        $userData['address']['street'] = "Highway";
-
-        $this->assertEquals($userData, $payload->getData());
-        $this->assertEquals('Highway', $payload->toPayloadReader()->stringValue('address.street'));
+        $this->assertEquals($userData, $decodedPayload->extractTypeData());
     }
 
     /**
@@ -139,8 +112,8 @@ class PayloadTest extends TestCase
 
         $payload->replaceData($newUserData);
 
-        $this->assertEquals($newUserData, $payload->getData());
-        $this->assertEquals('Tom', $payload->toPayloadReader()->stringValue('name'));
+        $this->assertEquals($newUserData, $payload->extractTypeData());
+        $this->assertEquals('Tom', (new ArrayReader($payload->extractTypeData()))->stringValue('name'));
     }
 
     /**
@@ -163,7 +136,7 @@ class PayloadTest extends TestCase
 
         $payload = Payload::fromType($user);
 
-        $this->assertEquals('Main Street', $payload->toPayloadReader()->stringValue('address.street'));
+        $this->assertEquals('Main Street', (new ArrayReader($payload->extractTypeData()))->stringValue('address.street'));
     }
 
     /**
@@ -233,7 +206,7 @@ class PayloadTest extends TestCase
 
         $this->assertEquals('GingerTest\Mock\UserDictionary', $payload->getTypeClass());
 
-        $this->assertEquals(array(), $payload->getData());
+        $this->assertNull($payload->extractTypeData());
 
         $userData = array(
             'id' => 1,

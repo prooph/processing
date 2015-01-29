@@ -96,6 +96,6 @@ class FuncTest extends TestCase
 
         $addWorld($payload);
 
-        $this->assertEquals('Hello World', $payload->getData());
+        $this->assertEquals('Hello World', $payload->extractTypeData());
     }
 } 

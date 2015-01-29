@@ -156,7 +156,7 @@ final class Func
      */
     public static function to_data(Payload $payload)
     {
-        return $payload->getData();
+        return $payload->extractTypeData();
     }
 
     /**
@@ -170,7 +170,7 @@ final class Func
     {
         self::assert_callable($callback);
 
-        $payload->replaceData($callback($payload->getData()));
+        $payload->replaceData($callback($payload->extractTypeData()));
 
         return $payload;
     }

@@ -240,7 +240,7 @@ class ProcessFactoryTest extends TestCase
 
         $this->assertTrue($process->isSuccessfulDone());
 
-        $this->assertEquals('Hello World', $message->payload()->getData());
+        $this->assertEquals('Hello World', $message->payload()->extractTypeData());
     }
 }
  

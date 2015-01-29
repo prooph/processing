@@ -34,7 +34,7 @@ class ManipulatePayloadTest extends TestCase
 
         $task->performManipulationOn($payload);
 
-        $this->assertEquals('Hello World', $payload->getData());
+        $this->assertEquals('Hello World', $payload->extractTypeData());
     }
 
     /**
@@ -52,6 +52,6 @@ class ManipulatePayloadTest extends TestCase
 
         $copiedTask->performManipulationOn($payload);
 
-        $this->assertEquals('Hello World', $payload->getData());
+        $this->assertEquals('Hello World', $payload->extractTypeData());
     }
 } 

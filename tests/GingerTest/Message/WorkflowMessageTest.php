@@ -43,7 +43,7 @@ class WorkflowMessageTest extends TestCase
             $wfMessage->getMessageName()
         );
 
-        $this->assertEquals(array(), $wfMessage->payload()->getData());
+        $this->assertNull($wfMessage->payload()->extractTypeData());
         $this->assertEquals(array('metadata' => true), $wfMessage->metadata());
         $this->assertEquals(MessageNameUtils::COLLECT_DATA, $wfMessage->messageType());
         $this->assertEquals(NodeName::defaultName()->toString(), $wfMessage->target());
@@ -76,7 +76,7 @@ class WorkflowMessageTest extends TestCase
             $wfMessage->getMessageName()
         );
 
-        $this->assertEquals($userData, $wfMessage->payload()->getData());
+        $this->assertEquals($userData, $wfMessage->payload()->extractTypeData());
         $this->assertEquals(array('metadata' => true), $wfMessage->metadata());
         $this->assertEquals(MessageNameUtils::DATA_COLLECTED, $wfMessage->messageType());
         $this->assertEquals(NodeName::defaultName()->toString(), $wfMessage->target());
@@ -111,7 +111,7 @@ class WorkflowMessageTest extends TestCase
             $wfAnswer->getMessageName()
         );
 
-        $this->assertEquals($userData, $wfAnswer->payload()->getData());
+        $this->assertEquals($userData, $wfAnswer->payload()->extractTypeData());
 
         $this->assertFalse($wfMessage->uuid()->equals($wfAnswer->uuid()));
 
@@ -176,7 +176,7 @@ class WorkflowMessageTest extends TestCase
             $wfCommand->getMessageName()
         );
 
-        $this->assertEquals($userData, $wfCommand->payload()->getData());
+        $this->assertEquals($userData, $wfCommand->payload()->extractTypeData());
 
         $this->assertFalse($wfMessage->uuid()->equals($wfCommand->uuid()));
 
@@ -221,7 +221,7 @@ class WorkflowMessageTest extends TestCase
             $wfAnswer->getMessageName()
         );
 
-        $this->assertEquals($userData, $wfAnswer->payload()->getData());
+        $this->assertEquals($userData, $wfAnswer->payload()->extractTypeData());
 
         $this->assertFalse($wfCommand->uuid()->equals($wfAnswer->uuid()));
 
@@ -287,7 +287,7 @@ class WorkflowMessageTest extends TestCase
             $copyOfWfMessage->getMessageName()
         );
 
-        $this->assertEquals(array(), $copyOfWfMessage->payload()->getData());
+        $this->assertNull($copyOfWfMessage->payload()->extractTypeData());
         $this->assertEquals(array('metadata' => true), $copyOfWfMessage->metadata());
         $this->assertEquals(MessageNameUtils::COLLECT_DATA, $copyOfWfMessage->messageType());
         $this->assertEquals(NodeName::defaultName()->toString(), $copyOfWfMessage->target());

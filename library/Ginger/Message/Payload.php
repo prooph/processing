@@ -12,7 +12,6 @@
 namespace Ginger\Message;
 
 use Assert\Assertion;
-use Codeliner\ArrayReader\ArrayReader;
 use Ginger\Type\Prototype;
 use Ginger\Type\Type;
 
@@ -30,14 +29,14 @@ class Payload implements \JsonSerializable
     protected $typeClass;
 
     /**
+     * @var Type
+     */
+    protected $type;
+
+    /**
      * @var array
      */
     protected $data;
-
-    /**
-     * @var ArrayReader
-     */
-    protected $payloadReader;
 
     /**
      * @param Prototype $aPrototype
@@ -45,7 +44,7 @@ class Payload implements \JsonSerializable
      */
     public static function fromPrototype(Prototype $aPrototype)
     {
-        return new static($aPrototype->of(), array());
+        return new static($aPrototype->of(), null);
     }
 
     /**
@@ -54,12 +53,7 @@ class Payload implements \JsonSerializable
      */
     public static function fromType(Type $aType)
     {
-        //We need to convert the type to it's native value representation with the help of json encoding
-        $jsonString = json_encode($aType);
-
-        $data = json_decode($jsonString, true);
-
-        return new static(get_class($aType), static::normalizeData($data));
+        return new static(get_class($aType), $aType);
     }
 
     /**
@@ -73,17 +67,24 @@ class Payload implements \JsonSerializable
         Assertion::notEmpty($jsonDecodedData['typeClass']);
         Assertion::string($jsonDecodedData['typeClass']);
 
-        return new static($jsonDecodedData['typeClass'], static::normalizeData($jsonDecodedData['data']));
+        return new static($jsonDecodedData['typeClass'], $jsonDecodedData['data']);
     }
 
     /**
      * @param string $typeClass
-     * @param mixed $data
+     * @param null $dataOrType
      */
-    protected function __construct($typeClass, array $data)
+    protected function __construct($typeClass, $dataOrType = null)
     {
         $this->typeClass = $typeClass;
-        $this->data = $data;
+
+        if (! is_null($dataOrType)) {
+            if ($dataOrType instanceof Type) {
+                $this->type = $dataOrType;
+            } else {
+                $this->data = $dataOrType;
+            }
+        }
     }
 
     /**
@@ -95,25 +96,21 @@ class Payload implements \JsonSerializable
      */
     public function jsonSerialize()
     {
-        return array('typeClass' => $this->typeClass, 'data' => $this->data);
+        return array('typeClass' => $this->typeClass, 'data' => $this->extractTypeData());
     }
 
     /**
      * @return mixed
      */
-    public function getData()
+    public function extractTypeData()
     {
-       return static::convertToOriginalData($this->data);
-    }
+       if (is_null($this->data) && ! is_null($this->type)) {
+           $serializedData = json_encode($this->type);
+           $jsonDecodedData = json_decode($serializedData, true);
+           $this->data = $jsonDecodedData;
+       }
 
-    /**
-     * @param mixed $newData
-     */
-    public function changeData($newData)
-    {
-        $newData = static::normalizeData($newData);
-        $this->data = \Zend\Stdlib\ArrayUtils::merge($this->data, $newData);
-        $this->resetPayloadReader();
+        return $this->data;
     }
 
     /**
@@ -121,27 +118,8 @@ class Payload implements \JsonSerializable
      */
     public function replaceData($newData)
     {
-        $this->data = static::normalizeData($newData);
-        $this->resetPayloadReader();
-    }
-
-    /**
-     * @return ArrayReader
-     */
-    public function toPayloadReader()
-    {
-        if (is_null($this->payloadReader)) {
-            $this->payloadReader = new ArrayReader($this->data);
-        }
-        return $this->payloadReader;
-    }
-
-    /**
-     * @return null
-     */
-    protected function resetPayloadReader()
-    {
-        return $this->payloadReader = null;
+        $this->data = $newData;
+        $this->type = null;
     }
 
     /**
@@ -160,44 +138,21 @@ class Payload implements \JsonSerializable
         Assertion::string($newTypeClass);
         Assertion::implementsInterface($newTypeClass, 'Ginger\Type\Type');
         $this->typeClass = $newTypeClass;
+        $this->type = null;
     }
 
     /**
-     * @return Type
+     * @return Type|null
      */
     public function toType()
     {
-        $typeClass = $this->typeClass;
+        if (is_null($this->type) && ! is_null($this->data)) {
+            $typeClass = $this->typeClass;
 
-        return $typeClass::fromJsonDecodedData($this->convertToOriginalData($this->data));
-    }
-
-    /**
-     * Internally data always has to be of type array
-     *
-     * @param mixed $data
-     * @return array
-     */
-    protected static function normalizeData($data)
-    {
-        if (! is_array($data)) {
-            $data = array('__value__' => $data);
+            $this->type = $typeClass::fromJsonDecodedData($this->data);
         }
 
-        return $data;
-    }
-
-    /**
-     * @param $data
-     * @return mixed
-     */
-    protected static function convertToOriginalData(array $data)
-    {
-        if (count($data) === 1 && isset($data['__value__'])) {
-            $data = $data['__value__'];
-        }
-
-        return $data;
+        return $this->type;
     }
 }
  
