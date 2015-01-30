@@ -29,7 +29,7 @@ interface GingerMessage extends ServiceBusTranslatableMessage
      * @return Uuid
      */
     public function uuid();
-    
+
     /**
      * @return string
      */

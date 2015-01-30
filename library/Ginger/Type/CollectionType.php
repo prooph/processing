@@ -15,7 +15,8 @@ namespace Ginger\Type;
  * Interface CollectionType
  *
  * This interface forces the implementing class to provide iterator methods,
- * so that it is possible to iterate over the items in the collection.
+ * so that it is possible to iterate over the items in the collection and get the inner iterator.
+ * AbstractCollection provides a basic implementation.
  *
  * @package Ginger\Type
  * @author Alexander Miertsch <kontakt@codeliner.ws>
@@ -71,5 +72,13 @@ interface CollectionType extends Type
      * @return void Any returned value is ignored.
      */
     public function rewind();
+
+    /**
+     * (PHP 5 &gt;= 5.1.0)<br/>
+     * Returns the inner iterator for the current entry.
+     * @link http://php.net/manual/en/outeriterator.getinneriterator.php
+     * @return Iterator The inner iterator for the current entry.
+     */
+    public function getInnerIterator();
 }
  

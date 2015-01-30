@@ -8,6 +8,7 @@
  */
 namespace Ginger\Functional;
 
+use Ginger\Functional\Iterator\MapIterator;
 use Ginger\Message\Payload;
 
 /**
@@ -93,6 +94,9 @@ final class Func
             case 'map':
                 if (count($args) != 2) throw new \BadMethodCallException("Wrong parameter count for method Func::map");
                 return self::map($args[0], $args[1]);
+            case 'premap':
+                if (count($args) != 2) throw new \BadMethodCallException("Wrong parameter count for method Func::premap");
+                return self::premap($args[0], $args[1]);
             case 'to_data':
                 if (count($args) != 1) throw new \BadMethodCallException("Wrong parameter count for method Func::to_data");
                 return self::to_data($args[0]);
@@ -171,6 +175,27 @@ final class Func
         self::assert_callable($callback);
 
         $payload->replaceData($callback($payload->extractTypeData()));
+
+        return $payload;
+    }
+
+    /**
+     * Applies callback to payload type if type is a collection
+     * The callback is applied before the collection calls its own logic
+     * on the current item. This allows you to prepare an item (change structure f.e.)
+     * so that the collection can translate the item to its type representation
+     *
+     * @param Payload $payload
+     * @param $callback
+     * @return \Ginger\Message\Payload
+     */
+    public static function premap(Payload $payload, $callback)
+    {
+        $type = $payload->toType();
+
+        if ($type instanceof \OuterIterator) {
+            $payload->replaceType($type::fromNativeValue(new MapIterator($type->getInnerIterator(), $callback)));
+        }
 
         return $payload;
     }

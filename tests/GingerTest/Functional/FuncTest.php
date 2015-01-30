@@ -11,6 +11,7 @@ namespace GingerTest\Functional;
 use Ginger\Functional\Func;
 use Ginger\Message\Payload;
 use Ginger\Type\String;
+use Ginger\Type\StringCollection;
 use GingerTest\TestCase;
 
 /**
@@ -97,5 +98,33 @@ class FuncTest extends TestCase
         $addWorld($payload);
 
         $this->assertEquals('Hello World', $payload->extractTypeData());
+    }
+
+    /**
+     * @test
+     */
+    public function it_applies_premap_callback_to_payload_collection()
+    {
+        $stringCollection = [
+            "a string",
+            100,
+            "yet another string"
+        ];
+
+        $collection = StringCollection::fromNativeValue($stringCollection);
+
+        $payload = Payload::fromType($collection);
+
+        $string_cast = Func::prepare('premap', null, function($item, $key, \Iterator $collection) {
+            return (string)$item;
+        });
+
+        $string_cast($payload);
+
+        $this->assertEquals([
+            "a string",
+            "100",
+            "yet another string"
+        ], $payload->extractTypeData());
     }
 } 

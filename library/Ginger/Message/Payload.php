@@ -154,5 +154,12 @@ class Payload implements \JsonSerializable
 
         return $this->type;
     }
+
+    public function replaceType(Type $type)
+    {
+        $this->typeClass = get_class($type);
+        $this->type = $type;
+        $this->data = null;
+    }
 }
  
