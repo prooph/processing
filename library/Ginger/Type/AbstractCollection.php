@@ -37,7 +37,10 @@ abstract class AbstractCollection extends \IteratorIterator implements Collectio
      */
     protected $itemTypeClass;
 
-
+    /**
+     * @var array
+     */
+    protected $valueCache;
     /**
      * Provides access to a prototype of the Ginger\Type\Type (empty Object, with a Description and PrototypeProperties)
      *
@@ -195,7 +198,11 @@ abstract class AbstractCollection extends \IteratorIterator implements Collectio
      */
     public function value()
     {
-        return iterator_to_array($this);
+        if (is_null($this->valueCache)) {
+            $this->valueCache = iterator_to_array($this);
+        }
+
+        return $this->valueCache;
     }
 
     /**
