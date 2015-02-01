@@ -92,11 +92,12 @@ final class LogMessage implements MessageNameProvider, GingerMessage
     /**
      * @param string $msg
      * @param TaskListPosition $taskListPosition
+     * @param array $msgParams
      * @return LogMessage
      */
-    public static function logErrorMsg($msg, TaskListPosition $taskListPosition)
+    public static function logErrorMsg($msg, TaskListPosition $taskListPosition, array $msgParams = [])
     {
-        return new self($taskListPosition, (string)$msg, 500);
+        return new self($taskListPosition, (string)$msg, 500, $msgParams);
     }
 
     /**
@@ -176,21 +177,23 @@ final class LogMessage implements MessageNameProvider, GingerMessage
     /**
      * @param string $msg
      * @param TaskListPosition $taskListPosition
+     * @param array $msgParams
      * @return LogMessage
      */
-    public static function logDebugMsg($msg, TaskListPosition $taskListPosition)
+    public static function logDebugMsg($msg, TaskListPosition $taskListPosition, array $msgParams = [])
     {
-        return new self($taskListPosition, $msg);
+        return new self($taskListPosition, $msg, 0, $msgParams);
     }
 
     /**
      * @param string $warning
      * @param TaskListPosition $taskListPosition
+     * @param array $msgParams
      * @return LogMessage
      */
-    public static function logWarningMsg($warning, TaskListPosition $taskListPosition)
+    public static function logWarningMsg($warning, TaskListPosition $taskListPosition, array $msgParams = [])
     {
-        return new self($taskListPosition, $warning, 100);
+        return new self($taskListPosition, $warning, 100, $msgParams);
     }
 
     /**
