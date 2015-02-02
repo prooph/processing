@@ -232,5 +232,38 @@ class LogMessageTest extends TestCase
         $this->assertTrue($taskListPosition->equals($copyOfLogMessage->processTaskListPosition()));
         $this->assertEquals(NodeName::defaultName()->toString(), $copyOfLogMessage->target());
     }
+
+    /**
+     * @test
+     */
+    function it_can_log_a_items_processing_failed_message_with_a_failed_msg_for_each_failed_item()
+    {
+        $taskListPosition = TaskListPosition::at(TaskListId::linkWith(NodeName::defaultName(), ProcessId::generate()), 1);
+
+        $successfulItems = 3;
+        $failedItems = 2;
+        $failedMsgs = [
+            'Processing failed!',
+            'Processing failed, too!'
+        ];
+
+        $logMsg = LogMessage::logItemsProcessingFailed($successfulItems, $failedItems, $failedMsgs, $taskListPosition);
+
+        $this->assertTrue($logMsg->isError());
+
+        $this->assertEquals(LogMessage::ERROR_ITEMS_PROCESSING_FAILED, $logMsg->msgCode());
+
+        $this->assertEquals('Processing for 2 of 5 items failed', $logMsg->technicalMsg());
+
+        $msgParams = $logMsg->msgParams();
+
+        $this->assertTrue(isset($msgParams[LogMessage::MSG_PARAM_SUCCESSFUL_ITEMS]));
+        $this->assertTrue(isset($msgParams[LogMessage::MSG_PARAM_FAILED_ITEMS]));
+        $this->assertTrue(isset($msgParams[LogMessage::MSG_PARAM_FAILED_MESSAGES]));
+
+        $this->assertEquals($successfulItems, $msgParams[LogMessage::MSG_PARAM_SUCCESSFUL_ITEMS]);
+        $this->assertEquals($failedItems, $msgParams[LogMessage::MSG_PARAM_FAILED_ITEMS]);
+        $this->assertEquals($failedMsgs, $msgParams[LogMessage::MSG_PARAM_FAILED_MESSAGES]);
+    }
 }
  

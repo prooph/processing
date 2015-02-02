@@ -34,6 +34,23 @@ final class LogMessage implements MessageNameProvider, GingerMessage
     const LOG_LEVEL_INFO = "info";
     const LOG_LEVEL_ERROR = "error";
 
+    const ERROR_SYSTEM_ERROR = 500;
+    const ERROR_ITEMS_PROCESSING_FAILED = 501;
+    const ERROR_NO_MESSAGE_RECEIVED = 412;
+    const ERROR_WRONG_MESSAGE_RECEIVED = 415;
+    const ERROR_UNSUPPORTED_MESSAGE_RECEIVED = 416;
+
+    const INFO_PROCESSING_STARTED = 202;
+
+    const WARNING_MSG = 100;
+
+    const DEBUG_MSG = 0;
+
+    const MSG_PARAM_TRACE = 'trace';
+    const MSG_PARAM_SUCCESSFUL_ITEMS = 'successful_items';
+    const MSG_PARAM_FAILED_ITEMS = 'failed_items';
+    const MSG_PARAM_FAILED_MESSAGES = 'failed_messages';
+
     /**
      * @var Uuid
      */
@@ -70,7 +87,7 @@ final class LogMessage implements MessageNameProvider, GingerMessage
      */
     public static function logInfoDataProcessingStarted(TaskListPosition $taskListPosition)
     {
-        return new self($taskListPosition, 'Data processing was started', 202, array('started_on' => date(\DateTime::ISO8601)));
+        return new self($taskListPosition, 'Data processing was started', self::INFO_PROCESSING_STARTED, array('started_on' => date(\DateTime::ISO8601)));
     }
 
     /**
@@ -80,13 +97,13 @@ final class LogMessage implements MessageNameProvider, GingerMessage
      */
     public static function logException(\Exception $exception, TaskListPosition $taskListPosition)
     {
-        $errorCode = $exception->getCode()? : 500;
+        $errorCode = $exception->getCode()? : self::ERROR_SYSTEM_ERROR;
 
         if ($errorCode < 400) {
-            $errorCode = 500;
+            $errorCode = self::ERROR_SYSTEM_ERROR;
         }
 
-        return new self($taskListPosition, $exception->getMessage(), $errorCode, array('trace' => $exception->getTraceAsString()));
+        return new self($taskListPosition, $exception->getMessage(), $errorCode, array(self::MSG_PARAM_TRACE => $exception->getTraceAsString()));
     }
 
     /**
@@ -97,7 +114,37 @@ final class LogMessage implements MessageNameProvider, GingerMessage
      */
     public static function logErrorMsg($msg, TaskListPosition $taskListPosition, array $msgParams = [])
     {
-        return new self($taskListPosition, (string)$msg, 500, $msgParams);
+        return new self($taskListPosition, (string)$msg, self::ERROR_SYSTEM_ERROR, $msgParams);
+    }
+
+    /**
+     * @param int $successfulItems
+     * @param int $failedItems
+     * @param array $failedMessages
+     * @param TaskListPosition $taskListPosition
+     * @return LogMessage
+     */
+    public static function logItemsProcessingFailed($successfulItems, $failedItems, array $failedMessages, TaskListPosition $taskListPosition)
+    {
+        Assertion::integer($successfulItems);
+        Assertion::integer($failedItems);
+
+        foreach ($failedMessages as $failedMsg) {
+            Assertion::string($failedMsg);
+        }
+
+        Assertion::count($failedMessages, $failedItems, "Number of failed messages should be the same as number of failed items");
+
+        return new self(
+            $taskListPosition,
+            sprintf('Processing for %d of %d items failed', $failedItems, $successfulItems + $failedItems),
+            self::ERROR_ITEMS_PROCESSING_FAILED,
+            [
+                self::MSG_PARAM_SUCCESSFUL_ITEMS => $successfulItems,
+                self::MSG_PARAM_FAILED_ITEMS     => $failedItems,
+                self::MSG_PARAM_FAILED_MESSAGES  => $failedMessages
+            ]
+        );
     }
 
     /**
@@ -115,7 +162,7 @@ final class LogMessage implements MessageNameProvider, GingerMessage
                 get_class($task),
                 $taskListPosition->position()
             ),
-            412,
+            self::ERROR_NO_MESSAGE_RECEIVED,
             array(
                 'process_id' => $taskListPosition->taskListId()->processId()->toString(),
                 'task_list_position' => $taskListPosition->position(),
@@ -141,7 +188,7 @@ final class LogMessage implements MessageNameProvider, GingerMessage
                 get_class($task),
                 $taskListPosition->position()
             ),
-            415,
+            self::ERROR_WRONG_MESSAGE_RECEIVED,
             array(
                 'process_id' => $taskListPosition->taskListId()->processId()->toString(),
                 'task_list_position' => $taskListPosition->position(),
@@ -166,7 +213,7 @@ final class LogMessage implements MessageNameProvider, GingerMessage
                 $workflowMessage->getMessageName(),
                 $workflowMessage->processTaskListPosition()->toString()
             ),
-            416,
+            self::ERROR_UNSUPPORTED_MESSAGE_RECEIVED,
             array(
                 'workflow_message_handler' => (string)$workflowMessageHandlerName,
                 'message_name' => $workflowMessage->getMessageName(),
@@ -182,7 +229,7 @@ final class LogMessage implements MessageNameProvider, GingerMessage
      */
     public static function logDebugMsg($msg, TaskListPosition $taskListPosition, array $msgParams = [])
     {
-        return new self($taskListPosition, $msg, 0, $msgParams);
+        return new self($taskListPosition, $msg, self::DEBUG_MSG, $msgParams);
     }
 
     /**
@@ -193,7 +240,7 @@ final class LogMessage implements MessageNameProvider, GingerMessage
      */
     public static function logWarningMsg($warning, TaskListPosition $taskListPosition, array $msgParams = [])
     {
-        return new self($taskListPosition, $warning, 100, $msgParams);
+        return new self($taskListPosition, $warning, self::WARNING_MSG, $msgParams);
     }
 
     /**
