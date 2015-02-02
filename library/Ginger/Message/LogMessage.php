@@ -236,15 +236,7 @@ final class LogMessage implements MessageNameProvider, GingerMessage
         Assertion::string($technicalMsg);
         Assertion::integer($msgCode);
 
-        foreach ($msgParams as $key => $param) {
-            if (! is_scalar($param)) {
-                throw new \InvalidArgumentException(sprintf(
-                    'Msg param %s needs to be a scalar type but type of %s given',
-                    $key,
-                    (is_object($param))? get_class($param) : gettype($param)
-                ));
-            }
-        }
+        $this->assertMsgParams($msgParams);
 
         $this->technicalMsg = $technicalMsg;
         $this->msgCode = $msgCode;
@@ -427,6 +419,18 @@ final class LogMessage implements MessageNameProvider, GingerMessage
     public function isError()
     {
         return $this->logLevel() === self::LOG_LEVEL_ERROR;
+    }
+
+    /**
+     * @param array $msgParams
+     * @throws \InvalidArgumentException
+     */
+    protected function assertMsgParams(array $msgParams)
+    {
+        foreach ($msgParams as $entry) {
+            if (is_array($entry)) $this->assertMsgParams($entry);
+            elseif (! is_scalar($entry)) throw new \InvalidArgumentException('Msg params should only contain arrays or scalar values');
+        }
     }
 }
  
