@@ -228,7 +228,7 @@ class AbstractChannelFactoryTest extends TestCase
 
         $env = Environment::setUp($serviceLocator);
 
-        $channel = $env->services()->get('ginger.command_bus.my_target:::a_origin:::a_sender');
+        $channel = $env->services()->get('ginger.command_bus.my_target___a_origin___a_sender');
 
         $this->assertInstanceOf(\Prooph\ServiceBus\CommandBus::class, $channel);
 
@@ -311,7 +311,7 @@ class AbstractChannelFactoryTest extends TestCase
 
         $env = Environment::setUp($serviceLocator);
 
-        $channel = $env->services()->get('ginger.command_bus.my_target:::my_origin');
+        $channel = $env->services()->get('ginger.command_bus.my_target___my_origin');
 
         $this->assertInstanceOf(\Prooph\ServiceBus\CommandBus::class, $channel);
 
@@ -359,7 +359,7 @@ class AbstractChannelFactoryTest extends TestCase
 
         $env = Environment::setUp($serviceLocator);
 
-        $channel = $env->services()->get('ginger.command_bus.my_target:::my_origin');
+        $channel = $env->services()->get('ginger.command_bus.my_target___my_origin');
 
         $this->assertInstanceOf(\Prooph\ServiceBus\CommandBus::class, $channel);
 
@@ -407,7 +407,7 @@ class AbstractChannelFactoryTest extends TestCase
 
         $env = Environment::setUp($serviceLocator);
 
-        $channel = $env->services()->get('ginger.command_bus.my_target:::my_sender');
+        $channel = $env->services()->get('ginger.command_bus.my_target___my_sender');
 
         $this->assertInstanceOf(\Prooph\ServiceBus\CommandBus::class, $channel);
 
@@ -455,7 +455,7 @@ class AbstractChannelFactoryTest extends TestCase
 
         $env = Environment::setUp($serviceLocator);
 
-        $channel = $env->services()->get('ginger.command_bus.my_target:::my_origin:::my_sender');
+        $channel = $env->services()->get('ginger.command_bus.my_target___my_origin___my_sender');
 
         $this->assertInstanceOf(\Prooph\ServiceBus\CommandBus::class, $channel);
 
@@ -503,7 +503,7 @@ class AbstractChannelFactoryTest extends TestCase
 
         $env = Environment::setUp($serviceLocator);
 
-        $channel = $env->services()->get('ginger.command_bus.my_target:::my_origin');
+        $channel = $env->services()->get('ginger.command_bus.my_target___my_origin');
 
         $this->assertInstanceOf(\Prooph\ServiceBus\CommandBus::class, $channel);
 
@@ -562,7 +562,7 @@ class AbstractChannelFactoryTest extends TestCase
 
         $env = Environment::setUp($serviceLocator);
 
-        $channel = $env->services()->get('ginger.command_bus.my_target:::my_origin:::my_sender');
+        $channel = $env->services()->get('ginger.command_bus.my_target___my_origin___my_sender');
 
         $this->assertInstanceOf(\Prooph\ServiceBus\CommandBus::class, $channel);
 
@@ -636,7 +636,7 @@ class AbstractChannelFactoryTest extends TestCase
 
         $env = Environment::setUp($serviceLocator);
 
-        $channel = $env->services()->get('ginger.command_bus.my_target:::my_origin:::my_sender');
+        $channel = $env->services()->get('ginger.command_bus.my_target___my_origin___my_sender');
 
         $this->assertInstanceOf(\Prooph\ServiceBus\CommandBus::class, $channel);
 
@@ -711,7 +711,7 @@ class AbstractChannelFactoryTest extends TestCase
 
         $env = Environment::setUp($serviceLocator);
 
-        $channel = $env->services()->get('ginger.command_bus.my_target:::my_origin:::my_sender');
+        $channel = $env->services()->get('ginger.command_bus.my_target___my_origin___my_sender');
 
         $this->assertInstanceOf(\Prooph\ServiceBus\CommandBus::class, $channel);
 

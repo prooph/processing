@@ -32,14 +32,14 @@ use Zend\ServiceManager\ServiceLocatorInterface;
  * Class AbstractChannelFactory
  *
  * This class is the fallback factory for channels. It uses the channel config of the environment
- * to select a channel for a given service name with the format ginger.(command_bus|event_bus).<target>(:::<origin>)(:::<sender>)
+ * to select a channel for a given service name with the format ginger.(command_bus|event_bus).<target>(___<origin>)(___<sender>)
  *
  * @package Ginger\Environment\Factory
  * @author Alexander Miertsch <kontakt@codeliner.ws>
  */
 class AbstractChannelFactory implements AbstractFactoryInterface
 {
-    const CHANNEL_NAME_DELIMITER = ":::";
+    const CHANNEL_NAME_DELIMITER = "___";
 
     private $handleWorkflowMessageStrategy;
 
