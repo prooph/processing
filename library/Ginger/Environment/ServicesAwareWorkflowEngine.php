@@ -12,6 +12,7 @@
 namespace Ginger\Environment;
 
 use Codeliner\ArrayReader\ArrayReader;
+use Ginger\Environment\Factory\AbstractChannelFactory;
 use Ginger\Processor\AbstractWorkflowEngine;
 use Ginger\Processor\Definition;
 use Ginger\Processor\NodeName;
@@ -53,25 +54,23 @@ class ServicesAwareWorkflowEngine extends AbstractWorkflowEngine
     }
 
     /**
-     * @param null|string $target
-     * @throws \RuntimeException
-     * @return CommandBus
+     * @inheritdoc
      */
-    public function getCommandChannelFor($target)
+    public function getCommandChannelFor($target, $origin = null, $sender = null)
     {
-        if (is_null($target)) $target = Definition::SERVICE_WORKFLOW_PROCESSOR;
-
         if (! is_string($target) || empty($target)) throw new \RuntimeException('Target must be a non empty string');
 
-        $channelName = 'ginger.command_bus.' . $target;
+        $channelName = $this->generateChannelName($target, $origin, $sender);
+
+        $channelName = 'ginger.command_bus.' . $channelName;
 
         if (isset($this->cachedChannels[$channelName])) return $this->cachedChannels[$channelName];
 
         $commandBus = $this->services->get($channelName);
 
         if (! $commandBus instanceof CommandBus) throw new \RuntimeException(sprintf(
-            "CommandBus for target %s must be of type Prooph\ServiceBus\CommandBus but type of %s given!",
-            (string)$target,
+            "CommandBus for target %s must be of type Prooph\\ServiceBus\\CommandBus but type of %s given!",
+            $target,
             (is_object($commandBus))? get_class($commandBus) : gettype($commandBus)
         ));
 
@@ -85,11 +84,9 @@ class ServicesAwareWorkflowEngine extends AbstractWorkflowEngine
     }
 
     /**
-     * @param $target
-     * @return EventBus
-     * @throws \RuntimeException
+     * @inheritdoc
      */
-    public function getEventChannelFor($target)
+    public function getEventChannelFor($target, $origin = null, $sender = null)
     {
         if (is_null($target)) $target = Definition::SERVICE_WORKFLOW_PROCESSOR;
 
@@ -102,8 +99,8 @@ class ServicesAwareWorkflowEngine extends AbstractWorkflowEngine
         $eventBus = $this->services->get($channelName);
 
         if (! $eventBus instanceof EventBus) throw new \RuntimeException(sprintf(
-            "EventBu for target %s must be of type Prooph\ServiceBus\EventBus but type of %s given!",
-            (string)$target,
+            "EventBus for target %s must be of type Prooph\\ServiceBus\\EventBus but type of %s given!",
+            $target,
             (is_object($eventBus))? get_class($eventBus) : gettype($eventBus)
         ));
 
@@ -128,6 +125,27 @@ class ServicesAwareWorkflowEngine extends AbstractWorkflowEngine
         }
 
         $this->cachedPlugins[] = $plugin;
+    }
+
+    /**
+     * @param string $target
+     * @param null|string $origin
+     * @param null|string $sender
+     * @return string
+     */
+    private function generateChannelName($target, $origin = null, $sender = null)
+    {
+        $channelName = $target;
+
+        if (!is_null($origin)) {
+            $channelName.= AbstractChannelFactory::CHANNEL_NAME_DELIMITER . $origin;
+        }
+
+        if (!is_null($sender)) {
+            $channelName.= AbstractChannelFactory::CHANNEL_NAME_DELIMITER . $sender;
+        }
+
+        return $channelName;
     }
 }
  

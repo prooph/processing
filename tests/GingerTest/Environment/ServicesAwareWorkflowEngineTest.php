@@ -12,6 +12,7 @@
 namespace GingerTest\Environment;
 
 use Ginger\Environment\Environment;
+use Ginger\Environment\ServicesAwareWorkflowEngine;
 use Ginger\Processor\Definition;
 use GingerTest\Mock\SimpleBusPlugin;
 use GingerTest\TestCase;
@@ -33,20 +34,22 @@ class ServicesAwareWorkflowEngineTest extends TestCase
 
         $commandBus = $env->getWorkflowEngine()->getCommandChannelFor(Definition::SERVICE_WORKFLOW_PROCESSOR);
 
-        $this->assertInstanceOf('Prooph\ServiceBus\CommandBus', $commandBus);
+        $this->assertInstanceOf(\Prooph\ServiceBus\CommandBus::class, $commandBus);
     }
 
     /**
      * @test
      */
-    public function it_derives_local_command_bus_when_target_is_null()
+    public function it_derives_local_command_bus_when_target_is_unknown()
     {
         $env = Environment::setUp();
 
-        $commandBus = $env->getWorkflowEngine()->getCommandChannelFor(Definition::SERVICE_WORKFLOW_PROCESSOR);
-        $localBus = $env->getWorkflowEngine()->getCommandChannelFor(null);
+        /** @var $workflowEngine ServicesAwareWorkflowEngine */
+        $workflowEngine = $env->getWorkflowEngine();
 
-        $this->assertSame($commandBus, $localBus);
+        $localBus = $workflowEngine->getCommandChannelFor('unknown target');
+
+        $this->assertInstanceOf(\Prooph\ServiceBus\CommandBus::class, $localBus);
     }
 
     /**
@@ -58,7 +61,7 @@ class ServicesAwareWorkflowEngineTest extends TestCase
 
         $eventBus = $env->getWorkflowEngine()->getEventChannelFor(Definition::SERVICE_WORKFLOW_PROCESSOR);
 
-        $this->assertInstanceOf('Prooph\ServiceBus\EventBus', $eventBus);
+        $this->assertInstanceOf(\Prooph\ServiceBus\EventBus::class, $eventBus);
     }
 
     /**
@@ -68,10 +71,9 @@ class ServicesAwareWorkflowEngineTest extends TestCase
     {
         $env = Environment::setUp();
 
-        $eventBus = $env->getWorkflowEngine()->getEventChannelFor(Definition::SERVICE_WORKFLOW_PROCESSOR);
         $localBus = $env->getWorkflowEngine()->getEventChannelFor(null);
 
-        $this->assertSame($eventBus, $localBus);
+        $this->assertInstanceOf(\Prooph\ServiceBus\EventBus::class, $localBus);
     }
 
     /**

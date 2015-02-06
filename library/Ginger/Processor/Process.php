@@ -290,7 +290,7 @@ abstract class Process extends AggregateRoot
         $workflowMessage->connectToProcessTask($taskListPosition);
 
         try {
-            $workflowEngine->getCommandChannelFor($collectData->source())->dispatch($workflowMessage);
+            $workflowEngine->dispatch($workflowMessage);
         } catch (CommandDispatchException $ex) {
             $this->receiveMessage(LogMessage::logException($ex->getPrevious(), $workflowMessage), $workflowEngine);
         } catch (\Exception $ex) {

@@ -105,14 +105,10 @@ class RegistryWorkflowEngine extends AbstractWorkflowEngine
     }
 
     /**
-     * @param string|null $target
-     * @return CommandBus
-     * @throws \RuntimeException
+     * @inheritdoc
      */
-    public function getCommandChannelFor($target)
+    public function getCommandChannelFor($target, $origin = null, $sender = null)
     {
-        if (is_null($target)) $target = self::LOCAL_CHANNEL;
-
         Assertion::string($target);
 
         if (! isset($this->commandBusMap[$target])) {
@@ -126,11 +122,9 @@ class RegistryWorkflowEngine extends AbstractWorkflowEngine
     }
 
     /**
-     * @param null|string $target
-     * @return EventBus
-     * @throws \RuntimeException
+     * @inheritdoc
      */
-    public function getEventChannelFor($target)
+    public function getEventChannelFor($target, $origin = null, $sender = null)
     {
         if (is_null($target)) $target = self::LOCAL_CHANNEL;
 

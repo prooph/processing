@@ -28,37 +28,17 @@ use Zend\EventManager\ListenerAggregateInterface;
 interface WorkflowEngine
 {
     /**
-     * The workflow engine automatically detects the change channel for the message.
+     * The workflow engine automatically detects the channel for a message.
      *
-     * It uses GingerMessage::target() to detect the right channel.
-     * If GingerMessage::target() returns null the "local" channel is used to dispatch the message.
+     * It uses GingerMessage::origin(), GingerMessage::target() and optionally the $sender to detect the right channel.
      * If a service bus message is given the workflow engine translates it to a ginger message first.
      * If translation is not possible it should throw a InvalidArgumentException
      *
      * @param MessageInterface|GingerMessage $message
+     * @param null|string $sender
      * @return void
-     * @throws \InvalidArgumentException
      */
-    public function dispatch($message);
-
-    /**
-     * If target is null, the local channel is returned
-     *
-     * @param null|string $target
-     * @return CommandBus
-     * @throws \RuntimeException
-     */
-    public function getCommandChannelFor($target);
-
-
-    /**
-     * If target is null, the local channel is returned
-     *
-     * @param null|string $target
-     * @return EventBus
-     * @throws \RuntimeException
-     */
-    public function getEventChannelFor($target);
+    public function dispatch($message, $sender = null);
 
     /**
      * @param ListenerAggregateInterface $plugin

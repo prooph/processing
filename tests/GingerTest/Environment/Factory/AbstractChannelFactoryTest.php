@@ -16,6 +16,10 @@ use Ginger\Environment\Factory\AbstractChannelFactory;
 use Ginger\Message\WorkflowMessage;
 use Ginger\Processor\Definition;
 use Ginger\Processor\NodeName;
+use GingerTest\Mock\ChannelPlugin\TargetAndOriginChannelPlugin;
+use GingerTest\Mock\ChannelPlugin\TargetAndSenderChannelPlugin;
+use GingerTest\Mock\ChannelPlugin\TargetChannelPlugin;
+use GingerTest\Mock\ChannelPlugin\TargetOriginAndSenderChannelPlugin;
 use GingerTest\Mock\SimpleBusPlugin;
 use GingerTest\Mock\StupidMessageDispatcher;
 use GingerTest\Mock\StupidWorkflowProcessorMock;
@@ -194,6 +198,527 @@ class AbstractChannelFactoryTest extends TestCase
         $commandBus->dispatch($message);
 
         $this->assertSame($message, $messageHandler->lastWorkflowMessage());
+    }
+
+    /**
+     * @test
+     */
+    public function it_selects_the_target_channel_even_when_origin_and_sender_do_not_match()
+    {
+        $targetChannelPlugin = new TargetChannelPlugin();
+
+        $serviceLocator = new ServiceManager();
+
+        $serviceLocator->setService('target_channel_plugin', $targetChannelPlugin);
+
+        $serviceLocator->setService('configuration', [
+            'ginger' => [
+                'channels' => [
+                    'target_channel' => [
+                        'targets' => [
+                            'my_target'
+                        ],
+                        'utils' => [
+                            'target_channel_plugin'
+                        ]
+                    ]
+                ]
+            ]
+        ]);
+
+        $env = Environment::setUp($serviceLocator);
+
+        $channel = $env->services()->get('ginger.command_bus.my_target:::a_origin:::a_sender');
+
+        $this->assertInstanceOf(\Prooph\ServiceBus\CommandBus::class, $channel);
+
+        $this->assertTrue($targetChannelPlugin->isRegistered());
+    }
+
+    /**
+     * @test
+     */
+    public function it_selects_the_default_channel_because_origin_is_not_given()
+    {
+        $targetChannelPlugin = new TargetChannelPlugin();
+
+        $serviceLocator = new ServiceManager();
+
+        $serviceLocator->setService('target_channel_plugin', $targetChannelPlugin);
+
+        $serviceLocator->setService('configuration', [
+            'ginger' => [
+                'channels' => [
+                    'target_channel' => [
+                        'targets' => [
+                            'my_target'
+                        ],
+                        'origin' => 'required_origin',
+                        'utils' => [
+                            'target_channel_plugin'
+                        ]
+                    ]
+                ]
+            ]
+        ]);
+
+        $env = Environment::setUp($serviceLocator);
+
+        $channel = $env->services()->get('ginger.command_bus.my_target');
+
+        $this->assertInstanceOf(\Prooph\ServiceBus\CommandBus::class, $channel);
+
+        $this->assertFalse($targetChannelPlugin->isRegistered());
+    }
+
+    /**
+     * @test
+     */
+    public function it_selects_the_target_and_origin_channel()
+    {
+        $targetChannelPlugin = new TargetChannelPlugin();
+
+        $targetAndOriginPlugin = new TargetAndOriginChannelPlugin();
+
+        $serviceLocator = new ServiceManager();
+
+        $serviceLocator->setService('target_channel_plugin', $targetChannelPlugin);
+        $serviceLocator->setService('target_and_origin_channel_plugin', $targetAndOriginPlugin);
+
+        $serviceLocator->setService('configuration', [
+            'ginger' => [
+                'channels' => [
+                    'target_channel' => [
+                        'targets' => [
+                            'my_target'
+                        ],
+                        'utils' => [
+                            'target_channel_plugin'
+                        ]
+                    ],
+                    'target_and_origin_channel' => [
+                        'targets' => [
+                            'my_target'
+                        ],
+                        'origin' => 'my_origin',
+                        'utils' => [
+                            'target_and_origin_channel_plugin'
+                        ]
+                    ]
+                ]
+            ]
+        ]);
+
+        $env = Environment::setUp($serviceLocator);
+
+        $channel = $env->services()->get('ginger.command_bus.my_target:::my_origin');
+
+        $this->assertInstanceOf(\Prooph\ServiceBus\CommandBus::class, $channel);
+
+        $this->assertFalse($targetChannelPlugin->isRegistered());
+        $this->assertTrue($targetAndOriginPlugin->isRegistered());
+    }
+
+    /**
+     * @test
+     */
+    public function it_selects_the_target_channel_because_origin_criteria_does_not_match_but_is_not_set_for_target_channel()
+    {
+        $targetChannelPlugin = new TargetChannelPlugin();
+
+        $targetAndOriginPlugin = new TargetAndOriginChannelPlugin();
+
+        $serviceLocator = new ServiceManager();
+
+        $serviceLocator->setService('target_channel_plugin', $targetChannelPlugin);
+        $serviceLocator->setService('target_and_origin_channel_plugin', $targetAndOriginPlugin);
+
+        $serviceLocator->setService('configuration', [
+            'ginger' => [
+                'channels' => [
+                    'target_channel' => [
+                        'targets' => [
+                            'my_target'
+                        ],
+                        'utils' => [
+                            'target_channel_plugin'
+                        ]
+                    ],
+                    'target_and_origin_channel' => [
+                        'targets' => [
+                            'my_target'
+                        ],
+                        'origin' => 'another_origin',
+                        'utils' => [
+                            'target_and_origin_channel_plugin'
+                        ]
+                    ]
+                ]
+            ]
+        ]);
+
+        $env = Environment::setUp($serviceLocator);
+
+        $channel = $env->services()->get('ginger.command_bus.my_target:::my_origin');
+
+        $this->assertInstanceOf(\Prooph\ServiceBus\CommandBus::class, $channel);
+
+        $this->assertTrue($targetChannelPlugin->isRegistered());
+        $this->assertFalse($targetAndOriginPlugin->isRegistered());
+    }
+
+    /**
+     * @test
+     */
+    public function it_selects_the_target_and_sender_channel_by_using_the_origin_as_sender()
+    {
+        $targetChannelPlugin = new TargetChannelPlugin();
+
+        $targetAndSenderPlugin = new TargetAndSenderChannelPlugin();
+
+        $serviceLocator = new ServiceManager();
+
+        $serviceLocator->setService('target_channel_plugin', $targetChannelPlugin);
+        $serviceLocator->setService('target_and_sender_channel_plugin', $targetAndSenderPlugin);
+
+        $serviceLocator->setService('configuration', [
+            'ginger' => [
+                'channels' => [
+                    'target_channel' => [
+                        'targets' => [
+                            'my_target'
+                        ],
+                        'utils' => [
+                            'target_channel_plugin'
+                        ]
+                    ],
+                    'target_and_sender_channel' => [
+                        'targets' => [
+                            'my_target'
+                        ],
+                        'sender' => 'my_sender',
+                        'utils' => [
+                            'target_and_sender_channel_plugin'
+                        ]
+                    ]
+                ]
+            ]
+        ]);
+
+        $env = Environment::setUp($serviceLocator);
+
+        $channel = $env->services()->get('ginger.command_bus.my_target:::my_sender');
+
+        $this->assertInstanceOf(\Prooph\ServiceBus\CommandBus::class, $channel);
+
+        $this->assertFalse($targetChannelPlugin->isRegistered());
+        $this->assertTrue($targetAndSenderPlugin->isRegistered());
+    }
+
+    /**
+     * @test
+     */
+    public function it_selects_the_target_and_sender_channel()
+    {
+        $targetChannelPlugin = new TargetChannelPlugin();
+
+        $targetAndSenderPlugin = new TargetAndSenderChannelPlugin();
+
+        $serviceLocator = new ServiceManager();
+
+        $serviceLocator->setService('target_channel_plugin', $targetChannelPlugin);
+        $serviceLocator->setService('target_and_sender_channel_plugin', $targetAndSenderPlugin);
+
+        $serviceLocator->setService('configuration', [
+            'ginger' => [
+                'channels' => [
+                    'target_channel' => [
+                        'targets' => [
+                            'my_target'
+                        ],
+                        'utils' => [
+                            'target_channel_plugin'
+                        ]
+                    ],
+                    'target_and_sender_channel' => [
+                        'targets' => [
+                            'my_target'
+                        ],
+                        'sender' => 'my_sender',
+                        'utils' => [
+                            'target_and_sender_channel_plugin'
+                        ]
+                    ]
+                ]
+            ]
+        ]);
+
+        $env = Environment::setUp($serviceLocator);
+
+        $channel = $env->services()->get('ginger.command_bus.my_target:::my_origin:::my_sender');
+
+        $this->assertInstanceOf(\Prooph\ServiceBus\CommandBus::class, $channel);
+
+        $this->assertFalse($targetChannelPlugin->isRegistered());
+        $this->assertTrue($targetAndSenderPlugin->isRegistered());
+    }
+
+    /**
+     * @test
+     */
+    public function it_selects_the_target_channel_because_sender_criteria_does_not_match_but_is_not_set_for_target_channel()
+    {
+        $targetChannelPlugin = new TargetChannelPlugin();
+
+        $targetAndSenderPlugin = new TargetAndSenderChannelPlugin();
+
+        $serviceLocator = new ServiceManager();
+
+        $serviceLocator->setService('target_channel_plugin', $targetChannelPlugin);
+        $serviceLocator->setService('target_and_sender_channel_plugin', $targetAndSenderPlugin);
+
+        $serviceLocator->setService('configuration', [
+            'ginger' => [
+                'channels' => [
+                    'target_channel' => [
+                        'targets' => [
+                            'my_target'
+                        ],
+                        'utils' => [
+                            'target_channel_plugin'
+                        ]
+                    ],
+                    'target_and_origin_channel' => [
+                        'targets' => [
+                            'my_target'
+                        ],
+                        'sender' => 'another_sender',
+                        'utils' => [
+                            'target_and_sender_channel_plugin'
+                        ]
+                    ]
+                ]
+            ]
+        ]);
+
+        $env = Environment::setUp($serviceLocator);
+
+        $channel = $env->services()->get('ginger.command_bus.my_target:::my_origin');
+
+        $this->assertInstanceOf(\Prooph\ServiceBus\CommandBus::class, $channel);
+
+        $this->assertTrue($targetChannelPlugin->isRegistered());
+        $this->assertFalse($targetAndSenderPlugin->isRegistered());
+    }
+
+    /**
+     * @test
+     */
+    public function it_selects_local_channel_because_no_criteria_combination_matches()
+    {
+        $targetChannelPlugin = new TargetChannelPlugin();
+
+        $targetAndOriginPlugin = new TargetAndOriginChannelPlugin();
+
+        $targetAndSenderPlugin = new TargetAndSenderChannelPlugin();
+
+        $serviceLocator = new ServiceManager();
+
+        $serviceLocator->setService('target_channel_plugin', $targetChannelPlugin);
+        $serviceLocator->setService('target_and_origin_channel_plugin', $targetAndOriginPlugin);
+        $serviceLocator->setService('target_and_sender_channel_plugin', $targetAndSenderPlugin);
+
+        $serviceLocator->setService('configuration', [
+            'ginger' => [
+                'channels' => [
+                    'target_and_origin_channel' => [
+                        'targets' => [
+                            'my_target'
+                        ],
+                        'origin' => 'my_origin',
+                        'sender' => 'another_sender',
+                        'utils' => [
+                            'target_and_origin_channel_plugin'
+                        ]
+                    ],
+                    'target_and_sender_channel' => [
+                        'targets' => [
+                            'my_target'
+                        ],
+                        'origin' => 'another_origin',
+                        'sender' => 'my_sender',
+                        'utils' => [
+                            'target_and_sender_channel_plugin'
+                        ]
+                    ],
+                    'local' => [
+                        'utils' => [
+                            'target_channel_plugin'
+                        ]
+                    ]
+                ]
+            ]
+        ]);
+
+        $env = Environment::setUp($serviceLocator);
+
+        $channel = $env->services()->get('ginger.command_bus.my_target:::my_origin:::my_sender');
+
+        $this->assertInstanceOf(\Prooph\ServiceBus\CommandBus::class, $channel);
+
+        $this->assertFalse($targetAndOriginPlugin->isRegistered());
+        $this->assertFalse($targetAndSenderPlugin->isRegistered());
+        $this->assertTrue($targetChannelPlugin->isRegistered());
+    }
+
+    /**
+     * @test
+     */
+    public function it_selects_the_channel_with_the_best_match()
+    {
+        $targetChannelPlugin = new TargetChannelPlugin();
+
+        $targetAndOriginPlugin = new TargetAndOriginChannelPlugin();
+
+        $targetAndSenderPlugin = new TargetAndSenderChannelPlugin();
+
+        $targetOriginAndSenderPlugin = new TargetOriginAndSenderChannelPlugin();
+
+        $serviceLocator = new ServiceManager();
+
+        $serviceLocator->setService('target_channel_plugin', $targetChannelPlugin);
+        $serviceLocator->setService('target_and_origin_channel_plugin', $targetAndOriginPlugin);
+        $serviceLocator->setService('target_and_sender_channel_plugin', $targetAndSenderPlugin);
+        $serviceLocator->setService('target_origin_and_sender_channel_plugin', $targetOriginAndSenderPlugin);
+
+        $serviceLocator->setService('configuration', [
+            'ginger' => [
+                'channels' => [
+                    'target_channel' => [
+                        'targets' => [
+                            'my_target'
+                        ],
+                        'utils' => [
+                            'target_channel_plugin'
+                        ]
+                    ],
+                    'target_and_origin_channel' => [
+                        'targets' => [
+                            'my_target'
+                        ],
+                        'origin' => 'my_origin',
+                        'utils' => [
+                            'target_and_origin_channel_plugin'
+                        ]
+                    ],
+                    'target_and_sender_channel' => [
+                        'targets' => [
+                            'my_target'
+                        ],
+                        'sender' => 'my_sender',
+                        'utils' => [
+                            'target_and_sender_channel_plugin'
+                        ]
+                    ],
+                    'target_origin_and_sender_channel' => [
+                        'targets' => [
+                            'my_target'
+                        ],
+                        'origin' => 'my_origin',
+                        'sender' => 'my_sender',
+                        'utils' => [
+                            'target_origin_and_sender_channel_plugin'
+                        ]
+                    ],
+                ]
+            ]
+        ]);
+
+        $env = Environment::setUp($serviceLocator);
+
+        $channel = $env->services()->get('ginger.command_bus.my_target:::my_origin:::my_sender');
+
+        $this->assertInstanceOf(\Prooph\ServiceBus\CommandBus::class, $channel);
+
+        $this->assertFalse($targetAndOriginPlugin->isRegistered());
+        $this->assertFalse($targetAndSenderPlugin->isRegistered());
+        $this->assertFalse($targetChannelPlugin->isRegistered());
+        $this->assertTrue($targetOriginAndSenderPlugin->isRegistered());
+    }
+
+    /**
+     * @test
+     */
+    public function it_selects_the_local_channel_because_target_is_in_no_list()
+    {
+        $targetChannelPlugin = new TargetChannelPlugin();
+
+        $targetAndOriginPlugin = new TargetAndOriginChannelPlugin();
+
+        $targetAndSenderPlugin = new TargetAndSenderChannelPlugin();
+
+        $targetOriginAndSenderPlugin = new TargetOriginAndSenderChannelPlugin();
+
+        $serviceLocator = new ServiceManager();
+
+        $serviceLocator->setService('target_channel_plugin', $targetChannelPlugin);
+        $serviceLocator->setService('target_and_origin_channel_plugin', $targetAndOriginPlugin);
+        $serviceLocator->setService('target_and_sender_channel_plugin', $targetAndSenderPlugin);
+        $serviceLocator->setService('target_origin_and_sender_channel_plugin', $targetOriginAndSenderPlugin);
+
+        $serviceLocator->setService('configuration', [
+            'ginger' => [
+                'channels' => [
+                    'target_channel' => [
+                        'targets' => [
+                            'another_target'
+                        ],
+                        'utils' => [
+                            'target_channel_plugin'
+                        ]
+                    ],
+                    'target_and_origin_channel' => [
+                        'targets' => [
+                            'another_target'
+                        ],
+                        'origin' => 'my_origin',
+                        'utils' => [
+                            'target_and_origin_channel_plugin'
+                        ]
+                    ],
+                    'target_and_sender_channel' => [
+                        'targets' => [
+                            'another_target'
+                        ],
+                        'sender' => 'my_sender',
+                        'utils' => [
+                            'target_and_sender_channel_plugin'
+                        ]
+                    ],
+                    'target_origin_and_sender_channel' => [
+                        'targets' => [
+                            'another_target'
+                        ],
+                        'origin' => 'my_origin',
+                        'sender' => 'my_sender',
+                        'utils' => [
+                            'target_origin_and_sender_channel_plugin'
+                        ]
+                    ],
+                ]
+            ]
+        ]);
+
+        $env = Environment::setUp($serviceLocator);
+
+        $channel = $env->services()->get('ginger.command_bus.my_target:::my_origin:::my_sender');
+
+        $this->assertInstanceOf(\Prooph\ServiceBus\CommandBus::class, $channel);
+
+        $this->assertFalse($targetAndOriginPlugin->isRegistered());
+        $this->assertFalse($targetAndSenderPlugin->isRegistered());
+        $this->assertFalse($targetChannelPlugin->isRegistered());
+        $this->assertFalse($targetOriginAndSenderPlugin->isRegistered());
     }
 }
  

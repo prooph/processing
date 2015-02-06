@@ -38,18 +38,33 @@ abstract class AbstractWorkflowEngine implements WorkflowEngine
     private $toGingerMessageTranslator = null;
 
     /**
-     * The workflow engine automatically detects the change channel for the message.
+     * Return command channel for given parameters
      *
-     * It uses GingerMessage::target() to detect the right channel.
-     * If GingerMessage::target() returns null the "local" channel is used to dispatch the message.
-     * If a service bus message is given the workflow engine translates it to a ginger message first.
-     * If translation is not possible it should throw a InvalidArgumentException
+     * If multiple channels match, the one with the highest match or highest priority should be returned.
      *
-     * @param MessageInterface|GingerMessage $message
-     * @return void
-     * @throws \InvalidArgumentException
+     * @param string $target
+     * @param null|string $origin
+     * @param null|string $sender
+     * @return mixed
      */
-    public function dispatch($message)
+    abstract public function getCommandChannelFor($target, $origin = null, $sender = null);
+
+    /**
+     * Return event channel for given parameters
+     *
+     * If multiple channels match, the one with the highest match or highest priority should be returned.
+     *
+     * @param string $target
+     * @param null|string $origin
+     * @param null|string $sender
+     * @return mixed
+     */
+    abstract public function getEventChannelFor($target, $origin = null, $sender = null);
+
+    /**
+     * @inheritdoc
+     */
+    public function dispatch($message, $sender = null)
     {
         if ($message instanceof MessageInterface) {
             $message = $this->getToGingerMessageTranslator()->translateToGingerMessage($message);
@@ -70,7 +85,7 @@ abstract class AbstractWorkflowEngine implements WorkflowEngine
         }
 
         /** @var $channelBus CommandBus|EventBus */
-        $channelBus = $this->{$channelGetter}($message->target());
+        $channelBus = $this->{$channelGetter}($message->target(), $message->origin(), $sender);
 
         $channelBus->dispatch($message);
     }

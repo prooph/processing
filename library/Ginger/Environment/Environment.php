@@ -46,16 +46,16 @@ class Environment
     private static $defaultServicesConfig = [
         'factories' => [
             //Ginger specific services
-            Definition::SERVICE_WORKFLOW_PROCESSOR       => 'Ginger\Environment\Factory\WorkflowProcessorFactory',
-            Definition::SERVICE_PROCESS_FACTORY          => 'Ginger\Environment\Factory\ProcessFactoryFactory',
-            Definition::SERVICE_PROCESS_REPOSITORY       => 'Ginger\Environment\Factory\ProcessRepositoryFactory',
+            Definition::SERVICE_WORKFLOW_PROCESSOR       => Factory\WorkflowProcessorFactory::class,
+            Definition::SERVICE_PROCESS_FACTORY          => Factory\ProcessFactoryFactory::class,
+            Definition::SERVICE_PROCESS_REPOSITORY       => Factory\ProcessRepositoryFactory::class,
 
             //ProophEventStore section
-            'prooph.event_store' => 'Ginger\Environment\Factory\EventStoreFactory',
+            'prooph.event_store' => Factory\EventStoreFactory::class,
         ],
         'abstract_factories' => [
             //ProophServiceBus section
-            'Ginger\Environment\Factory\AbstractServiceBusFactory'
+            Factory\AbstractChannelFactory::class
         ],
     ];
 
@@ -72,19 +72,25 @@ class Environment
             'channels' => [
                 //You can provide different configurations for channels responsible for different targets
                 //A channel is automatically split into a command bus and an event bus and some standard utilities are attached to
-                //each bus {@see Ginger\Environment\Factory\AbstractServiceBusFactory} for details
+                //each bus {@see Ginger\Environment\Factory\AbstractChannelFactory} for details
                 'local' => [
                     'targets' => [
                         //List of targets for which the channel is responsible for
                         //Note: The Environment sets the defined node name as target for the local channel in the set up routine
                         //'target_1_alias', 'target_2_alias', ...
                     ],
+                    'utils' => [
+                        //List of additional channel or ProophServiceBus plugins, can be aliases resolvable by the ServiceManager
+                    ],
                     //Set the alias of a message dispatcher that dispatches all messages send over the channel to a remote system
                     //This is an optional config, because it is only required for remote channels
                     //'message_dispatcher' => 'alias_of_message_dispatcher',
-                    'utils' => [
-                        //List of additional channel or ProophServiceBus plugins, can be aliases resolvable by the ServiceManager
-                    ]
+
+                    //Optional filter criteria. If it is present it needs to match so that the workflow engine selects
+                    //this channel. The origin is provided by the ginger message and the sender
+                    //can be given as optional argument to the WorkflowEngine::dispatch() method
+                    //'origin' => '<unique name of origin>',
+                    //'sender' => '<unique name of sender>',
                 ],
             ],
         ],
