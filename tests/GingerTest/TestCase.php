@@ -268,7 +268,7 @@ class TestCase extends \PHPUnit_Framework_TestCase
 
         $user = UserDictionary::fromNativeValue($userData);
 
-        return WorkflowMessage::newDataCollected($user);
+        return WorkflowMessage::newDataCollected($user, 'test-case', NodeName::defaultName()->toString());
     }
 
     /**

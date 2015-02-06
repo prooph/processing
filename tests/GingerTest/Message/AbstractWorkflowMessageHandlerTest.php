@@ -78,7 +78,7 @@ final class AbstractWorkflowMessageHandlerTest extends TestCase
     {
         $taskListPosition = TaskListPosition::at(TaskListId::linkWith(NodeName::defaultName(), ProcessId::generate()), 2);
 
-        $wfMessage = WorkflowMessage::collectDataOf(UserDictionary::prototype());
+        $wfMessage = WorkflowMessage::collectDataOf(UserDictionary::prototype(), 'test-case', NodeName::defaultName());
 
         $wfMessage->connectToProcessTask($taskListPosition);
 
@@ -105,11 +105,11 @@ final class AbstractWorkflowMessageHandlerTest extends TestCase
                 'zip' => '12345',
                 'city' => 'Test City'
             ]
-        ]));
+        ]), 'test-case', NodeName::defaultName());
 
         $wfMessage->connectToProcessTask($taskListPosition);
 
-        $wfMessage = $wfMessage->prepareDataProcessing($taskListPosition);
+        $wfMessage = $wfMessage->prepareDataProcessing($taskListPosition, 'message-handler');
 
         $this->workflowMessageHandler->handleWorkflowMessage($wfMessage);
 

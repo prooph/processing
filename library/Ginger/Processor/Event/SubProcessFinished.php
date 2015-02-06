@@ -76,6 +76,16 @@ class SubProcessFinished extends Event implements GingerMessage
     }
 
     /**
+     * The origin of a sub process finished event is always the sub processor node name.
+     *
+     * @return string
+     */
+    public function origin()
+    {
+        return $this->payload['processor_node_name'];
+    }
+
+    /**
      * Target of the sub process finished event is always the parent processor
      *
      * @return null|string

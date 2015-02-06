@@ -28,12 +28,14 @@ use Zend\ServiceManager\AbstractFactoryInterface;
 use Zend\ServiceManager\ServiceLocatorInterface;
 
 /**
- * Class AbstractServiceBusFactory
+ * Class AbstractChannelFactory
+ *
+ * This class is the fallback factory for channels
  *
  * @package Ginger\Environment\Factory
  * @author Alexander Miertsch <kontakt@codeliner.ws>
  */
-class AbstractServiceBusFactory implements AbstractFactoryInterface
+class AbstractChannelFactory implements AbstractFactoryInterface
 {
 
     private $handleWorkflowMessageStrategy;

@@ -13,6 +13,7 @@ namespace GingerTest\Message\Service;
 
 use Ginger\Message\ProophPlugin\HandleWorkflowMessageInvokeStrategy;
 use Ginger\Message\WorkflowMessage;
+use Ginger\Processor\NodeName;
 use GingerTest\TestCase;
 use GingerTest\Mock\TestWorkflowMessageHandler;
 use GingerTest\Mock\UserDictionary;
@@ -44,7 +45,7 @@ class HandleWorkflowMessageInvokeStrategyTest extends TestCase
      */
     public function it_invokes_ginger_command_on_workflow_message_handler()
     {
-        $wfCommand = WorkflowMessage::collectDataOf(UserDictionary::prototype());
+        $wfCommand = WorkflowMessage::collectDataOf(UserDictionary::prototype(), 'test-case', NodeName::defaultName());
 
         $commandBus = new CommandBus();
 
@@ -79,7 +80,7 @@ class HandleWorkflowMessageInvokeStrategyTest extends TestCase
 
         $user = UserDictionary::fromNativeValue($userData);
 
-        $wfEvent = WorkflowMessage::newDataCollected($user);
+        $wfEvent = WorkflowMessage::newDataCollected($user, 'test-case', NodeName::defaultName());
 
         $eventBus = new EventBus();
 

@@ -252,14 +252,14 @@ class WorkflowProcessor
                 $this->informParentProcessAboutSubProcess($process, true, $lastAnswer);
             } else {
                 if (! $lastAnswer instanceof LogMessage) {
-                    $lastAnswer = LogMessage::logErrorMsg(
-                        "Sub process failed but last message was not a LogMessage",
+                    $lastAnswer = LogMessage::logException(
+                        new \RuntimeException("Sub process failed but last message was not a LogMessage"),
                         $process->parentTaskListPosition()
                     );
                 }
 
                 if (! $lastAnswer->isError()) {
-                    $lastAnswer = LogMessage::logErrorMsg($lastAnswer->technicalMsg(), $lastAnswer->processTaskListPosition());
+                    $lastAnswer = LogMessage::logErrorMsg($lastAnswer->technicalMsg(), $lastAnswer);
                 }
 
                 $this->informParentProcessAboutSubProcess($process, false, $lastAnswer);

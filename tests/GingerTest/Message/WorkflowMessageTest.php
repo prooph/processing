@@ -34,7 +34,12 @@ class WorkflowMessageTest extends TestCase
      */
     public function it_constructs_a_collect_data_of_prototype_command()
     {
-        $wfMessage = WorkflowMessage::collectDataOf(UserDictionary::prototype(), array('metadata' => true), NodeName::defaultName()->toString());
+        $wfMessage = WorkflowMessage::collectDataOf(
+            UserDictionary::prototype(),
+            'test-case',
+            NodeName::defaultName()->toString(),
+            array('metadata' => true)
+        );
 
         $this->assertInstanceOf('Ginger\Message\WorkflowMessage', $wfMessage);
 
@@ -46,6 +51,7 @@ class WorkflowMessageTest extends TestCase
         $this->assertNull($wfMessage->payload()->extractTypeData());
         $this->assertEquals(array('metadata' => true), $wfMessage->metadata());
         $this->assertEquals(MessageNameUtils::COLLECT_DATA, $wfMessage->messageType());
+        $this->assertEquals('test-case', $wfMessage->origin());
         $this->assertEquals(NodeName::defaultName()->toString(), $wfMessage->target());
     }
 
@@ -67,7 +73,12 @@ class WorkflowMessageTest extends TestCase
 
         $user = UserDictionary::fromNativeValue($userData);
 
-        $wfMessage = WorkflowMessage::newDataCollected($user, array('metadata' => true), NodeName::defaultName()->toString());
+        $wfMessage = WorkflowMessage::newDataCollected(
+            $user,
+            'test-case',
+            NodeName::defaultName()->toString(),
+            array('metadata' => true)
+        );
 
         $this->assertInstanceOf('Ginger\Message\WorkflowMessage', $wfMessage);
 
@@ -79,6 +90,7 @@ class WorkflowMessageTest extends TestCase
         $this->assertEquals($userData, $wfMessage->payload()->extractTypeData());
         $this->assertEquals(array('metadata' => true), $wfMessage->metadata());
         $this->assertEquals(MessageNameUtils::DATA_COLLECTED, $wfMessage->messageType());
+        $this->assertEquals('test-case', $wfMessage->origin());
         $this->assertEquals(NodeName::defaultName()->toString(), $wfMessage->target());
     }
 
@@ -87,7 +99,7 @@ class WorkflowMessageTest extends TestCase
      */
     public function it_transforms_a_collect_data_command_to_data_collected_event()
     {
-        $wfMessage = WorkflowMessage::collectDataOf(UserDictionary::prototype(), array('metadata' => true), 'user-data-connector');
+        $wfMessage = WorkflowMessage::collectDataOf(UserDictionary::prototype(), 'test-case', 'user-data-connector', array('metadata' => true));
 
         $wfMessage->connectToProcessTask(TaskListPosition::at(TaskListId::linkWith(NodeName::defaultName(), ProcessId::generate()), 1));
 
@@ -122,10 +134,12 @@ class WorkflowMessageTest extends TestCase
 
         $this->assertEquals(array('metadata' => true, 'success' => true), $wfAnswer->metadata());
 
+        $this->assertEquals('test-case', $wfMessage->origin());
         $this->assertEquals('user-data-connector', $wfMessage->target());
 
-        //Target of answer was not set so the target should default to node name passed to TaskListId
-        $this->assertEquals(NodeName::defaultName()->toString(), $wfAnswer->target());
+        //For the answer origin and target should be switched
+        $this->assertEquals('user-data-connector', $wfAnswer->origin());
+        $this->assertEquals('test-case', $wfAnswer->target());
     }
 
     /**
@@ -133,7 +147,11 @@ class WorkflowMessageTest extends TestCase
      */
     public function it_throws_invalid_type_exception_if_answer_type_does_not_match_with_requested_type()
     {
-        $wfMessage = WorkflowMessage::collectDataOf(UserDictionary::prototype());
+        $wfMessage = WorkflowMessage::collectDataOf(
+            UserDictionary::prototype(),
+            'test-case',
+            'message-handler'
+        );
 
         $address = AddressDictionary::fromNativeValue(array(
             'street' => 'Main Street',
@@ -165,11 +183,20 @@ class WorkflowMessageTest extends TestCase
 
         $user = UserDictionary::fromNativeValue($userData);
 
-        $wfMessage = WorkflowMessage::newDataCollected($user, array('metadata' => true));
+        $wfMessage = WorkflowMessage::newDataCollected(
+            $user,
+            'test-case',
+            NodeName::defaultName()->toString(),
+            array('metadata' => true)
+        );
 
         $taskListPosition = TaskListPosition::at(TaskListId::linkWith(NodeName::defaultName(), ProcessId::generate()), 1);
 
-        $wfCommand = $wfMessage->prepareDataProcessing($taskListPosition, array('count' => 1), 'user-data-processor');
+        $wfCommand = $wfMessage->prepareDataProcessing(
+            $taskListPosition,
+            'user-data-processor',
+            array('count' => 1)
+        );
 
         $this->assertEquals(
             MessageNameUtils::MESSAGE_NAME_PREFIX . 'gingertestmockuserdictionary-process-data',
@@ -187,6 +214,8 @@ class WorkflowMessageTest extends TestCase
 
         $this->assertEquals(array('metadata' => true, 'count' => 1), $wfCommand->metadata());
 
+        //Old target should become new origin and target should be set as new target
+        $this->assertEquals(NodeName::defaultName()->toString(), $wfCommand->origin());
         $this->assertEquals('user-data-processor', $wfCommand->target());
     }
 
@@ -208,11 +237,20 @@ class WorkflowMessageTest extends TestCase
 
         $user = UserDictionary::fromNativeValue($userData);
 
-        $wfMessage = WorkflowMessage::newDataCollected($user, array('metadata' => true));
+        $wfMessage = WorkflowMessage::newDataCollected(
+            $user,
+            'test-case',
+            NodeName::defaultName()->toString(),
+            array('metadata' => true)
+        );
 
         $taskListPosition = TaskListPosition::at(TaskListId::linkWith(NodeName::defaultName(), ProcessId::generate()), 1);
 
-        $wfCommand = $wfMessage->prepareDataProcessing($taskListPosition, array('prepared' => true), 'user-data-processor');
+        $wfCommand = $wfMessage->prepareDataProcessing(
+            $taskListPosition,
+            'user-data-processor',
+            array('prepared' => true)
+        );
 
         $wfAnswer = $wfCommand->answerWithDataProcessingCompleted(array('processed' => true));
 
@@ -234,7 +272,10 @@ class WorkflowMessageTest extends TestCase
 
         $this->assertEquals(array('metadata' => true, 'prepared' => true, 'processed' => true), $wfAnswer->metadata());
 
+        //Target of the new-data-collected event, should also be the target of the answer of the process-data command
         $this->assertEquals(NodeName::defaultName()->toString(), $wfAnswer->target());
+        //Origin of the answer should be the addressed message handler
+        $this->assertEquals('user-data-processor', $wfAnswer->origin());
     }
 
     /**
@@ -255,7 +296,7 @@ class WorkflowMessageTest extends TestCase
 
         $user = UserDictionary::fromNativeValue($userData);
 
-        $wfMessage = WorkflowMessage::newDataCollected($user);
+        $wfMessage = WorkflowMessage::newDataCollected($user, 'test-case', NodeName::defaultName()->toString());
 
         $wfMessage->changeGingerType('GingerTest\Mock\TargetUserDictionary');
 
@@ -272,7 +313,12 @@ class WorkflowMessageTest extends TestCase
      */
     public function it_translates_itself_to_service_bus_message_and_back()
     {
-        $wfMessage = WorkflowMessage::collectDataOf(UserDictionary::prototype(), array('metadata' => true), NodeName::defaultName()->toString());
+        $wfMessage = WorkflowMessage::collectDataOf(
+            UserDictionary::prototype(),
+            'test-case',
+            NodeName::defaultName()->toString(),
+            array('metadata' => true)
+        );
 
         $sbMessage = $wfMessage->toServiceBusMessage();
 
@@ -290,6 +336,7 @@ class WorkflowMessageTest extends TestCase
         $this->assertNull($copyOfWfMessage->payload()->extractTypeData());
         $this->assertEquals(array('metadata' => true), $copyOfWfMessage->metadata());
         $this->assertEquals(MessageNameUtils::COLLECT_DATA, $copyOfWfMessage->messageType());
+        $this->assertEquals('test-case', $copyOfWfMessage->origin());
         $this->assertEquals(NodeName::defaultName()->toString(), $copyOfWfMessage->target());
     }
 }

@@ -41,7 +41,7 @@ class CollectCommand extends AbstractCommand
         try {
             $env = $this->loadEnvironment($route, $consoleWriter);
 
-            $message = WorkflowMessage::collectDataOf($gingerType::prototype());
+            $message = WorkflowMessage::collectDataOf($gingerType::prototype(), __CLASS__, $env->getNodeName());
 
             $consoleWriter->writeInfo('Start workflow with message: ' . $message->getMessageName());
 

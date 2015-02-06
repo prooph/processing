@@ -164,10 +164,14 @@ class TaskListEntryTest extends TestCase
     {
         $taskListEntry = $this->getTestTaskListEntry();
 
+        $wfMessage = $this->getUserDataCollectedTestMessage();
+
+        $wfMessage->connectToProcessTask($taskListEntry->taskListPosition());
+
         $taskListEntry->markAsRunning();
 
-        $taskListEntry->logMessage(LogMessage::logDebugMsg("A debug msg", $taskListEntry->taskListPosition()));
-        $taskListEntry->logMessage(LogMessage::logInfoDataProcessingStarted($taskListEntry->taskListPosition()));
+        $taskListEntry->logMessage(LogMessage::logDebugMsg("A debug msg", $wfMessage));
+        $taskListEntry->logMessage(LogMessage::logInfoDataProcessingStarted($wfMessage));
 
         $arrCopy = $taskListEntry->getArrayCopy();
 
@@ -183,11 +187,15 @@ class TaskListEntryTest extends TestCase
     {
         $taskListEntry = $this->getTestTaskListEntry();
 
-        $info = LogMessage::logInfoDataProcessingStarted($taskListEntry->taskListPosition());
+        $wfMessage = $this->getUserDataCollectedTestMessage();
+
+        $wfMessage->connectToProcessTask($taskListEntry->taskListPosition());
+
+        $info = LogMessage::logInfoDataProcessingStarted($wfMessage);
 
         $taskListEntry->logMessage($info);
 
-        $warning = LogMessage::logWarningMsg("Just a warning", $taskListEntry->taskListPosition());
+        $warning = LogMessage::logWarningMsg("Just a warning", $wfMessage);
 
         $taskListEntry->logMessage($warning);
 

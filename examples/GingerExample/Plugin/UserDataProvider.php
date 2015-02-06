@@ -13,15 +13,11 @@ namespace GingerExample\Plugin;
 
 use Ginger\Environment\Connector;
 use Ginger\Environment\Environment;
-use Ginger\Environment\Plugin;
 use Ginger\Message\AbstractWorkflowMessageHandler;
 use Ginger\Message\GingerMessage;
 use Ginger\Message\LogMessage;
 use Ginger\Message\WorkflowMessage;
-use Ginger\Message\WorkflowMessageHandler;
 use GingerExample\Type\SourceUser;
-use Prooph\ServiceBus\CommandBus;
-use Prooph\ServiceBus\EventBus;
 
 /**
  * Class UserDataProvider
@@ -46,7 +42,7 @@ class UserDataProvider extends AbstractWorkflowMessageHandler implements Connect
             if (! $userData) {
                 return LogMessage::logErrorMsg(
                     "Could not read user data from examples/data/user-source-data.php. Please check the permissions",
-                    $workflowMessage->processTaskListPosition()
+                    $workflowMessage
                 );
             }
 
@@ -57,7 +53,7 @@ class UserDataProvider extends AbstractWorkflowMessageHandler implements Connect
             return LogMessage::logErrorMsg(
                 sprintf(
                     '%s: Unknown type %s received', __CLASS__, $workflowMessage->payload()->getTypeClass()),
-                $workflowMessage->processTaskListPosition()
+                $workflowMessage
             );
         }
     }
@@ -104,6 +100,7 @@ class UserDataProvider extends AbstractWorkflowMessageHandler implements Connect
      *
      * @example: vendor/package:2.*
      *
+     * @throws \BadMethodCallException
      * @return string
      */
     public function getSupportedTypesComposerPackage()

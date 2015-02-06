@@ -54,7 +54,8 @@ class StartSubProcess extends Command implements GingerMessage
             'sync_log_messages' => $syncLogMessages,
             'sub_process_definition' => $processDefinition,
             'previous_message' => $previousMessageArrayOrNull,
-            'target' => $target
+            'origin' => $parentTaskListPosition->taskListId()->nodeName()->toString(),
+            'target' => $target,
         ];
 
         return new self(self::MSG_NAME, $payload);
@@ -66,6 +67,17 @@ class StartSubProcess extends Command implements GingerMessage
     public function messageName()
     {
         return $this->getMessageName();
+    }
+
+    /**
+     * Origin of a start sub process command is always the parent processor node name.
+     * It is set on initialization.
+     *
+     * @return string
+     */
+    public function origin()
+    {
+        return $this->payload['origin'];
     }
 
     /**

@@ -86,7 +86,7 @@ class LinearProcessTest extends TestCase
 
         $process = LinearProcess::setUp(NodeName::defaultName(), [$task]);
 
-        $wfm = WorkflowMessage::collectDataOf(UserDictionary::prototype());
+        $wfm = WorkflowMessage::collectDataOf(UserDictionary::prototype(), NodeName::defaultName(), 'test-handler');
 
         $answer = $wfm->answerWith(UserDictionary::fromNativeValue([
             'id' => 1,
@@ -154,7 +154,7 @@ class LinearProcessTest extends TestCase
 
         $process = LinearProcess::setUp(NodeName::defaultName(), [$task1, $task2]);
 
-        $wfm = WorkflowMessage::collectDataOf(UserDictionary::prototype());
+        $wfm = WorkflowMessage::collectDataOf(UserDictionary::prototype(), NodeName::defaultName(), 'test-case');
 
         $answer1 = $wfm->answerWith(UserDictionary::fromNativeValue([
             'id' => 1,
@@ -172,7 +172,7 @@ class LinearProcessTest extends TestCase
         $taskListPosition = TaskListPosition::at(TaskListId::linkWith(NodeName::defaultName(), ProcessId::generate()), 2);
 
         //Fake follow up task execution
-        $processDataMessage = $answer1->prepareDataProcessing($taskListPosition);
+        $processDataMessage = $answer1->prepareDataProcessing($taskListPosition, 'test-handler');
 
         //Remove TaskListPosition again
         $ref = new \ReflectionClass($processDataMessage);
@@ -227,7 +227,7 @@ class LinearProcessTest extends TestCase
 
         $process = LinearProcess::setUp(NodeName::defaultName(), [$task]);
 
-        $wfm = WorkflowMessage::collectDataOf(UserDictionary::prototype());
+        $wfm = WorkflowMessage::collectDataOf(UserDictionary::prototype(), 'test-case', NodeName::defaultName());
 
         $answer = $wfm->answerWith(UserDictionary::fromNativeValue([
             'id' => 1,
@@ -260,7 +260,7 @@ class LinearProcessTest extends TestCase
 
         $process = LinearProcess::setUp(NodeName::defaultName(), [$task]);
 
-        $wfm = WorkflowMessage::collectDataOf(UserDictionary::prototype());
+        $wfm = WorkflowMessage::collectDataOf(UserDictionary::prototype(), 'test-case', NodeName::defaultName());
 
         $answer = $wfm->answerWith(UserDictionary::fromNativeValue([
             'id' => 1,

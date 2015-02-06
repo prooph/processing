@@ -17,8 +17,8 @@ use Rhumsaa\Uuid\Uuid;
 /**
  * Interface GingerMessage
  *
- * Forces all ginger message to provide target information.
- * With the target the workflow engine can determine the correct channel for message.
+ * Forces all ginger messages to provide some meta information used for routing and logging.
+ * With the origin and target the workflow engine can determine the correct channel for a message.
  *
  * @package Ginger\Message
  * @author Alexander Miertsch <kontakt@codeliner.ws>
@@ -34,12 +34,23 @@ interface GingerMessage extends ServiceBusTranslatableMessage
      * @return string
      */
     public function messageName();
-    
+
     /**
-     * If target is null the workflow engine will use the local channel to send the message to the workflow processor.
+     * The target defines the receiver of the message.
+     * This can either be a workflow message handler
+     * or the workflow processor of a ginger node.
      *
-     * @return null|string
+     * @return string
      */
     public function target();
+
+    /**
+     * The origin defines the component which sent the message.
+     * Like the target this can either be a workflow message handler
+     * or a workflow processor.
+     *
+     * @return string
+     */
+    public function origin();
 }
  

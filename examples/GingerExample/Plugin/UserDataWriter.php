@@ -13,14 +13,10 @@ namespace GingerExample\Plugin;
 
 use Ginger\Environment\Connector;
 use Ginger\Environment\Environment;
-use Ginger\Environment\Plugin;
 use Ginger\Message\AbstractWorkflowMessageHandler;
 use Ginger\Message\GingerMessage;
 use Ginger\Message\LogMessage;
 use Ginger\Message\WorkflowMessage;
-use Ginger\Message\WorkflowMessageHandler;
-use Prooph\ServiceBus\CommandBus;
-use Prooph\ServiceBus\EventBus;
 
 /**
  * Class UserDataWriter
@@ -65,7 +61,7 @@ class UserDataWriter extends AbstractWorkflowMessageHandler implements Connector
                 }
 
             } catch (\Exception $ex) {
-                $answer = \Ginger\Message\LogMessage::logException($ex, $workflowMessage->processTaskListPosition());
+                $answer = \Ginger\Message\LogMessage::logException($ex, $workflowMessage);
             }
 
             return $answer;
@@ -74,7 +70,7 @@ class UserDataWriter extends AbstractWorkflowMessageHandler implements Connector
                 sprintf(
                     '%s: Unknown type %s received', __CLASS__, $workflowMessage->payload()->getTypeClass()
                 ),
-                $workflowMessage->processTaskListPosition()
+                $workflowMessage
             );
         }
     }
@@ -108,6 +104,7 @@ class UserDataWriter extends AbstractWorkflowMessageHandler implements Connector
      *
      * @example: vendor/package:2.*
      *
+     * @throws \BadMethodCallException
      * @return string
      */
     public function getSupportedTypesComposerPackage()

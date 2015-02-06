@@ -280,16 +280,21 @@ abstract class Process extends AggregateRoot
             $metadata = ArrayUtils::merge($previousMessage->metadata(), $collectData->metadata());
         }
 
-        $workflowMessage = WorkflowMessage::collectDataOf($collectData->prototype(), $metadata, $collectData->source());
+        $workflowMessage = WorkflowMessage::collectDataOf(
+            $collectData->prototype(),
+            $this->taskList->taskListId()->nodeName(),
+            $collectData->source(),
+            $metadata
+        );
 
         $workflowMessage->connectToProcessTask($taskListPosition);
 
         try {
             $workflowEngine->getCommandChannelFor($collectData->source())->dispatch($workflowMessage);
         } catch (CommandDispatchException $ex) {
-            $this->receiveMessage(LogMessage::logException($ex->getPrevious(), $workflowMessage->processTaskListPosition()), $workflowEngine);
+            $this->receiveMessage(LogMessage::logException($ex->getPrevious(), $workflowMessage), $workflowEngine);
         } catch (\Exception $ex) {
-            $this->receiveMessage(LogMessage::logException($ex, $workflowMessage->processTaskListPosition()), $workflowEngine);
+            $this->receiveMessage(LogMessage::logException($ex, $workflowMessage), $workflowEngine);
         }
     }
 
@@ -301,18 +306,22 @@ abstract class Process extends AggregateRoot
      */
     protected function performProcessData(ProcessData $processData, TaskListPosition $taskListPosition, WorkflowMessage $previousMessage, WorkflowEngine $workflowEngine)
     {
-        $workflowMessage = $previousMessage->prepareDataProcessing($taskListPosition, $processData->metadata(), $processData->target());
+        $workflowMessage = $previousMessage->prepareDataProcessing(
+            $taskListPosition,
+            $processData->target(),
+            $processData->metadata()
+        );
 
         if (! in_array($workflowMessage->payload()->getTypeClass(), $processData->allowedTypes())) {
             $workflowMessage->changeGingerType($processData->preferredType());
         }
 
         try {
-            $workflowEngine->getCommandChannelFor($processData->target())->dispatch($workflowMessage);
+            $workflowEngine->dispatch($workflowMessage);
         } catch (CommandDispatchException $ex) {
-            $this->receiveMessage(LogMessage::logException($ex->getPrevious(), $workflowMessage->processTaskListPosition()), $workflowEngine);
+            $this->receiveMessage(LogMessage::logException($ex->getPrevious(), $workflowMessage), $workflowEngine);
         } catch (\Exception $ex) {
-            $this->receiveMessage(LogMessage::logException($ex, $workflowMessage->processTaskListPosition()), $workflowEngine);
+            $this->receiveMessage(LogMessage::logException($ex, $workflowMessage), $workflowEngine);
         }
     }
 
@@ -331,7 +340,7 @@ abstract class Process extends AggregateRoot
         try {
             $startSubProcessCommand = $task->generateStartCommandForSubProcess($taskListPosition, $previousMessage);
 
-            $workflowEngine->getCommandChannelFor($task->targetNodeName()->toString())->dispatch($startSubProcessCommand);
+            $workflowEngine->dispatch($startSubProcessCommand);
 
         } catch (CommandDispatchException $ex) {
             $this->receiveMessage(LogMessage::logException($ex->getPrevious(), $taskListPosition), $workflowEngine);
@@ -354,7 +363,11 @@ abstract class Process extends AggregateRoot
     {
         if (! MessageNameUtils::isGingerEvent($previousMessage->getMessageName())) {
             $this->receiveMessage(
-                LogMessage::logWrongMessageReceivedFor($task, $taskListPosition, $previousMessage),
+                LogMessage::logWrongMessageReceivedFor(
+                    $task,
+                    $taskListPosition,
+                    $previousMessage
+                ),
                 $workflowEngine
             );
 
@@ -370,7 +383,10 @@ abstract class Process extends AggregateRoot
             return;
         }
 
-        $newEvent = $previousMessage->prepareDataProcessing($taskListPosition)->answerWithDataProcessingCompleted();
+        $newEvent = $previousMessage->prepareDataProcessing(
+            $taskListPosition,
+            $this->taskList->taskListId()->nodeName()
+        )->answerWithDataProcessingCompleted();
 
         $this->receiveMessage($newEvent, $workflowEngine);
     }

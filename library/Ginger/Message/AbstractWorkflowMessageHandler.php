@@ -50,7 +50,7 @@ abstract class AbstractWorkflowMessageHandler implements WorkflowMessageHandler
     public function handleWorkflowMessage(WorkflowMessage $workflowMessage)
     {
         if (! MessageNameUtils::isGingerCommand($workflowMessage->messageName())) {
-            $this->workflowEngine->dispatch(LogMessage::logUnsupportedMessageReceived($workflowMessage, get_called_class()));
+            $this->workflowEngine->dispatch(LogMessage::logUnsupportedMessageReceived($workflowMessage));
         }
 
         try {
@@ -67,14 +67,14 @@ abstract class AbstractWorkflowMessageHandler implements WorkflowMessageHandler
                     throw new \RuntimeException(sprintf("%s::handleProcessData method returned %s instead of a GingerMessage", get_called_class(), ((is_object($gingerMessage)? get_class($gingerMessage) : gettype($gingerMessage)))));
                 }
             } else {
-                $this->workflowEngine->dispatch(LogMessage::logUnsupportedMessageReceived($workflowMessage, get_called_class()));
+                $this->workflowEngine->dispatch(LogMessage::logUnsupportedMessageReceived($workflowMessage));
                 return;
             }
 
             $this->workflowEngine->dispatch($gingerMessage);
             return;
         } catch (\Exception $ex) {
-            $this->workflowEngine->dispatch(LogMessage::logException($ex, $workflowMessage->processTaskListPosition()));
+            $this->workflowEngine->dispatch(LogMessage::logException($ex, $workflowMessage));
             return;
         }
     }

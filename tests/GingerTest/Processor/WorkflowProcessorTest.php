@@ -160,7 +160,7 @@ class WorkflowProcessorTest extends TestCase
 
         $receivedMessage = $this->workflowMessageHandler->lastWorkflowMessage();
 
-        $logMessage = LogMessage::logInfoDataProcessingStarted($receivedMessage->processTaskListPosition());
+        $logMessage = LogMessage::logInfoDataProcessingStarted($receivedMessage);
 
         //Set up EventBus
         $eventBus = new EventBus();
@@ -207,7 +207,8 @@ class WorkflowProcessorTest extends TestCase
         $this->workflowMessageHandler->useWorkflowEngine($workflowEngine);
 
         $nextAnswer = $wfMessage->prepareDataProcessing(
-            TaskListPosition::at(TaskListId::linkWith(NodeName::defaultName(), ProcessId::generate()), 1)
+            TaskListPosition::at(TaskListId::linkWith(NodeName::defaultName(), ProcessId::generate()), 1),
+            NodeName::defaultName()
         )->answerWithDataProcessingCompleted();
 
         $ref = new \ReflectionClass($nextAnswer);
@@ -260,7 +261,7 @@ class WorkflowProcessorTest extends TestCase
 
         $this->assertNotNull($receivedMessage);
 
-        $logMessage = LogMessage::logInfoDataProcessingStarted($receivedMessage->processTaskListPosition());
+        $logMessage = LogMessage::logInfoDataProcessingStarted($receivedMessage);
 
         $this->getOtherMachineWorkflowProcessor()->receiveMessage($logMessage);
 
@@ -309,7 +310,7 @@ class WorkflowProcessorTest extends TestCase
 
         $this->assertNotNull($receivedMessage);
 
-        $error = LogMessage::logErrorMsg("Simulated error", $receivedMessage->processTaskListPosition());
+        $error = LogMessage::logErrorMsg("Simulated error", $receivedMessage);
 
         $this->getOtherMachineWorkflowProcessor()->receiveMessage($error);
 

@@ -10,9 +10,8 @@
  */
 
 namespace Ginger\Console;
+
 use Ginger\Environment\Environment;
-use Ginger\Message\WorkflowMessage;
-use Ginger\Processor\Definition;
 use Zend\Stdlib\ArrayUtils;
 use ZF\Console\Route;
 
@@ -42,7 +41,7 @@ class AbstractCommand
         if (is_null($additionalConfig)) {
             $consoleWriter->writeError("Provided config is not a valid json string");
             $consoleWriter->writeError(json_last_error_msg());
-            return self::INVALID_CONFIG;
+            return self::MESSAGE_PROCESSING_FAILED;
         }
 
         if (file_exists($configPath)) {
