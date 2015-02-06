@@ -20,16 +20,9 @@ use Ginger\Processor\Task\Event\MultiPerformTaskWasStarted;
 use Ginger\Processor\Task\Event\TaskEntryMarkedAsDone;
 use Ginger\Processor\Task\Event\TaskEntryMarkedAsFailed;
 use Ginger\Processor\Task\Event\TaskEntryMarkedAsRunning;
-use Ginger\Processor\Task\Event\TaskListWasRescheduled;
-use Ginger\Processor\Task\MultiPerformTask;
 use Ginger\Processor\Task\RunSubProcess;
-use Ginger\Processor\Task\TaskList;
 use Ginger\Processor\Task\TaskListEntry;
-use Ginger\Processor\Task\TaskListId;
-use Ginger\Type\AbstractCollection;
 use Ginger\Type\CollectionType;
-use Ginger\Type\Description\NativeType;
-use Zend\Validator\Exception\BadMethodCallException;
 
 /**
  * Class ForEachProcess
@@ -115,13 +108,23 @@ class ForEachProcess extends Process
             throw new \RuntimeException('ForEachProcess::perform was called but there are no tasks configured!');
         }
 
+        if (is_null($workflowMessage)) {
+            $this->recordThat(TaskEntryMarkedAsRunning::at($taskListEntry->taskListPosition()));
+            $this->receiveMessage(
+                LogMessage::logNoMessageReceivedFor($taskListEntry->task(), $taskListEntry->taskListPosition()),
+                $workflowEngine
+            );
+            return;
+        }
+
+        $workflowMessage = $workflowMessage->reconnectToProcessTask($taskListEntry->taskListPosition());
 
         if (count($this->taskList->getAllTaskListEntries()) > 1) {
             $this->recordThat(TaskEntryMarkedAsRunning::at($taskListEntry->taskListPosition()));
             $this->receiveMessage(
                 LogMessage::logErrorMsg(
                     'The ForEachProcess can only handle a single RunSubProcess task but there are more tasks configured',
-                    $taskListEntry->taskListPosition()
+                    $workflowMessage
                 ),
                 $workflowEngine
             );
@@ -136,17 +139,8 @@ class ForEachProcess extends Process
                         'The ForEachProcess can only handle a RunSubProcess task but there is a %s task configured',
                         get_class($taskListEntry->task())
                     ),
-                    $taskListEntry->taskListPosition()
+                    $workflowMessage
                 ),
-                $workflowEngine
-            );
-            return;
-        }
-
-        if (is_null($workflowMessage)) {
-            $this->recordThat(TaskEntryMarkedAsRunning::at($taskListEntry->taskListPosition()));
-            $this->receiveMessage(
-                LogMessage::logNoMessageReceivedFor($taskListEntry->task(), $taskListEntry->taskListPosition()),
                 $workflowEngine
             );
             return;
@@ -170,7 +164,7 @@ class ForEachProcess extends Process
                         'The ForEachProcess requires a Ginger\Type\CollectionType as payload of the incoming message, but it is a %s type given',
                         $workflowMessage->payload()->getTypeClass()
                     ),
-                    $taskListEntry->taskListPosition()
+                    $workflowMessage
                 ),
                 $workflowEngine
             );
@@ -192,16 +186,22 @@ class ForEachProcess extends Process
 
         $this->processingCollection = true;
 
-        foreach ($collection as $item) {
+        /** @var $task RunSubProcess */
+        $task = $taskListEntry->task();
 
-            $message = WorkflowMessage::newDataCollected($item);
+        foreach ($collection as $item) {
+            $message = WorkflowMessage::newDataCollected(
+                $item,
+                $this->taskList->taskListId()->nodeName(),
+                $task->targetNodeName()
+            );
 
             $message->connectToProcessTask($taskListEntry->taskListPosition());
 
             $this->recordThat(MultiPerformTaskWasStarted::at($taskListEntry->taskListPosition()));
 
             $this->performRunSubProcess(
-                $taskListEntry->task(),
+                $task,
                 $taskListEntry->taskListPosition(),
                 $workflowEngine,
                 $message

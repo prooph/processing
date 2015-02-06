@@ -12,6 +12,7 @@
 namespace GingerTest\Processor\ProophPlugin;
 
 use Ginger\Message\WorkflowMessage;
+use Ginger\Processor\NodeName;
 use Ginger\Processor\ProophPlugin\SingleTargetMessageRouter;
 use GingerTest\Mock\TestWorkflowMessageHandler;
 use GingerTest\Mock\UserDictionary;
@@ -65,7 +66,11 @@ class SingleTargetMessageRouterTest extends TestCase
      */
     public function it_injects_target_handler_to_command_dispatch_when_command_is_a_workflow_message()
     {
-        $message = WorkflowMessage::collectDataOf(UserDictionary::prototype());
+        $message = WorkflowMessage::collectDataOf(
+            UserDictionary::prototype(),
+            'test-case',
+            NodeName::defaultName()
+        );
 
         $commandDispatch = new CommandDispatch();
 
@@ -92,7 +97,7 @@ class SingleTargetMessageRouterTest extends TestCase
                 'zip' => '12345',
                 'city' => 'Test City'
             ]
-        ]));
+        ]), 'test-case', NodeName::defaultName());
 
         $eventDispatch = new EventDispatch();
 

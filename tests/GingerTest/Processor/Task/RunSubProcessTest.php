@@ -109,7 +109,7 @@ class RunSubProcessTest extends TestCase
                 'zip' => '12345',
                 'city' => 'Test City'
             ]
-        ]));
+        ]), 'test-case', NodeName::defaultName());
 
         $startSubProcess = $task->generateStartCommandForSubProcess($parentTaskListPosition, $previousMessage);
 

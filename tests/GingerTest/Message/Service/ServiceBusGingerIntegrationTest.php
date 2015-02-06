@@ -135,7 +135,11 @@ class ServiceBusGingerIntegrationTest extends TestCase
     {
         $taskListPosition = TaskListPosition::at(TaskListId::linkWith(NodeName::defaultName(), ProcessId::generate()), 1);
 
-        $logMessage = LogMessage::logWarningMsg("Just a fake warning", $taskListPosition);
+        $wfMessage = $this->getUserDataCollectedTestMessage();
+
+        $wfMessage->connectToProcessTask($taskListPosition);
+
+        $logMessage = LogMessage::logWarningMsg("Just a fake warning", $wfMessage);
 
         $eventBus = new EventBus();
 
@@ -198,7 +202,11 @@ class ServiceBusGingerIntegrationTest extends TestCase
     {
         $taskListPosition = TaskListPosition::at(TaskListId::linkWith(NodeName::defaultName(), ProcessId::generate()), 1);
 
-        $logMessage = LogMessage::logDebugMsg("Just a fake event", $taskListPosition);
+        $wfMessage = $this->getUserDataCollectedTestMessage();
+
+        $wfMessage->connectToProcessTask($taskListPosition);
+
+        $logMessage = LogMessage::logDebugMsg("Just a fake event", $wfMessage);
 
         $subProcessFinished = SubProcessFinished::record(
             NodeName::defaultName(),

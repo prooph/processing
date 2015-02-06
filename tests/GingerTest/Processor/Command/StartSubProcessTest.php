@@ -55,7 +55,7 @@ class StartSubProcessTest extends TestCase
                 'zip' => '12345',
                 'city' => 'Test City'
             ]
-        ]));
+        ]), 'test-case', 'processor');
 
         $parentTaskListPosition = TaskListPosition::at(TaskListId::linkWith(NodeName::defaultName(), ProcessId::generate()), 1);
 
@@ -68,6 +68,8 @@ class StartSubProcessTest extends TestCase
         $this->assertEquals($subProcessDefinition, $command->subProcessDefinition());
 
         $this->assertEquals($previousMessage->getMessageName(), $command->previousWorkflowMessage()->getMessageName());
+
+        $this->assertEquals(NodeName::defaultName()->toString(), $command->origin());
 
         $this->assertEquals('sub-processor', $command->target());
     }
@@ -134,6 +136,8 @@ class StartSubProcessTest extends TestCase
         $this->assertEquals($subProcessDefinition, $copyOfCommand->subProcessDefinition());
 
         $this->assertFalse($copyOfCommand->syncLogMessages());
+
+        $this->assertEquals(NodeName::defaultName()->toString(), $copyOfCommand->origin());
 
         $this->assertEquals('sub-processor', $copyOfCommand->target());
     }

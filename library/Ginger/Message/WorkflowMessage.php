@@ -13,6 +13,7 @@ namespace Ginger\Message;
 
 use Assert\Assertion;
 use Ginger\Message\ProophPlugin\ServiceBusTranslatableMessage;
+use Ginger\Processor\NodeName;
 use Ginger\Processor\ProcessId;
 use Ginger\Processor\Task\TaskListPosition;
 use Ginger\Type\Exception\InvalidTypeException;
@@ -39,15 +40,26 @@ class WorkflowMessage implements MessageNameProvider, GingerMessage
     protected $messageName;
 
     /**
-     * The target is either a workflow engine channel target or null
+     * The target defines the receiver of the message.
+     * This can either be a workflow message handler
+     * or the workflow processor of a ginger node.
      *
-     * By default target is null. In this case the message is addressed to the local ginger node.
-     * If the message is connected to a process task and target is null then the property getter target()
-     * returns the processor node name from the TaskListPosition as target.
+     * The workflow processor is addressed via a ginger node name.
+     * A workflow message handler is addressed via a unique name that
+     * identifies the handler.
      *
-     * @var null|string
+     * @var string
      */
     protected $target;
+
+    /**
+     * The origin defines the component which sent the message.
+     * Like the target this can be either a workflow message handler
+     * or a workflow processor.
+     *
+     * @var string
+     */
+    protected $origin;
 
     /**
      * @var Uuid
@@ -81,30 +93,32 @@ class WorkflowMessage implements MessageNameProvider, GingerMessage
 
     /**
      * @param Prototype $aPrototype
+     * @param string|NodeName $origin
+     * @param string|NodeName $target
      * @param array $metadata
-     * @param null|string $target
      * @return WorkflowMessage
      */
-    public static function collectDataOf(Prototype $aPrototype, array $metadata = [], $target = null)
+    public static function collectDataOf(Prototype $aPrototype, $origin, $target, array $metadata = [])
     {
         $messageName = MessageNameUtils::getCollectDataCommandName($aPrototype->of());
 
-        return new static(Payload::fromPrototype($aPrototype), $messageName, $metadata, $target);
+        return new static(Payload::fromPrototype($aPrototype), $messageName, $origin, $target, $metadata);
     }
 
     /**
      * @param \Ginger\Type\Type $data
+     * @param string|NodeName $origin
+     * @param string|NodeName $target
      * @param array $metadata
-     * @param null|string $target
      * @return WorkflowMessage
      */
-    public static function newDataCollected(Type $data, array $metadata = [], $target = null)
+    public static function newDataCollected(Type $data, $origin, $target, array $metadata = [])
     {
         $payload = Payload::fromType($data);
 
         $messageName = MessageNameUtils::getDataCollectedEventName($payload->getTypeClass());
 
-        return new static($payload, $messageName, $metadata, $target);
+        return new static($payload, $messageName, $origin, $target, $metadata);
     }
 
     /**
@@ -117,8 +131,11 @@ class WorkflowMessage implements MessageNameProvider, GingerMessage
         $payload = $aMessage->payload();
 
         Assertion::keyExists($payload, 'json');
+        Assertion::keyExists($payload, 'origin');
+        Assertion::keyExists($payload, 'target');
 
-        $target = (isset($payload['target']))? $payload['target'] : null;
+        $origin = $payload['origin'];
+        $target = $payload['target'];
 
         $taskListPosition = (isset($payload['processTaskListPosition']))?
             TaskListPosition::fromString($payload['processTaskListPosition']) : null;
@@ -130,8 +147,9 @@ class WorkflowMessage implements MessageNameProvider, GingerMessage
         return new static(
             $messagePayload,
             $aMessage->name(),
-            $metadata,
+            $origin,
             $target,
+            $metadata,
             $taskListPosition,
             $aMessage->header()->version(),
             $aMessage->header()->createdOn(),
@@ -142,8 +160,9 @@ class WorkflowMessage implements MessageNameProvider, GingerMessage
     /**
      * @param Payload $payload
      * @param string $messageName
+     * @param string|NodeName $origin
+     * @param string|NodeName $target
      * @param array|null $metadata
-     * @param string|null $target
      * @param TaskListPosition|null $taskListPosition
      * @param int $version
      * @param \DateTime|null $createdOn
@@ -152,8 +171,9 @@ class WorkflowMessage implements MessageNameProvider, GingerMessage
     protected function __construct(
         Payload $payload,
         $messageName,
+        $origin,
+        $target,
         array $metadata,
-        $target = null,
         TaskListPosition $taskListPosition = null,
         $version = 1,
         \DateTime $createdOn = null,
@@ -164,12 +184,23 @@ class WorkflowMessage implements MessageNameProvider, GingerMessage
         Assertion::notEmpty($messageName);
         Assertion::string($messageName);
 
-        if (!is_null($target)) {
-            Assertion::notEmpty($target);
-            Assertion::string($target);
+        if ($origin instanceof NodeName) {
+            $origin = $origin->toString();
         }
 
+        Assertion::notEmpty($origin);
+        Assertion::string($origin);
+
+        if ($target instanceof NodeName) {
+            $target = $target->toString();
+        }
+
+        Assertion::notEmpty($target);
+        Assertion::string($target);
+
         $this->messageName = $messageName;
+
+        $this->origin = $origin;
 
         $this->target = $target;
 
@@ -226,8 +257,9 @@ class WorkflowMessage implements MessageNameProvider, GingerMessage
         return new self(
             $collectedPayload,
             MessageNameUtils::getDataCollectedEventName($type),
+            $this->target, //Previous target is now the origin of the answer
+            $this->origin, //Previous origin is now the target of the answer
             $metadata,
-            null, //Target is not set, so it defaults to node name of TaskListPosition->TaskListId
             $this->processTaskListPosition,
             $this->version + 1
         );
@@ -237,11 +269,11 @@ class WorkflowMessage implements MessageNameProvider, GingerMessage
      * Transforms current message to a process data command
      *
      * @param \Ginger\Processor\Task\TaskListPosition $newTaskListPosition
+     * @param string|NodeName $target
      * @param array $metadata
-     * @param null|string $target
      * @return WorkflowMessage
      */
-    public function prepareDataProcessing(TaskListPosition $newTaskListPosition, array $metadata = [], $target = null)
+    public function prepareDataProcessing(TaskListPosition $newTaskListPosition, $target, array $metadata = [])
     {
         $type = MessageNameUtils::getTypePartOfMessageName($this->messageName);
 
@@ -250,8 +282,9 @@ class WorkflowMessage implements MessageNameProvider, GingerMessage
         return new self(
             $this->payload,
             MessageNameUtils::getProcessDataCommandName($type),
-            $metadata,
+            $this->target, //Target of the last answer is the origin of the new command
             $target,
+            $metadata,
             $newTaskListPosition,
             $this->version + 1
         );
@@ -272,8 +305,9 @@ class WorkflowMessage implements MessageNameProvider, GingerMessage
         return new self(
             $this->payload,
             MessageNameUtils::getDataProcessedEventName($type),
+            $this->target, //Previous target is now the origin of the answer
+            $this->origin, //Previous origin is now the target of the answer
             $metadata,
-            null, //Target is not set, so it defaults to node name of TaskListPosition->TaskListId
             $this->processTaskListPosition,
             $this->version + 1
         );
@@ -307,8 +341,9 @@ class WorkflowMessage implements MessageNameProvider, GingerMessage
         return new self(
             $this->payload,
             $this->getMessageName(),
-            $this->metadata,
+            $this->origin,
             $this->target,
+            $this->metadata,
             $taskListPosition,
             $this->version,
             $this->createdOn()
@@ -342,14 +377,18 @@ class WorkflowMessage implements MessageNameProvider, GingerMessage
     }
 
     /**
-     * @return null|string
+     * @return string
+     */
+    public function origin()
+    {
+        return $this->origin;
+    }
+
+    /**
+     * @return string
      */
     public function target()
     {
-        if (is_null($this->target) && ! is_null($this->processTaskListPosition)) {
-            return $this->processTaskListPosition()->taskListId()->nodeName()->toString();
-        }
-
         return $this->target;
     }
 
@@ -395,6 +434,7 @@ class WorkflowMessage implements MessageNameProvider, GingerMessage
 
     /**
      * @param string $newGingerType
+     * @TODO: make this function protected and use a decorator
      */
     public function changeGingerType($newGingerType)
     {
@@ -408,7 +448,7 @@ class WorkflowMessage implements MessageNameProvider, GingerMessage
     }
 
     /**
-     * @return array|null
+     * @return array
      */
     public function metadata()
     {
@@ -453,6 +493,7 @@ class WorkflowMessage implements MessageNameProvider, GingerMessage
         $msgPayload = array(
             'json' => json_encode($this->payload()),
             'metadata' => $this->metadata,
+            'origin' => $this->origin(),
             'target' => $this->target()
         );
 

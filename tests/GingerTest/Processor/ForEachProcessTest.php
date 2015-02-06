@@ -95,7 +95,7 @@ class ForEachProcessTest extends TestCase
 
         $this->assertInstanceOf('Ginger\Processor\ForEachProcess', $forEachProcess);
 
-        $message = WorkflowMessage::newDataCollected($stringCollection);
+        $message = WorkflowMessage::newDataCollected($stringCollection, 'test-case', NodeName::defaultName());
 
         $forEachProcess->perform($this->workflowEngine, $message);
 
@@ -104,7 +104,7 @@ class ForEachProcessTest extends TestCase
         $this->assertFalse($forEachProcess->isFinished());
 
         foreach ($this->startSubProcessCommands as $command) {
-            $mockedMessage = WorkflowMessage::newDataCollected(String::fromNativeValue("Fake message"));
+            $mockedMessage = WorkflowMessage::newDataCollected(String::fromNativeValue("Fake message"), 'test-case', NodeName::defaultName());
 
             $mockedMessage->connectToProcessTask($command->parentTaskListPosition());
 

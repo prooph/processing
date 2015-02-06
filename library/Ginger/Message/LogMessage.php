@@ -57,6 +57,11 @@ final class LogMessage implements MessageNameProvider, GingerMessage
     private $uuid;
 
     /**
+     * @var string
+     */
+    private $origin;
+
+    /**
      * @var TaskListPosition
      */
     private $processTaskListPosition;
@@ -82,20 +87,26 @@ final class LogMessage implements MessageNameProvider, GingerMessage
     private $createdOn;
 
     /**
-     * @param TaskListPosition $taskListPosition
+     * @param WorkflowMessage $originMessage
      * @return LogMessage
      */
-    public static function logInfoDataProcessingStarted(TaskListPosition $taskListPosition)
+    public static function logInfoDataProcessingStarted(WorkflowMessage $originMessage)
     {
-        return new self($taskListPosition, 'Data processing was started', self::INFO_PROCESSING_STARTED, array('started_on' => date(\DateTime::ISO8601)));
+        return new self(
+            $originMessage->target(),
+            $originMessage->processTaskListPosition(),
+            'Data processing was started',
+            self::INFO_PROCESSING_STARTED,
+            array('started_on' => date(\DateTime::ISO8601))
+        );
     }
 
     /**
      * @param \Exception $exception
-     * @param TaskListPosition $taskListPosition
+     * @param WorkflowMessage|TaskListPosition $originMessageOrTaskListPosition
      * @return LogMessage
      */
-    public static function logException(\Exception $exception, TaskListPosition $taskListPosition)
+    public static function logException(\Exception $exception, $originMessageOrTaskListPosition)
     {
         $errorCode = $exception->getCode()? : self::ERROR_SYSTEM_ERROR;
 
@@ -103,28 +114,55 @@ final class LogMessage implements MessageNameProvider, GingerMessage
             $errorCode = self::ERROR_SYSTEM_ERROR;
         }
 
-        return new self($taskListPosition, $exception->getMessage(), $errorCode, array(self::MSG_PARAM_TRACE => $exception->getTraceAsString()));
+        $origin = null;
+        $taskListPosition = null;
+
+        if ($originMessageOrTaskListPosition instanceof WorkflowMessage) {
+            $origin = $originMessageOrTaskListPosition->target();
+            $taskListPosition = $originMessageOrTaskListPosition->processTaskListPosition();
+        } elseif ($originMessageOrTaskListPosition instanceof TaskListPosition) {
+            $origin = $originMessageOrTaskListPosition->taskListId()->nodeName()->toString();
+            $taskListPosition = $originMessageOrTaskListPosition;
+        } else {
+            throw new \InvalidArgumentException(
+                "Second param of LogMessage::logException should be a workflow message or task list position. Got:  " . gettype($originMessageOrTaskListPosition)
+            );
+        }
+
+        return new self(
+            $origin,
+            $taskListPosition,
+            $exception->getMessage(),
+            $errorCode,
+            array(self::MSG_PARAM_TRACE => $exception->getTraceAsString())
+        );
     }
 
     /**
      * @param string $msg
-     * @param TaskListPosition $taskListPosition
+     * @param WorkflowMessage $originMessage
      * @param array $msgParams
      * @return LogMessage
      */
-    public static function logErrorMsg($msg, TaskListPosition $taskListPosition, array $msgParams = [])
+    public static function logErrorMsg($msg, WorkflowMessage $originMessage, array $msgParams = [])
     {
-        return new self($taskListPosition, (string)$msg, self::ERROR_SYSTEM_ERROR, $msgParams);
+        return new self(
+            $originMessage->target(),
+            $originMessage->processTaskListPosition(),
+            (string)$msg,
+            self::ERROR_SYSTEM_ERROR,
+            $msgParams
+        );
     }
 
     /**
      * @param int $successfulItems
      * @param int $failedItems
      * @param array $failedMessages
-     * @param TaskListPosition $taskListPosition
+     * @param WorkflowMessage $originMessage
      * @return LogMessage
      */
-    public static function logItemsProcessingFailed($successfulItems, $failedItems, array $failedMessages, TaskListPosition $taskListPosition)
+    public static function logItemsProcessingFailed($successfulItems, $failedItems, array $failedMessages, WorkflowMessage $originMessage)
     {
         Assertion::integer($successfulItems);
         Assertion::integer($failedItems);
@@ -136,7 +174,8 @@ final class LogMessage implements MessageNameProvider, GingerMessage
         Assertion::count($failedMessages, $failedItems, "Number of failed messages should be the same as number of failed items");
 
         return new self(
-            $taskListPosition,
+            $originMessage->target(),
+            $originMessage->processTaskListPosition(),
             sprintf('Processing for %d of %d items failed', $failedItems, $successfulItems + $failedItems),
             self::ERROR_ITEMS_PROCESSING_FAILED,
             [
@@ -155,6 +194,7 @@ final class LogMessage implements MessageNameProvider, GingerMessage
     public static function logNoMessageReceivedFor(Task $task, TaskListPosition $taskListPosition)
     {
         return new self(
+            $taskListPosition->taskListId()->nodeName()->toString(),
             $taskListPosition,
             sprintf(
                 "Process %s received no message for task %s at position %d",
@@ -180,6 +220,7 @@ final class LogMessage implements MessageNameProvider, GingerMessage
     public static function logWrongMessageReceivedFor(Task $task, TaskListPosition $taskListPosition, WorkflowMessage $workflowMessage)
     {
         return new self(
+            $taskListPosition->taskListId()->nodeName()->toString(),
             $taskListPosition,
             sprintf(
                 "Process %s received wrong message with name %s for task %s at position %d",
@@ -200,22 +241,22 @@ final class LogMessage implements MessageNameProvider, GingerMessage
 
     /**
      * @param WorkflowMessage $workflowMessage
-     * @param string $workflowMessageHandlerName
      * @return LogMessage
      */
-    public static function logUnsupportedMessageReceived(WorkflowMessage $workflowMessage, $workflowMessageHandlerName)
+    public static function logUnsupportedMessageReceived(WorkflowMessage $workflowMessage)
     {
         return new self(
+            $workflowMessage->target(),
             $workflowMessage->processTaskListPosition(),
             sprintf(
                 "Workflow message handler %s received wrong message with name %s for task %s",
-                (string)$workflowMessageHandlerName,
+                $workflowMessage->target(),
                 $workflowMessage->getMessageName(),
                 $workflowMessage->processTaskListPosition()->toString()
             ),
             self::ERROR_UNSUPPORTED_MESSAGE_RECEIVED,
             array(
-                'workflow_message_handler' => (string)$workflowMessageHandlerName,
+                'workflow_message_handler' => $workflowMessage->target(),
                 'message_name' => $workflowMessage->getMessageName(),
             )
         );
@@ -223,24 +264,35 @@ final class LogMessage implements MessageNameProvider, GingerMessage
 
     /**
      * @param string $msg
-     * @param TaskListPosition $taskListPosition
+     * @param WorkflowMessage $originMessage
      * @param array $msgParams
      * @return LogMessage
      */
-    public static function logDebugMsg($msg, TaskListPosition $taskListPosition, array $msgParams = [])
+    public static function logDebugMsg($msg, WorkflowMessage $originMessage, array $msgParams = [])
     {
-        return new self($taskListPosition, $msg, self::DEBUG_MSG, $msgParams);
+        return new self(
+            $originMessage->target(),
+            $originMessage->processTaskListPosition(),
+            $msg,
+            self::DEBUG_MSG, $msgParams
+        );
     }
 
     /**
      * @param string $warning
-     * @param TaskListPosition $taskListPosition
+     * @param WorkflowMessage $originMessage
      * @param array $msgParams
      * @return LogMessage
      */
-    public static function logWarningMsg($warning, TaskListPosition $taskListPosition, array $msgParams = [])
+    public static function logWarningMsg($warning, WorkflowMessage $originMessage, array $msgParams = [])
     {
-        return new self($taskListPosition, $warning, self::WARNING_MSG, $msgParams);
+        return new self(
+            $originMessage->target(),
+            $originMessage->processTaskListPosition(),
+            $warning,
+            self::WARNING_MSG,
+            $msgParams
+        );
     }
 
     /**
@@ -253,6 +305,7 @@ final class LogMessage implements MessageNameProvider, GingerMessage
         $payload = $aMessage->payload();
 
         Assertion::keyExists($payload, 'processTaskListPosition');
+        Assertion::keyExists($payload, 'origin');
         Assertion::keyExists($payload, 'technicalMsg');
         Assertion::keyExists($payload, 'msgParams');
         Assertion::keyExists($payload, 'msgCode');
@@ -260,6 +313,7 @@ final class LogMessage implements MessageNameProvider, GingerMessage
         $taskListPosition = TaskListPosition::fromString($payload['processTaskListPosition']);
 
         return new self(
+            $payload['origin'],
             $taskListPosition,
             $payload['technicalMsg'],
             $payload['msgCode'],
@@ -270,16 +324,18 @@ final class LogMessage implements MessageNameProvider, GingerMessage
     }
 
     /**
+     * @param string $origin
      * @param TaskListPosition $taskListPosition
      * @param string $technicalMsg
      * @param int $msgCode
      * @param array $msgParams
      * @param Uuid $uuid
      * @param \DateTime $createdOn
-     * @throws \InvalidArgumentException
      */
-    private function __construct(TaskListPosition $taskListPosition, $technicalMsg, $msgCode = 0, array $msgParams = array(), Uuid $uuid = null, \DateTime $createdOn = null)
+    private function __construct($origin, TaskListPosition $taskListPosition, $technicalMsg, $msgCode = 0, array $msgParams = array(), Uuid $uuid = null, \DateTime $createdOn = null)
     {
+        Assertion::string($origin);
+        Assertion::notEmpty($origin);
         Assertion::string($technicalMsg);
         Assertion::integer($msgCode);
 
@@ -289,6 +345,7 @@ final class LogMessage implements MessageNameProvider, GingerMessage
         $this->msgCode = $msgCode;
         $this->msgParams = $msgParams;
         $this->processTaskListPosition = $taskListPosition;
+        $this->origin = $origin;
 
         if (is_null($uuid)) {
             $uuid = Uuid::uuid4();
@@ -322,6 +379,14 @@ final class LogMessage implements MessageNameProvider, GingerMessage
     }
 
     /**
+     * @return string
+     */
+    public function origin()
+    {
+        return $this->origin;
+    }
+
+    /**
      * Target of the log message is always the workflow processor of the referenced task that should receive the message
      *
      * @return null|string
@@ -347,6 +412,7 @@ final class LogMessage implements MessageNameProvider, GingerMessage
             $this->getMessageName(),
             $header,
             [
+                'origin' => $this->origin(),
                 'processTaskListPosition' => $this->processTaskListPosition()->toString(),
                 'technicalMsg' => $this->technicalMsg(),
                 'msgParams' => $this->msgParams(),
@@ -362,6 +428,7 @@ final class LogMessage implements MessageNameProvider, GingerMessage
     public function reconnectToProcessTask(TaskListPosition $taskListPosition)
     {
         return new self(
+            $this->origin(),
             $taskListPosition,
             $this->technicalMsg(),
             $this->msgCode(),

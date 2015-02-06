@@ -234,7 +234,11 @@ class ProcessFactoryTest extends TestCase
 
         $this->assertInstanceOf('Ginger\Processor\LinearProcess', $process);
 
-        $message = WorkflowMessage::newDataCollected(String::fromString('Hello'));
+        $message = WorkflowMessage::newDataCollected(
+            String::fromString('Hello'),
+            'test-case',
+            NodeName::defaultName()
+        );
 
         $process->perform($this->workflowEngine, $message);
 

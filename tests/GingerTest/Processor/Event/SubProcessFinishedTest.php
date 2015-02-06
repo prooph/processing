@@ -36,9 +36,14 @@ class SubProcessFinishedTest extends TestCase
         $subProcessId = ProcessId::generate();
         $parentTaskListPosition = TaskListPosition::at(TaskListId::linkWith(NodeName::defaultName(), ProcessId::generate()), 1);
 
+        $wfMessage = $this->getUserDataCollectedTestMessage();
+
+        $wfMessage->connectToProcessTask(TaskListPosition::at(TaskListId::linkWith($nodeName, $subProcessId), 1));
+
+
         $message = LogMessage::logDebugMsg(
             "Processing finished",
-            TaskListPosition::at(TaskListId::linkWith($nodeName, $subProcessId), 1)
+            $wfMessage
         );
 
         $event = SubProcessFinished::record(
@@ -68,9 +73,13 @@ class SubProcessFinishedTest extends TestCase
         $subProcessId = ProcessId::generate();
         $parentTaskListPosition = TaskListPosition::at(TaskListId::linkWith(NodeName::defaultName(), ProcessId::generate()), 1);
 
+        $wfMessage = $this->getUserDataCollectedTestMessage();
+
+        $wfMessage->connectToProcessTask(TaskListPosition::at(TaskListId::linkWith($nodeName, $subProcessId), 1));
+
         $message = LogMessage::logDebugMsg(
             "Processing finished",
-            TaskListPosition::at(TaskListId::linkWith($nodeName, $subProcessId), 1)
+            $wfMessage
         );
 
         $event = SubProcessFinished::record(

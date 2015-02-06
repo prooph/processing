@@ -15,6 +15,7 @@ use Ginger\Environment\Environment;
 use Ginger\Environment\Factory\AbstractServiceBusFactory;
 use Ginger\Message\WorkflowMessage;
 use Ginger\Processor\Definition;
+use Ginger\Processor\NodeName;
 use GingerTest\Mock\SimpleBusPlugin;
 use GingerTest\Mock\StupidMessageDispatcher;
 use GingerTest\Mock\StupidWorkflowProcessorMock;
@@ -70,7 +71,7 @@ class AbstractServiceBusFactoryTest extends TestCase
 
         $this->assertInstanceOf('Prooph\ServiceBus\CommandBus', $commandBus);
 
-        $message = WorkflowMessage::collectDataOf(UserDictionary::prototype());
+        $message = WorkflowMessage::collectDataOf(UserDictionary::prototype(), 'test-case', NodeName::defaultName());
 
         $commandBus->dispatch($message);
 
@@ -103,7 +104,7 @@ class AbstractServiceBusFactoryTest extends TestCase
                 'zip' => '12345',
                 'city' => 'Test City'
             ]
-        ]));
+        ]), 'test-case', NodeName::defaultName());
 
         $eventBus->dispatch($message);
 
@@ -160,7 +161,7 @@ class AbstractServiceBusFactoryTest extends TestCase
 
         $commandBus = $env->services()->get("ginger.command_bus.remote_command_handler");
 
-        $message = WorkflowMessage::collectDataOf(UserDictionary::prototype());
+        $message = WorkflowMessage::collectDataOf(UserDictionary::prototype(), 'test-case', NodeName::defaultName());
 
         $commandBus->dispatch($message);
 
@@ -188,7 +189,7 @@ class AbstractServiceBusFactoryTest extends TestCase
 
         $commandBus = $env->services()->get("ginger.command_bus.test_command_handler");
 
-        $message = WorkflowMessage::collectDataOf(UserDictionary::prototype());
+        $message = WorkflowMessage::collectDataOf(UserDictionary::prototype(), 'test-case', NodeName::defaultName());
 
         $commandBus->dispatch($message);
 

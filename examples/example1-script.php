@@ -199,7 +199,7 @@ function _set_up_workflow_engine() {
                 }
 
             } catch (\Exception $ex) {
-                $answer = \Ginger\Message\LogMessage::logException($ex, $message->processTaskListPosition());
+                $answer = \Ginger\Message\LogMessage::logException($ex, $message);
             }
 
             $eventBus->dispatch($answer);
@@ -228,7 +228,7 @@ $userData = include('data/user-source-data.php');
 $user = \GingerExample\Type\SourceUser::fromNativeValue($userData);
 
 //Step 3: Prepare WorkflowMessage
-$userDataCollected = \Ginger\Message\WorkflowMessage::newDataCollected($user);
+$userDataCollected = \Ginger\Message\WorkflowMessage::newDataCollected($user, 'example-script', \Ginger\Processor\NodeName::defaultName());
 
 //Step 4: Start processing by sending a "data-collected" event to the WorkflowProcessor (simplified step without using an EventBus)
 $workflowProcessor->receiveMessage($userDataCollected);

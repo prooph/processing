@@ -112,7 +112,7 @@ final class AbstractWorkflowEngineTest extends TestCase
      */
     public function it_dispatches_a_workflow_message_command()
     {
-        $wfMessage = WorkflowMessage::collectDataOf(UserDictionary::prototype(), [], 'test-target');
+        $wfMessage = WorkflowMessage::collectDataOf(UserDictionary::prototype(),'test-case', 'test-target', []);
 
         $this->workflowEngine->dispatch($wfMessage);
 
@@ -137,7 +137,7 @@ final class AbstractWorkflowEngineTest extends TestCase
 
         $user = UserDictionary::fromNativeValue($userData);
 
-        $wfMessage = WorkflowMessage::newDataCollected($user, [], NodeName::defaultName()->toString());
+        $wfMessage = WorkflowMessage::newDataCollected($user, 'test-case', NodeName::defaultName(), []);
 
         $this->workflowEngine->dispatch($wfMessage);
 
@@ -151,7 +151,11 @@ final class AbstractWorkflowEngineTest extends TestCase
     {
         $taskListPosition = TaskListPosition::at(TaskListId::linkWith(NodeName::defaultName(), ProcessId::generate()), 1);
 
-        $logMessage = LogMessage::logWarningMsg("Just a fake warning", $taskListPosition);
+        $wfMessage = $this->getUserDataCollectedTestMessage();
+
+        $wfMessage->connectToProcessTask($taskListPosition);
+
+        $logMessage = LogMessage::logWarningMsg("Just a fake warning", $wfMessage);
 
         $this->workflowEngine->dispatch($logMessage);
 
@@ -179,7 +183,11 @@ final class AbstractWorkflowEngineTest extends TestCase
     {
         $taskListPosition = TaskListPosition::at(TaskListId::linkWith(NodeName::defaultName(), ProcessId::generate()), 1);
 
-        $logMessage = LogMessage::logDebugMsg("Just a fake event", $taskListPosition);
+        $wfMessage = $this->getUserDataCollectedTestMessage();
+
+        $wfMessage->connectToProcessTask($taskListPosition);
+
+        $logMessage = LogMessage::logDebugMsg("Just a fake event", $wfMessage);
 
         $subProcessFinished = SubProcessFinished::record(
             NodeName::defaultName(),
@@ -199,7 +207,7 @@ final class AbstractWorkflowEngineTest extends TestCase
      */
     public function it_dispatches_a_service_bus_message()
     {
-        $wfMessage = WorkflowMessage::collectDataOf(UserDictionary::prototype(), [], 'test-target');
+        $wfMessage = WorkflowMessage::collectDataOf(UserDictionary::prototype(), 'test-case', 'test-target', []);
 
         $sbMessage = $wfMessage->toServiceBusMessage();
 
