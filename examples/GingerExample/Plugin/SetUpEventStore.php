@@ -47,7 +47,7 @@ class SetUpEventStore implements Plugin
 
         $es->create(
             new \Prooph\EventStore\Stream\Stream(
-                new \Prooph\EventStore\Stream\StreamName('Ginger\Processor\Process'),
+                new \Prooph\EventStore\Stream\StreamName('process_stream'),
                 []
             )
         );

@@ -86,7 +86,7 @@ function set_up_workflow_environment() {
 
     $eventStore->create(
         new \Prooph\EventStore\Stream\Stream(
-            new \Prooph\EventStore\Stream\StreamName('Ginger\Processor\Process'),
+            new \Prooph\EventStore\Stream\StreamName('process_stream'),
             []
         )
     );
