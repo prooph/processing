@@ -12,7 +12,7 @@
 namespace GingerTest\Environment\Factory;
 
 use Ginger\Environment\Environment;
-use Ginger\Environment\Factory\AbstractServiceBusFactory;
+use Ginger\Environment\Factory\AbstractChannelFactory;
 use Ginger\Message\WorkflowMessage;
 use Ginger\Processor\Definition;
 use Ginger\Processor\NodeName;
@@ -25,12 +25,12 @@ use GingerTest\TestCase;
 use Zend\ServiceManager\ServiceManager;
 
 /**
- * Class AbstractServiceBusFactoryTest
+ * Class AbstractChannelFactoryTest
  *
  * @package GingerTest\Environment\Factory
  * @author Alexander Miertsch <kontakt@codeliner.ws>
  */
-class AbstractServiceBusFactoryTest extends TestCase
+class AbstractChannelFactoryTest extends TestCase
 {
     /**
      * @test
@@ -38,7 +38,7 @@ class AbstractServiceBusFactoryTest extends TestCase
      */
     public function it_can_create_a_bus_when_correct_alias_is_given($busAlias, $canCreate)
     {
-        $factory = new AbstractServiceBusFactory();
+        $factory = new AbstractChannelFactory();
 
         $this->assertSame($canCreate, $factory->canCreateServiceWithName(new ServiceManager(), $busAlias, $busAlias));
     }
