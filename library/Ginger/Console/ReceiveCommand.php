@@ -60,9 +60,9 @@ class ReceiveCommand extends AbstractCommand
             $consoleWriter->writeInfo('Process PSB message: ' . $message->name());
 
             if ($message->header()->type() === MessageHeader::TYPE_COMMAND) {
-                $env->getWorkflowEngine()->getCommandChannelFor($target)->dispatch($message);
+                $env->getWorkflowEngine()->dispatch($message);
             } else {
-                $env->getWorkflowEngine()->getEventChannelFor($target)->dispatch($message);
+                $env->getWorkflowEngine()->dispatch($message);
             }
 
             return 0;
