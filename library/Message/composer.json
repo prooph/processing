@@ -1,0 +1,26 @@
+{
+    "name": "prooph/processing-message",
+    "description": "Provides base classes for workflow messaging",
+    "license": "BSD-3-Clause",
+    "keywords": [
+        "processing",
+        "prooph",
+        "message"
+    ],
+    "autoload": {
+        "psr-0": {
+            "Prooph\\Processing\\Message\\": ""
+        }
+    },
+    "target-dir": "Prooph/Processing/Message",
+    "require": {
+        "php": ">=5.4.8",
+        "prooph/processing-type" : "self.version",
+        "prooph/processing-processor" : "self.version",
+        "beberlei/assert": "~2.0",
+        "prooph/service-bus" : "~0.4",
+        "codeliner/array-reader": "~1.1",
+        "zendframework/zend-stdlib" : "~2.3",
+        "rhumsaa/uuid" : "~2.5"
+    }
+}

@@ -2,8 +2,8 @@
 
 <phpunit bootstrap="bootstrap.php">
     <testsuites>
-        <testsuite name="GingerTest">
-            <directory>./GingerTest</directory>
+        <testsuite name="ProcessingTest">
+            <directory>./ProcessingTest</directory>
         </testsuite>
     </testsuites>
 </phpunit>

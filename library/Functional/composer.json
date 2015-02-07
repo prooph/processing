@@ -1,0 +1,21 @@
+{
+    "name": "prooph/processing-functional",
+    "description": "Provides functions for manipulating data",
+    "license": "BSD-3-Clause",
+    "keywords": [
+        "processing",
+        "prooph",
+        "functional"
+    ],
+    "autoload": {
+        "psr-0": {
+            "Prooph\\Processing\\Functional\\": ""
+        }
+    },
+    "target-dir": "Prooph/Processing/Functional",
+    "require": {
+        "php": ">=5.4.8",
+        "prooph/processing-type" : "self.version",
+        "prooph/processing-message" : "self.version"
+    }
+}

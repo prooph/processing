@@ -1,13 +1,13 @@
 {
-    "name": "gingerwork/gingerframework",
-    "description": "Ginger Workflow Framework",
+    "name": "prooph/processing",
+    "description": "Workflow Processing Framework",
     "type": "library",
     "keywords": [
-        "framework",
         "prooph",
-        "workflow engine"
+        "workflow",
+        "processing"
     ],
-    "homepage": "https://github.com/gingerwork",
+    "homepage": "https://github.com/prooph/processing",
     "license": "BSD-3-Clause",
     "require": {
         "php": ">=5.5",
@@ -30,19 +30,19 @@
     "suggest": {
     },
     "autoload": {
-        "psr-0": {
-            "Ginger\\": "library/"
+        "psr-4": {
+            "Prooph\\Processing\\": "library/"
         }
     },
     "autoload-dev": {
-        "psr-0": {
-            "GingerTest\\": "tests/",
-            "GingerExample\\": "examples/"
+        "psr-4": {
+            "Prooph\\ProcessingTest\\": "tests/ProcessingTest",
+            "Prooph\\ProcessingExample\\": "examples/ProcessingExample"
         }
     },
     "replace": {
-        "gingerwork/ginger-type": "self.version",
-        "gingerwork/ginger-message": "self.version"
+        "prooph/processing-type": "self.version",
+        "prooph/processing-message": "self.version"
     },
-    "bin": ["./library/Ginger/Console/bin/ginger"]
+    "bin": ["./library/Console/bin/processing"]
 }

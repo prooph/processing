@@ -1,7 +1,7 @@
 <?php
 /*
- * This file is part of the Ginger Workflow Framework.
- * (c) Alexander Miertsch <contact@prooph.de>
+ * This file is part of the prooph processing framework.
+ * (c) 2014-2015 prooph software GmbH <contact@prooph.de>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -15,8 +15,8 @@
  * starts a new process and the process forwards the collected data to a target-file-writer which writes
  * the data to a new file -> examples/data/target-data.txt
  *
- * The environment set up is made by hand without the help of Ginger\Environment to show you some insights.
- * Normally most of the heavy set up is made by factories. Ginger\Environment and Zend\ServiceManager are the glue
+ * The environment set up is made by hand without the help of Prooph\Processing\Environment to show you some insights.
+ * Normally most of the heavy set up is made by factories. Prooph\Processing\Environment and Zend\ServiceManager are the glue
  * components to connect a workflow processor with workflow message handlers.
  */
 
@@ -33,27 +33,27 @@ chdir(__DIR__);
 require_once '../vendor/autoload.php';
 
 /**
- * This function returns a ready to use Ginger\Processor\WorkflowProcessor
+ * This function returns a ready to use Prooph\Processing\Processor\WorkflowProcessor
  *
- * A workflow in Ginger is the definition of a process. Each Process contains
+ * A workflow in processing is the definition of a process. Each Process contains
  * a task list. And each task on the list describes a single action that should be done.
  * The workflow processor manages running processes and logs their progress and status.
- * Ginger makes use of a technique performed event sourcing. The model is based on events
+ * Processing makes use of a technique performed event sourcing. The model is based on events
  * which are persisted in a stream and used to reconstitute the model for further processing.
  *
- * @return \Ginger\Processor\WorkflowProcessor
+ * @return \Prooph\Processing\Processor\WorkflowProcessor
  */
 function set_up_workflow_environment() {
 
     //A process definition is a configuration based on a php array
     //We define a linear messaging process here ...
     $processDefinition = [
-        "process_type" => \Ginger\Processor\Definition::PROCESS_LINEAR_MESSAGING,
+        "process_type" => \Prooph\Processing\Processor\Definition::PROCESS_LINEAR_MESSAGING,
         "tasks" => [
             [
-                "task_type"     => \Ginger\Processor\Definition::TASK_PROCESS_DATA,
+                "task_type"     => \Prooph\Processing\Processor\Definition::TASK_PROCESS_DATA,
                 "target"        => "target-file-writer",
-                "allowed_types" => ['GingerExample\Type\SourceUser']
+                "allowed_types" => ['Prooph\ProcessingExample\Type\SourceUser']
             ]
         ]
     ];
@@ -61,21 +61,21 @@ function set_up_workflow_environment() {
     //... and map it to the name of the initial workflow message which will trigger the process
     //The process factory is capable of parsing a process definition and build a process object from it
     //which can be processed by a workflow processor
-    $processFactory = new \Ginger\Processor\ProcessFactory(
+    $processFactory = new \Prooph\Processing\Processor\ProcessFactory(
         [
-            \Ginger\Message\MessageNameUtils::getDataCollectedEventName('GingerExample\Type\SourceUser') => $processDefinition
+            \Prooph\Processing\Message\MessageNameUtils::getDataCollectedEventName('Prooph\ProcessingExample\Type\SourceUser') => $processDefinition
         ]
     );
 
     //Here we set up the processor dependencies. Don't worry!
-    //When you set up your own workflow system Ginger\Environment will
+    //When you set up your own workflow system Prooph\Processing\Environment will
     //do the heavy lifting for you. We don't use it here cause you should
     //get an idea of the internal structure.
     //It's always a good thing to know the internals of a system not only the public API.
     //See comments in the set up functions to get more information about the individual components
     $eventStore         = _set_up_event_store();
     $workflowEngine     = _set_up_workflow_engine();
-    $processRepository  = new \Ginger\Processor\ProcessRepository($eventStore);
+    $processRepository  = new \Prooph\Processing\Processor\ProcessRepository($eventStore);
 
     //We need to create an empty stream for our process events.
     //The example uses in memory persistence
@@ -102,26 +102,26 @@ function set_up_workflow_environment() {
      * processes with a TaskList.
      * The node name provided as first argument identifies the system which runs the processor. For local processing
      * it is enough to use the default node name defined in the definition class but when working with
-     * many ginger nodes you should give each node a unique name and configure the workflow engine to
+     * many processing nodes you should give each node a unique name and configure the workflow engine to
      * provide the correct bus for each node.
      */
-    $workflowProcessor = new \Ginger\Processor\WorkflowProcessor(
-        \Ginger\Processor\NodeName::defaultName(),
+    $workflowProcessor = new \Prooph\Processing\Processor\WorkflowProcessor(
+        \Prooph\Processing\Processor\NodeName::defaultName(),
         $eventStore,
         $processRepository,
         $workflowEngine,
         $processFactory
     );
 
-    $eventBus = $workflowEngine->getEventChannelFor(\Ginger\Processor\Definition::SERVICE_WORKFLOW_PROCESSOR);
+    $eventBus = $workflowEngine->getEventChannelFor(\Prooph\Processing\Processor\Definition::SERVICE_WORKFLOW_PROCESSOR);
 
-    //Ginger provides a special ProophServiceBus plugin that can route all incoming messages to a single target
+    //Processing provides a special ProophServiceBus plugin that can route all incoming messages to a single target
     //in this case we want to route every message to the workflow processor
-    //Ginger\Environment attaches such a router to each service bus
-    $eventBus->utilize(new \Ginger\Processor\ProophPlugin\SingleTargetMessageRouter($workflowProcessor));
+    //Prooph\Processing\Environment attaches such a router to each service bus
+    $eventBus->utilize(new \Prooph\Processing\Processor\ProophPlugin\SingleTargetMessageRouter($workflowProcessor));
 
-    //Ginger also provides a special invoke strategy for the workflow processor
-    $eventBus->utilize(new \Ginger\Processor\ProophPlugin\WorkflowProcessorInvokeStrategy());
+    //Prooph\Processing also provides a special invoke strategy for the workflow processor
+    $eventBus->utilize(new \Prooph\Processing\Processor\ProophPlugin\WorkflowProcessorInvokeStrategy());
 
     return $workflowProcessor;
 }
@@ -160,11 +160,11 @@ function _set_up_event_store() {
 }
 
 /**
- * The workflow engine provides access to the communication layer of th Ginger system.
+ * The workflow engine provides access to the communication layer of the processing system.
  * Communication is based on ProophServiceBus. We use the idea of CQRS to decouple the
  * workflow processor from workflow message handlers which are responsible for processing
  * single tasks. A workflow message handler is normally the glue component which connects
- * Ginger with an external system. It receives commands from the processor like collect data or
+ * Prooph\Processing with an external system. It receives commands from the processor like collect data or
  * process data and send events back to tell the processor what's happened.
  *
  * Each target (external system) gets a command bus and an event bus assigned. These are the communication
@@ -172,7 +172,7 @@ function _set_up_event_store() {
  * You can use the full power of ProophServiceBus so a channel can be a local bus, a link to a messaging infrastructure,
  * a link to a worker queue, or a http remote interface.
  *
- * @return \Ginger\Processor\RegistryWorkflowEngine
+ * @return \Prooph\Processing\Processor\RegistryWorkflowEngine
  */
 function _set_up_workflow_engine() {
     $commandBus = new \Prooph\ServiceBus\CommandBus();
@@ -184,8 +184,8 @@ function _set_up_workflow_engine() {
     //For our scenario it is enough to use a closure as workflow message handler
     //In a production system this should be a class loadable by Zend\ServiceManager
     //See the more complex scenarios to get an idea how such a set up can be look like.
-    $commandRouter->route(\Ginger\Message\MessageNameUtils::getProcessDataCommandName('GingerExample\Type\SourceUser'))
-        ->to(function (\Ginger\Message\WorkflowMessage $message) use ($eventBus) {
+    $commandRouter->route(\Prooph\Processing\Message\MessageNameUtils::getProcessDataCommandName('Prooph\ProcessingExample\Type\SourceUser'))
+        ->to(function (\Prooph\Processing\Message\WorkflowMessage $message) use ($eventBus) {
 
             $dataAsJsonString = json_encode($message->payload());
 
@@ -199,7 +199,7 @@ function _set_up_workflow_engine() {
                 }
 
             } catch (\Exception $ex) {
-                $answer = \Ginger\Message\LogMessage::logException($ex, $message);
+                $answer = \Prooph\Processing\Message\LogMessage::logException($ex, $message);
             }
 
             $eventBus->dispatch($answer);
@@ -209,11 +209,11 @@ function _set_up_workflow_engine() {
 
     $commandBus->utilize(new \Prooph\ServiceBus\InvokeStrategy\CallbackStrategy());
 
-    $workflowEngine = new \Ginger\Processor\RegistryWorkflowEngine();
+    $workflowEngine = new \Prooph\Processing\Processor\RegistryWorkflowEngine();
 
     $workflowEngine->registerCommandBus($commandBus, ['target-file-writer']);
 
-    $workflowEngine->registerEventBus($eventBus, [\Ginger\Processor\Definition::SERVICE_WORKFLOW_PROCESSOR]);
+    $workflowEngine->registerEventBus($eventBus, [\Prooph\Processing\Processor\Definition::SERVICE_WORKFLOW_PROCESSOR]);
 
     return $workflowEngine;
 }
@@ -224,11 +224,11 @@ $workflowProcessor = set_up_workflow_environment();
 //Step 1: Read source data
 $userData = include('data/user-source-data.php');
 
-//Step 2: Use implementation of Ginger\Type\Type to validate source data
-$user = \GingerExample\Type\SourceUser::fromNativeValue($userData);
+//Step 2: Use implementation of Prooph\Processing\Type\Type to validate source data
+$user = \Prooph\ProcessingExample\Type\SourceUser::fromNativeValue($userData);
 
 //Step 3: Prepare WorkflowMessage
-$userDataCollected = \Ginger\Message\WorkflowMessage::newDataCollected($user, 'example-script', \Ginger\Processor\NodeName::defaultName());
+$userDataCollected = \Prooph\Processing\Message\WorkflowMessage::newDataCollected($user, 'example-script', \Prooph\Processing\Processor\NodeName::defaultName());
 
 //Step 4: Start processing by sending a "data-collected" event to the WorkflowProcessor (simplified step without using an EventBus)
 $workflowProcessor->receiveMessage($userDataCollected);

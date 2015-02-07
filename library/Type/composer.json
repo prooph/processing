@@ -1,0 +1,21 @@
+{
+    "name": "prooph/processing-type",
+    "description": "Provides base classes for source and target objects in a workflow",
+    "license": "BSD-3-Clause",
+    "keywords": [
+        "processing",
+        "prooph",
+        "type"
+    ],
+    "autoload": {
+        "psr-0": {
+            "Prooph\\Processing\\Type\\": ""
+        }
+    },
+    "target-dir": "Prooph/Processing/Type",
+    "require": {
+        "php": ">=5.4.8",
+        "beberlei/assert": "~2.0",
+        "codeliner/php-equalsbuilder": "~1.1"
+    }
+}

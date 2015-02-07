@@ -1,0 +1,67 @@
+#!/usr/bin/env php
+<?php
+/*
+ * This file is part of the prooph processing framework.
+ * (c) 2014-2015 prooph software GmbH <contact@prooph.de>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ *
+ * Date: 16.11.14 - 23:00
+ */
+
+$tryPaths = ['/../vendor/autoload.php', '/../../../vendor/autoload.php', '/../../vendor/autoload.php'];
+
+foreach ($tryPaths as $path) {
+    if (file_exists(__DIR__ . $path)) {
+        require_once __DIR__ . $path;
+        break;
+    }
+}
+
+
+
+define("VERSION", "1.0.0");
+
+$standardArgs = [
+    '--config-file' => 'Alternative path to config file',
+    '--config' => 'Additional json encoded configuration string',
+    '--quit'   => 'No verbosity',
+    '--verbose' => 'Increase verbosity',
+];
+
+$standardRouteArgs = '[--config-file=] [--config=] [--verbose|-v]:verbose [--quit|-q]:quit';
+
+$routeConfig = [
+    [
+        'name' => 'receive',
+        'route' => '<message> <target> ' . $standardRouteArgs,
+        'description' => 'Bootstrap a processing environment and receive a json encoded service bus message and forward it to a target. By default the script is looking for a processing.config.php(.dist) file in the current directory.',
+        'short_description' => 'Receive a service bus message',
+        'options_descriptions' => array_merge([
+            '<message>' => 'Json encoded message string',
+            '<target>'  => 'Target for the message',
+        ], $standardArgs)
+    ],
+    [
+        'name' => 'collect',
+        'route' => '<type> ' . $standardRouteArgs,
+        'description' => 'Start a workflow with a collect processing type task. By default the script is looking for a processing.config.php(.dist) file in the current directory.',
+        'short_description' => 'Start workflow by collecting processing type',
+        'options_descriptions' => array_merge([
+            '<type>' => 'Class of Prooph\Processing\Type',
+        ], $standardArgs)
+    ],
+];
+
+$dispatcher = new \ZF\Console\Dispatcher();
+
+$dispatcher->map('receive', new \Prooph\Processing\Console\ReceiveCommand());
+
+$dispatcher->map('collect', new \Prooph\Processing\Console\CollectCommand());
+
+$app = new \ZF\Console\Application('ProcessingNode', VERSION, $routeConfig, \Zend\Console\Console::getInstance(), $dispatcher);
+
+$exit = $app->run();
+
+exit($exit);

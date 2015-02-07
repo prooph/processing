@@ -1,0 +1,25 @@
+{
+    "name": "prooph/processing-console",
+    "description": "Provides base classes for using prooph processing on console",
+    "license": "BSD-3-Clause",
+    "keywords": [
+        "processing",
+        "prooph",
+        "console"
+    ],
+    "autoload": {
+        "psr-0": {
+            "Prooph\\Processing\\Console\\": ""
+        }
+    },
+    "target-dir": "Prooph/Processing/Console",
+    "require": {
+        "php": ">=5.4.8",
+        "prooph/processing-message" : "self.version",
+        "prooph/processing-environment" : "self.version",
+        "beberlei/assert": "~2.0",
+        "zfcampus/zf-console" : "~1.0",
+        "zendframework/zend-stdlib" : "~2.3"
+    },
+    "bin": ["bin/processing"]
+}

@@ -1,12 +1,12 @@
-Ginger Workflow Examples
-========================
+Workflow Processing Examples
+============================
 
-Ginger Workflow Framework ships with some examples showing you simplified workflow scenarios.
+Prooph processing ships with some examples showing you simplified workflow scenarios.
 
 # Example 1 - Write collected data to a file
 
 To get started you can have a look at [example1-script.php](example1-script.php).
-The annotated source code introduces the main components of the Ginger Workflow Framework.
+The annotated source code introduces the main components of the processing framework.
 Of course you can also run the example. Simply open a console and navigate to the examples dir of the package then
 fire up `php example1-script.php`. Please make sure that the script has read and write access
 to the `data` folder otherwise you will get error messages.
@@ -15,16 +15,16 @@ system in the comments of the script.
 
 # Example 2 - Start a workflow via console app
 
-`Ginger\Console` provides an easy way to start a pre configured workflow from the command line. The example
+`Prooph\Processing\Console` provides an easy way to start a pre configured workflow from the command line. The example
 ships with such a workflow configuration. Please see [example2-workflow.config.php](config/example2-workflow.config.php).
 
 To run the example navigate to
-`<ginger-package-root>/examples` and fire up
-`./bin/ginger collect GingerExample\\Type\\SourceUser --config-file config/example2-workflow.config.php --verbose`
+`<processing-package-root>/examples` and fire up
+`./bin/processing collect Prooph\\ProcessingExample\\Type\\SourceUser --config-file config/example2-workflow.config.php --verbose`
 
 ## What does the command?
-The command tells the Ginger console app that it should set up a Ginger\Environment with the config file found in `config/example2-workflow.config.php`
-and pass a `collect-data` workflow message with a prototype of `GingerExample\Type\SourceUser` to the workflow processor.
+The command tells the processing console app that it should set up a Prooph\Processing\Environment with the config file found in `config/example2-workflow.config.php`
+and pass a `collect-data` workflow message with a prototype of `Prooph\ProcessingExample\Type\SourceUser` to the workflow processor.
 The console app provides three verbosity levels:
 
 - `--quit` or  `-q` -> no output at all
