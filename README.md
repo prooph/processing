@@ -34,3 +34,8 @@ Please see [examples doc](examples/README.md) to get started with prooph process
 - [Prooph\Processing\Console](library/Console/README.md)
 - [Prooph\Processing\Environment](library/Environment/README.md)
 
+# Support
+
+- Ask any questions on [prooph-users](https://groups.google.com/forum/?hl=de#!forum/prooph) google group.
+- File issues at [https://github.com/prooph/processing/issues](https://github.com/prooph/processing/issues).
+
