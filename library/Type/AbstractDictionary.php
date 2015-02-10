@@ -109,21 +109,39 @@ abstract class AbstractDictionary implements DictionaryType
 
     /**
      * @param $value
+     * @throws Exception\InvalidTypeException
      * @return AbstractDictionary
      */
     public static function fromJsonDecodedData($value)
     {
         $prototypes = static::getPropertyPrototypes();
 
-        foreach ($value as $propertyName => $encodedProperty) {
-            $propertyPrototype = $prototypes[$propertyName];
+        $propertyNames = array_keys($prototypes);
 
-            $propertyClass = $propertyPrototype->of();
-
-            $value[$propertyName] = $propertyClass::fromJsonDecodedData($encodedProperty);
+        if (! is_array($value)) {
+            throw InvalidTypeException::fromMessageAndPrototype("Value must be an array", static::prototype());
         }
 
-        return new static($value);
+        $valueKeys = array_keys($value);
+
+        try{
+            if ($valueKeys != $propertyNames) {
+                foreach (array_keys($value) as $propertyName) Assertion::inArray($propertyName, $propertyNames);
+                foreach ($propertyNames as $propertyName) Assertion::inArray($propertyName, array_keys($value));
+            }
+
+            foreach ($value as $propertyName => $encodedProperty) {
+                $propertyPrototype = $prototypes[$propertyName];
+
+                $propertyClass = $propertyPrototype->of();
+
+                $value[$propertyName] = $propertyClass::fromJsonDecodedData($encodedProperty);
+            }
+
+            return new static($value);
+        } catch (\InvalidArgumentException $ex) {
+            throw InvalidTypeException::fromInvalidArgumentExceptionAndPrototype($ex, static::prototype());
+        }
     }
 
     /**
