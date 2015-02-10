@@ -186,6 +186,9 @@ class PayloadTest extends TestCase
 
         $payload->changeTypeClass('Prooph\ProcessingTest\Mock\AddressDictionary');
 
+        //Current data should be the user data even if type is already changed
+        $this->assertEquals($userData, $payload->extractTypeData());
+
         $payload->replaceData($userData['address']);
 
         $address = $payload->toType();

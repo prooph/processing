@@ -138,6 +138,11 @@ class Payload implements \JsonSerializable
         Assertion::string($newTypeClass);
         Assertion::implementsInterface($newTypeClass, 'Prooph\Processing\Type\Type');
         $this->typeClass = $newTypeClass;
+
+        if (is_null($this->data) && ! is_null($this->type)) {
+            $this->data = $this->extractTypeData();
+        }
+
         $this->type = null;
     }
 
