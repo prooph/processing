@@ -18,7 +18,7 @@ use Prooph\EventSourcing\AggregateChanged;
  * Class TaskListWasRescheduled
  *
  * @package Prooph\Processing\Processor\Task\Event
- * @author Alexander Miertsch <alexander.miertsch.extern@sixt.com>
+ * @author Alexander Miertsch <kontakt@codeliner.ws>
  */
 final class TaskListWasRescheduled extends AggregateChanged
 {

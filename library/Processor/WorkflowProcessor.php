@@ -235,17 +235,19 @@ class WorkflowProcessor
             throw $ex;
         }
 
-        $this->processorEventQueue->enqueue(
-            new Event(
-                'process_did_finish',
-                $this,
-                [
-                    'process_id' => $process->processId()->toString(),
-                    'finished_at' => $lastAnswer->createdOn()->format(\DateTime::ISO8601),
-                    'succeed' => $process->isSuccessfulDone()
-                ]
-            )
-        );
+        if ($process->isFinished()) {
+            $this->processorEventQueue->enqueue(
+                new Event(
+                    'process_did_finish',
+                    $this,
+                    [
+                        'process_id' => $process->processId()->toString(),
+                        'finished_at' => $lastAnswer->createdOn()->format(\DateTime::ISO8601),
+                        'succeed' => $process->isSuccessfulDone()
+                    ]
+                )
+            );
+        }
 
         if ($process->isSubProcess() && $process->isFinished()) {
             if ($process->isSuccessfulDone()) {
@@ -277,17 +279,12 @@ class WorkflowProcessor
             $subProcess->parentTaskListPosition()
         );
 
-        $eventBus = $this->workflowEngine->getEventChannelFor(
-            $subProcess->parentTaskListPosition()->taskListId()->nodeName()->toString()
-        );
-
-        $eventBus->dispatch($event);
+        $this->workflowEngine->dispatch($event);
     }
 
     /**
-     * @param Event\SubProcessFinished $subProcessFinished
+     * @param \Prooph\Processing\Processor\Event\SubProcessFinished $subProcessFinished
      * @throws \RuntimeException
-     * @throws \Exception
      */
     private function continueParentProcess(SubProcessFinished $subProcessFinished)
     {
