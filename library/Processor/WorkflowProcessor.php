@@ -337,7 +337,9 @@ class WorkflowProcessor
 
     private function rollbackTransaction()
     {
-        $this->eventStore->rollback();
+        if ($this->inTransaction) {
+            $this->eventStore->rollback();
+        }
 
         $this->inTransaction = false;
 
