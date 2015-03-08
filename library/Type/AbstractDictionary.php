@@ -135,7 +135,18 @@ abstract class AbstractDictionary implements DictionaryType
 
                 $propertyClass = $propertyPrototype->of();
 
-                $value[$propertyName] = $propertyClass::fromJsonDecodedData($encodedProperty);
+                try {
+                    $value[$propertyName] = $propertyClass::fromJsonDecodedData($encodedProperty);
+                } catch (\Exception $ex) {
+                    throw InvalidTypeException::fromMessageAndPrototype(
+                        sprintf(
+                            'Failed to create property  %s from json. Error: %s',
+                            $propertyName,
+                            $ex->getMessage()
+                        ),
+                        static::prototype()
+                    );
+                }
             }
 
             return new static($value);
@@ -146,6 +157,7 @@ abstract class AbstractDictionary implements DictionaryType
 
     /**
      * @param array $value
+     * @throws Exception\InvalidTypeException
      */
     protected function __construct(array $value)
     {
@@ -153,9 +165,8 @@ abstract class AbstractDictionary implements DictionaryType
 
         $properties = array();
 
-        try {
-
-            foreach ($value as $propertyName => $propertyTypeOrNativeValue) {
+        foreach ($value as $propertyName => $propertyTypeOrNativeValue) {
+            try {
                 $propertyPrototype = $prototypes[$propertyName];
 
                 $propertyTypeClass = $propertyPrototype->of();
@@ -169,10 +180,16 @@ abstract class AbstractDictionary implements DictionaryType
                 $properties[$propertyName] = new Property($propertyName, $propertyTypeOrNativeValue);
 
                 $value[$propertyName] = $propertyTypeOrNativeValue;
+            } catch (\InvalidArgumentException $ex) {
+                throw InvalidTypeException::fromMessageAndPrototype(
+                    sprintf(
+                        'Failed to create property %s with message %s',
+                        $propertyName,
+                        $ex->getMessage()
+                    ),
+                    static::prototype()
+                );
             }
-
-        } catch (\InvalidArgumentException $ex) {
-            throw InvalidTypeException::fromInvalidArgumentExceptionAndPrototype($ex, static::prototype());
         }
 
         $this->value = $value;
