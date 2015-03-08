@@ -209,17 +209,13 @@ class TaskListEntry
     public function markAsRunning(\DateTime $startedOn = null)
     {
         if ($this->isStarted()) {
-            throw new \RuntimeException(sprintf(
-                "TaskListEntry %s cannot be marked as running. It is already started",
-                $this->taskListPosition()->toString()
-            ));
+            //Seems like we've received a duplicate message, we should ignore that
+            return;
         }
 
         if ($this->isFinished()) {
-            throw new \RuntimeException(sprintf(
-                "TaskListEntry %s cannot be marked as running. It is already finished",
-                $this->taskListPosition()->toString()
-            ));
+            //Seems like we've received a duplicate message, we should ignore that
+            return;
         }
 
         if (is_null($startedOn)) {
@@ -237,15 +233,19 @@ class TaskListEntry
      */
     public function markAsSuccessfulDone(\DateTime $finishedOn = null)
     {
-        if (! $this->isRunning()) {
-            throw new \RuntimeException(sprintf(
-                "TaskListEntry %s cannot be marked as successful done. It is not marked as running",
-                $this->taskListPosition()->toString()
-            ));
-        }
-
         if (is_null($finishedOn)) {
             $finishedOn = new \DateTime();
+        }
+
+        if (! $this->isRunning()) {
+            if (! $this->isStarted()) {
+                $this->markAsRunning(new \DateTime());
+            } else {
+                if ($this->finishedOn > $finishedOn) {
+                    //Seems like we've received a duplicate message, we should ignore that
+                    return;
+                }
+            }
         }
 
         $this->finishedOn = $finishedOn;
@@ -259,15 +259,19 @@ class TaskListEntry
      */
     public function markAsFailed(\DateTime $finishedOn = null)
     {
-        if (! $this->isRunning()) {
-            throw new \RuntimeException(sprintf(
-                "TaskListEntry %s cannot be marked as failed. It is not marked as running",
-                $this->taskListPosition()->toString()
-            ));
-        }
-
         if (is_null($finishedOn)) {
             $finishedOn = new \DateTime();
+        }
+
+        if (! $this->isRunning()) {
+            if (! $this->isStarted()) {
+                $this->markAsRunning(new \DateTime());
+            } else {
+                if ($this->finishedOn > $finishedOn) {
+                    //Seems like we've received a duplicate message, we should ignore that
+                    return;
+                }
+            }
         }
 
         $this->finishedOn = $finishedOn;
