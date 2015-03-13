@@ -81,7 +81,7 @@ abstract class AbstractWorkflowEngine implements WorkflowEngine
         if (SubProcessFinished::MSG_NAME === $message->messageName())      $channelGetter = "getEventChannelFor";
 
         if (is_null($channelGetter)) {
-            throw new \InvalidArgumentException(sprintf('Channel detection for message %s was not possible', $messageName));
+            throw new \InvalidArgumentException(sprintf('Channel detection for message %s was not possible', $message->messageName()));
         }
 
         /** @var $channelBus CommandBus|EventBus */

@@ -18,7 +18,7 @@ use Prooph\ProcessingTest\TestCase;
  * Class FuncTest
  *
  * @package Prooph\ProcessingTest\Functional
- * @author Alexander Miertsch <alexander.miertsch.extern@sixt.com>
+ * @author Alexander Miertsch <kontakt@codeliner.ws>
  */
 class FuncTest extends TestCase
 {

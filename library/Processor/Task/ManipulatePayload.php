@@ -14,7 +14,7 @@ use Prooph\Processing\Message\Payload;
  * Class ManipulatePayload
  *
  * @package Prooph\Processing\Processor\Task
- * @author Alexander Miertsch <alexander.miertsch.extern@sixt.com>
+ * @author Alexander Miertsch <kontakt@codeliner.ws>
  */
 final class ManipulatePayload implements Task
 {

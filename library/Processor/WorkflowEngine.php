@@ -12,13 +12,11 @@
 namespace Prooph\Processing\Processor;
 
 use Prooph\Processing\Message\ProcessingMessage;
-use Prooph\ServiceBus\CommandBus;
-use Prooph\ServiceBus\EventBus;
 use Prooph\ServiceBus\Message\MessageInterface;
 use Zend\EventManager\ListenerAggregateInterface;
 
 /**
- * Class WorkflowEngine
+ * Interface WorkflowEngine
  *
  * Provides communication layer for the processing environment.
  *

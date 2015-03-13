@@ -109,25 +109,55 @@ abstract class AbstractDictionary implements DictionaryType
 
     /**
      * @param $value
+     * @throws Exception\InvalidTypeException
      * @return AbstractDictionary
      */
     public static function fromJsonDecodedData($value)
     {
         $prototypes = static::getPropertyPrototypes();
 
-        foreach ($value as $propertyName => $encodedProperty) {
-            $propertyPrototype = $prototypes[$propertyName];
+        $propertyNames = array_keys($prototypes);
 
-            $propertyClass = $propertyPrototype->of();
-
-            $value[$propertyName] = $propertyClass::fromJsonDecodedData($encodedProperty);
+        if (! is_array($value)) {
+            throw InvalidTypeException::fromMessageAndPrototype("Value must be an array", static::prototype());
         }
 
-        return new static($value);
+        $valueKeys = array_keys($value);
+
+        try{
+            if ($valueKeys != $propertyNames) {
+                foreach (array_keys($value) as $propertyName) Assertion::inArray($propertyName, $propertyNames);
+                foreach ($propertyNames as $propertyName) Assertion::inArray($propertyName, array_keys($value));
+            }
+
+            foreach ($value as $propertyName => $encodedProperty) {
+                $propertyPrototype = $prototypes[$propertyName];
+
+                $propertyClass = $propertyPrototype->of();
+
+                try {
+                    $value[$propertyName] = $propertyClass::fromJsonDecodedData($encodedProperty);
+                } catch (\Exception $ex) {
+                    throw InvalidTypeException::fromMessageAndPrototype(
+                        sprintf(
+                            'Failed to create property  %s from json. Error: %s',
+                            $propertyName,
+                            $ex->getMessage()
+                        ),
+                        static::prototype()
+                    );
+                }
+            }
+
+            return new static($value);
+        } catch (\InvalidArgumentException $ex) {
+            throw InvalidTypeException::fromInvalidArgumentExceptionAndPrototype($ex, static::prototype());
+        }
     }
 
     /**
      * @param array $value
+     * @throws Exception\InvalidTypeException
      */
     protected function __construct(array $value)
     {
@@ -135,9 +165,8 @@ abstract class AbstractDictionary implements DictionaryType
 
         $properties = array();
 
-        try {
-
-            foreach ($value as $propertyName => $propertyTypeOrNativeValue) {
+        foreach ($value as $propertyName => $propertyTypeOrNativeValue) {
+            try {
                 $propertyPrototype = $prototypes[$propertyName];
 
                 $propertyTypeClass = $propertyPrototype->of();
@@ -151,10 +180,16 @@ abstract class AbstractDictionary implements DictionaryType
                 $properties[$propertyName] = new Property($propertyName, $propertyTypeOrNativeValue);
 
                 $value[$propertyName] = $propertyTypeOrNativeValue;
+            } catch (\InvalidArgumentException $ex) {
+                throw InvalidTypeException::fromMessageAndPrototype(
+                    sprintf(
+                        'Failed to create property %s with message %s',
+                        $propertyName,
+                        $ex->getMessage()
+                    ),
+                    static::prototype()
+                );
             }
-
-        } catch (\InvalidArgumentException $ex) {
-            throw InvalidTypeException::fromInvalidArgumentExceptionAndPrototype($ex, static::prototype());
         }
 
         $this->value = $value;

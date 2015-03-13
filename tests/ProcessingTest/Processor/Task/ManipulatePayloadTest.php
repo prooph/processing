@@ -19,7 +19,7 @@ use Prooph\ProcessingTest\TestCase;
  * Class ManipulatePayloadTest
  *
  * @package Prooph\ProcessingTest\Processor\Task
- * @author Alexander Miertsch <alexander.miertsch.extern@sixt.com>
+ * @author Alexander Miertsch <kontakt@codeliner.ws>
  */
 class ManipulatePayloadTest extends TestCase
 {

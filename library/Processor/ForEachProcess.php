@@ -32,7 +32,7 @@ use Prooph\Processing\Type\CollectionType;
  * otherwise the process will fail.
  *
  * @package Prooph\Processing\Processor
- * @author Alexander Miertsch <alexander.miertsch.extern@sixt.com>
+ * @author Alexander Miertsch <kontakt@codeliner.ws>
  */
 class ForEachProcess extends Process
 {
