@@ -392,6 +392,22 @@ abstract class Process extends AggregateRoot
     }
 
     /**
+     * @param string $msg
+     * @param WorkflowMessage $workflowMessage
+     * @param WorkflowEngine $workflowEngine
+     */
+    protected function logErrorMsg($msg, WorkflowMessage $workflowMessage, WorkflowEngine $workflowEngine)
+    {
+        $this->receiveMessage(
+            LogMessage::logErrorMsg(
+                $msg,
+                $workflowMessage
+            ),
+            $workflowEngine
+        );
+    }
+
+    /**
      * @param TaskListPosition $taskListPosition
      * @throws \RuntimeException
      */

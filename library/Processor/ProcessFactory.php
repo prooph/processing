@@ -91,6 +91,10 @@ class ProcessFactory
                 return (is_null($parentTaskListPosition))?
                     ForEachProcess::setUp($nodeName, $tasks, $processConfig)
                     : ForEachProcess::setUpAsSubProcess($parentTaskListPosition, $nodeName, $tasks, $processConfig);
+            case Definition::PROCESS_PARALLEL_CHUNK:
+                return (is_null($parentTaskListPosition))?
+                    ChunkProcess::setUp($nodeName, $tasks, $processConfig)
+                    : ChunkProcess::setUpAsSubProcess($parentTaskListPosition, $nodeName, $tasks, $processConfig);
             default:
                 throw new \InvalidArgumentException(sprintf(
                     "Unsupported process_type given: %s",

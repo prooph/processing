@@ -334,7 +334,7 @@ class WorkflowMessage implements MessageNameProvider, ProcessingMessage
 
     /**
      * @param TaskListPosition $taskListPosition
-     * @return \Prooph\Processing\Message\LogMessage
+     * @return WorkflowMessage
      */
     public function reconnectToProcessTask(TaskListPosition $taskListPosition)
     {

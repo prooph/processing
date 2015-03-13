@@ -28,6 +28,7 @@ class Definition
     const PROCESS_LINEAR_MESSAGING   = "linear_messaging";
     const PROCESS_PARALLEL_FOR_EACH  = "parallel_for_each";
     const PROCESS_PARALLEL_FORK      = "parallel_fork";
+    const PROCESS_PARALLEL_CHUNK     = "parallel_chunk";
 
     const TASK_COLLECT_DATA          = "collect_data";
     const TASK_PROCESS_DATA          = "process_data";
