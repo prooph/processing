@@ -720,5 +720,80 @@ class AbstractChannelFactoryTest extends TestCase
         $this->assertFalse($targetChannelPlugin->isRegistered());
         $this->assertFalse($targetOriginAndSenderPlugin->isRegistered());
     }
+
+    /**
+     * @test
+     */
+    public function it_selects_the_target_and_sender_channel_because_target_list_contains_wildcard()
+    {
+        $targetChannelPlugin = new TargetChannelPlugin();
+
+        $targetAndOriginPlugin = new TargetAndOriginChannelPlugin();
+
+        $targetAndSenderPlugin = new TargetAndSenderChannelPlugin();
+
+        $targetOriginAndSenderPlugin = new TargetOriginAndSenderChannelPlugin();
+
+        $serviceLocator = new ServiceManager();
+
+        $serviceLocator->setService('target_channel_plugin', $targetChannelPlugin);
+        $serviceLocator->setService('target_and_origin_channel_plugin', $targetAndOriginPlugin);
+        $serviceLocator->setService('target_and_sender_channel_plugin', $targetAndSenderPlugin);
+        $serviceLocator->setService('target_origin_and_sender_channel_plugin', $targetOriginAndSenderPlugin);
+
+        $serviceLocator->setService('configuration', [
+            'processing' => [
+                'channels' => [
+                    'target_channel' => [
+                        'targets' => [
+                            'another_target'
+                        ],
+                        'utils' => [
+                            'target_channel_plugin'
+                        ]
+                    ],
+                    'target_and_origin_channel' => [
+                        'targets' => [
+                            'another_target'
+                        ],
+                        'origin' => 'my_origin',
+                        'utils' => [
+                            'target_and_origin_channel_plugin'
+                        ]
+                    ],
+                    'target_and_sender_channel' => [
+                        'targets' => [
+                            '*' //Wildcard matching all targets
+                        ],
+                        'sender' => 'my_sender',
+                        'utils' => [
+                            'target_and_sender_channel_plugin'
+                        ]
+                    ],
+                    'target_origin_and_sender_channel' => [
+                        'targets' => [
+                            'another_target'
+                        ],
+                        'origin' => 'my_origin',
+                        'sender' => 'my_sender',
+                        'utils' => [
+                            'target_origin_and_sender_channel_plugin'
+                        ]
+                    ],
+                ]
+            ]
+        ]);
+
+        $env = Environment::setUp($serviceLocator);
+
+        $channel = $env->services()->get('processing.command_bus.my_target___my_origin___my_sender');
+
+        $this->assertInstanceOf(\Prooph\ServiceBus\CommandBus::class, $channel);
+
+        $this->assertFalse($targetAndOriginPlugin->isRegistered());
+        $this->assertTrue($targetAndSenderPlugin->isRegistered());
+        $this->assertFalse($targetChannelPlugin->isRegistered());
+        $this->assertFalse($targetOriginAndSenderPlugin->isRegistered());
+    }
 }
  

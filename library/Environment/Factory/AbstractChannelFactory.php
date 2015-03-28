@@ -204,7 +204,7 @@ class AbstractChannelFactory implements AbstractFactoryInterface
             if (! is_array($channelConfig)
                 || ! array_key_exists('targets', $channelConfig)
                 || ! is_array($channelConfig['targets'])
-                || ! in_array($target, $channelConfig['targets']))
+                || (! in_array($target, $channelConfig['targets']) && ! in_array('*', $channelConfig['targets'])))
             { continue; }
 
             $originShouldMatch = isset($channelConfig['origin']);
