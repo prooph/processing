@@ -10,4 +10,4 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ## [0.2.0] - 2015-03-13
 - [Release Notes](https://github.com/prooph/processing/releases/tag/v0.2)
 
-[unreleased]: https://github.com/prooph/processing/compare/v0.2.0...HEAD
+[unreleased]: https://github.com/prooph/processing/compare/v0.2...HEAD
