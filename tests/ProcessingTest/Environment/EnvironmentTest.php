@@ -11,6 +11,7 @@
 
 namespace Prooph\ProcessingTest\Environment;
 
+use Prooph\Common\ServiceLocator\ServiceLocator;
 use Prooph\Processing\Environment\Environment;
 use Prooph\Processing\Processor\Definition;
 use Prooph\ProcessingTest\Mock\SimpleEnvPlugin;
@@ -104,7 +105,7 @@ class EnvironmentTest extends TestCase
 
         $env = Environment::setUp($services);
 
-        $this->assertSame($services, $env->services());
+        $this->assertInstanceOf(ServiceLocator::class, $env->services());
     }
 
     /**
@@ -203,9 +204,13 @@ class EnvironmentTest extends TestCase
      */
     public function it_adds_a_workflow_processor_buses_provider_to_services_so_every_workflow_message_handler_gets_the_buses_injected()
     {
-        $env = Environment::setUp();
-
-        $env->services()->setInvokableClass('test_workflow_message_handler', 'Prooph\ProcessingTest\Mock\TestWorkflowMessageHandler');
+        $env = Environment::setUp([
+            'services' => [
+                'invokables' => [
+                    'test_workflow_message_handler' => 'Prooph\ProcessingTest\Mock\TestWorkflowMessageHandler'
+                ]
+            ]
+        ]);
 
         /** @var $messageHandler TestWorkflowMessageHandler */
         $messageHandler = $env->services()->get('test_workflow_message_handler');

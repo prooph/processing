@@ -12,6 +12,8 @@
 namespace Prooph\Processing\Environment;
 
 use Codeliner\ArrayReader\ArrayReader;
+use Prooph\Common\ServiceLocator\ServiceLocator;
+use Prooph\Common\ServiceLocator\ZF2\Zf2ServiceManagerProxy;
 use Prooph\Processing\Processor\Definition;
 use Prooph\Processing\Processor\NodeName;
 use Prooph\Processing\Processor\ProcessFactory;
@@ -36,7 +38,7 @@ use Zend\Stdlib\ArrayUtils;
 class Environment 
 {
     /**
-     * @var ServiceManager
+     * @var ServiceLocator
      */
     private $services;
 
@@ -144,7 +146,7 @@ class Environment
                 $servicesConfig->configureServiceManager($configurationOrServices);
             }
 
-            $env = new self($configurationOrServices);
+            $env = new self(Zf2ServiceManagerProxy::proxy($configurationOrServices));
 
             //Check if the provided ServiceManager already has a configuration service available
             //so we make sure that we won't override it later but just merge it with the default environment config
@@ -165,7 +167,7 @@ class Environment
 
             $servicesConfig = new Config(ArrayUtils::merge(self::$defaultServicesConfig, $servicesConfig));
 
-            $env = new self(new ServiceManager($servicesConfig));
+            $env = new self(Zf2ServiceManagerProxy::proxy(new ServiceManager($servicesConfig)));
         }
 
         //This should never happen, but if for whatever reason a wrong $configurationOrServices was passed to the set up
@@ -197,22 +199,15 @@ class Environment
             );
         }
 
-        //We prepare the ServiceManager used by the Environment so that some standard services are always available
-        $orgAllowOverride = $env->services()->getAllowOverride();
-
-        $env->services()->setAllowOverride(true);
-
-        $env->services()->setService('configuration', $envConfig);
+        $env->services()->set('configuration', $envConfig, true);
 
         $env->services()->setAlias('config', 'configuration');
 
-        $env->services()->setService(Definition::SERVICE_ENVIRONMENT, $env);
+        $env->services()->set(Definition::SERVICE_ENVIRONMENT, $env, true);
 
         //The node name is used as message bus target to address the workflow processor of the current environment
         //We alias the workflow processor service with the node name to ensure that the target can be resolved
         $env->services()->setAlias($nodeName, Definition::SERVICE_WORKFLOW_PROCESSOR);
-
-        $env->services()->setAllowOverride($orgAllowOverride);
 
         //The environment component ships with an own workflow engine implementation that uses the ServiceManager
         //to resolve the required message buses for the various targets
@@ -248,9 +243,9 @@ class Environment
     }
 
     /**
-     * @param ServiceManager $services
+     * @param ServiceLocator $services
      */
-    private function __construct(ServiceManager $services)
+    private function __construct(ServiceLocator $services)
     {
         $this->services = $services;
     }
@@ -375,7 +370,7 @@ class Environment
     }
 
     /**
-     * @return ServiceManager
+     * @return ServiceLocator
      */
     public function services()
     {

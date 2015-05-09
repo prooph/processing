@@ -11,6 +11,7 @@
 
 namespace Prooph\Processing\Environment\Factory;
 
+use Prooph\Common\ServiceLocator\ZF2\Zf2ServiceManagerProxy;
 use Prooph\EventStore\Configuration\Configuration;
 use Prooph\EventStore\EventStore;
 use Prooph\EventStore\Feature\FeatureManager;
@@ -65,7 +66,7 @@ final class EventStoreFactory implements FactoryInterface
         $esConfiguration = new Configuration($config);
         $featureManager = new ZF2FeatureManager($featureManagerConfig);
         $featureManager->setServiceLocator($serviceLocator);
-        $esConfiguration->setFeatureManager($featureManager);
+        $esConfiguration->setFeatureManager(Zf2ServiceManagerProxy::proxy($featureManager));
 
         return new EventStore($esConfiguration);
     }

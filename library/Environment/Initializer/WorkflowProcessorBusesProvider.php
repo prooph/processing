@@ -11,11 +11,11 @@
 
 namespace Prooph\Processing\Environment\Initializer;
 
+use Prooph\Common\ServiceLocator\ServiceInitializer;
+use Prooph\Common\ServiceLocator\ServiceLocator;
 use Prooph\Processing\Environment\Environment;
 use Prooph\Processing\Message\WorkflowMessageHandler;
 use Prooph\Processing\Processor\Definition;
-use Zend\ServiceManager\InitializerInterface;
-use Zend\ServiceManager\ServiceLocatorInterface;
 
 /**
  * Class WorkflowProcessorBusesProvider
@@ -25,16 +25,16 @@ use Zend\ServiceManager\ServiceLocatorInterface;
  * @package Prooph\ProcessingTest\Environment\Initializer
  * @author Alexander Miertsch <kontakt@codeliner.ws>
  */
-class WorkflowProcessorBusesProvider implements InitializerInterface
+class WorkflowProcessorBusesProvider implements ServiceInitializer
 {
     /**
      * Initialize
      *
      * @param $instance
-     * @param ServiceLocatorInterface $serviceLocator
+     * @param ServiceLocator $serviceLocator
      * @return mixed
      */
-    public function initialize($instance, ServiceLocatorInterface $serviceLocator)
+    public function initialize($instance, ServiceLocator $serviceLocator)
     {
         if ($instance instanceof WorkflowMessageHandler) {
             /** @var $env Environment */

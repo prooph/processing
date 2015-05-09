@@ -67,9 +67,7 @@ class AbstractChannelFactoryTest extends TestCase
 
         $processor = new StupidWorkflowProcessorMock();
 
-        $env->services()->setAllowOverride(true);
-
-        $env->services()->setService(Definition::SERVICE_WORKFLOW_PROCESSOR, $processor);
+        $env->services()->set(Definition::SERVICE_WORKFLOW_PROCESSOR, $processor, true);
 
         $commandBus = $env->services()->get('processing.command_bus.' . Definition::SERVICE_WORKFLOW_PROCESSOR);
 
@@ -91,9 +89,7 @@ class AbstractChannelFactoryTest extends TestCase
 
         $processor = new StupidWorkflowProcessorMock();
 
-        $env->services()->setAllowOverride(true);
-
-        $env->services()->setService(Definition::SERVICE_WORKFLOW_PROCESSOR, $processor);
+        $env->services()->set(Definition::SERVICE_WORKFLOW_PROCESSOR, $processor, true);
 
         $eventBus = $env->services()->get('processing.event_bus.' . Definition::SERVICE_WORKFLOW_PROCESSOR);
 
@@ -134,8 +130,8 @@ class AbstractChannelFactoryTest extends TestCase
             ]
         ]);
 
-        $env->services()->setService("bus_plugin_1", $plugin1);
-        $env->services()->setService("bus_plugin_2", $plugin2);
+        $env->services()->set("bus_plugin_1", $plugin1);
+        $env->services()->set("bus_plugin_2", $plugin2);
 
         $env->services()->get('processing.command_bus.' . $env->getNodeName()->toString());
 
@@ -161,7 +157,7 @@ class AbstractChannelFactoryTest extends TestCase
 
         $messageDispatcher = new StupidMessageDispatcher();
 
-        $env->services()->setService("stupid_message_dispatcher", $messageDispatcher);
+        $env->services()->set("stupid_message_dispatcher", $messageDispatcher);
 
         $commandBus = $env->services()->get("processing.command_bus.remote_command_handler");
 
@@ -189,7 +185,7 @@ class AbstractChannelFactoryTest extends TestCase
 
         $messageHandler = new TestWorkflowMessageHandler();
 
-        $env->services()->setService('test_command_handler', $messageHandler);
+        $env->services()->set('test_command_handler', $messageHandler);
 
         $commandBus = $env->services()->get("processing.command_bus.test_command_handler");
 

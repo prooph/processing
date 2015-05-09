@@ -11,17 +11,13 @@
 
 namespace Prooph\Processing\Environment;
 
-use Codeliner\ArrayReader\ArrayReader;
 use Prooph\Common\Event\ActionEventListenerAggregate;
+use Prooph\Common\ServiceLocator\ServiceLocator;
 use Prooph\Processing\Environment\Factory\AbstractChannelFactory;
 use Prooph\Processing\Processor\AbstractWorkflowEngine;
 use Prooph\Processing\Processor\Definition;
-use Prooph\Processing\Processor\NodeName;
-use Prooph\Processing\Processor\WorkflowEngine;
 use Prooph\ServiceBus\CommandBus;
 use Prooph\ServiceBus\EventBus;
-use Zend\EventManager\ListenerAggregateInterface;
-use Zend\ServiceManager\ServiceManager;
 
 /**
  * Class ServicesAwareWorkflowEngine
@@ -32,7 +28,7 @@ use Zend\ServiceManager\ServiceManager;
 class ServicesAwareWorkflowEngine extends AbstractWorkflowEngine
 {
     /**
-     * @var ServiceManager
+     * @var ServiceLocator
      */
     private $services;
 
@@ -47,11 +43,11 @@ class ServicesAwareWorkflowEngine extends AbstractWorkflowEngine
     private $cachedPlugins = [];
 
     /**
-     * @param ServiceManager $serviceManager
+     * @param ServiceLocator $serviceLocator
      */
-    public function __construct(ServiceManager $serviceManager)
+    public function __construct(ServiceLocator $serviceLocator)
     {
-        $this->services = $serviceManager;
+        $this->services = $serviceLocator;
     }
 
     /**
