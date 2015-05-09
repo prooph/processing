@@ -11,15 +11,15 @@
 
 namespace Prooph\Processing\Message\ProophPlugin;
 
-use Prooph\Processing\Message\ProcessingMessage;
+use Prooph\Common\Event\ActionEventDispatcher;
+use Prooph\Common\Event\ActionEventListenerAggregate;
+use Prooph\Common\Event\DetachAggregateHandlers;
+use Prooph\Common\Messaging\RemoteMessage;
 use Prooph\Processing\Message\LogMessage;
 use Prooph\Processing\Message\MessageNameUtils;
 use Prooph\Processing\Message\WorkflowMessage;
 use Prooph\Processing\Processor\Command\StartSubProcess;
 use Prooph\Processing\Processor\Event\SubProcessFinished;
-use Prooph\ServiceBus\Message\MessageInterface;
-use Prooph\ServiceBus\Process\CommandDispatch;
-use Prooph\ServiceBus\Process\EventDispatch;
 use Prooph\ServiceBus\Process\MessageDispatch;
 use Zend\EventManager\AbstractListenerAggregate;
 use Zend\EventManager\EventManagerInterface;
@@ -30,33 +30,35 @@ use Zend\EventManager\EventManagerInterface;
  * @package Prooph\Processing\Message\Factory
  * @author Alexander Miertsch <kontakt@codeliner.ws>
  */
-class ToProcessingMessageTranslator extends AbstractListenerAggregate
+class ToProcessingMessageTranslator implements ActionEventListenerAggregate
 {
+    use DetachAggregateHandlers;
+
     public function __invoke(MessageDispatch $messageDispatch)
     {
         $message = $messageDispatch->getMessage();
 
-        if (! $message instanceof MessageInterface) return;
+        if (! $message instanceof RemoteMessage) return;
 
         $messageDispatch->setMessage($this->translateToProcessingMessage($message));
     }
 
     /**
-     * @param EventManagerInterface $events
+     * @param ActionEventDispatcher $events
      *
      * @return void
      */
-    public function attach(EventManagerInterface $events)
+    public function attach(ActionEventDispatcher $events)
     {
-        $this->listeners[] = $events->attach(MessageDispatch::INITIALIZE, $this);
+        $this->trackHandler($events->attachListener(MessageDispatch::INITIALIZE, $this));
     }
 
     /**
-     * @param MessageInterface $message
+     * @param RemoteMessage $message
      * @return LogMessage|WorkflowMessage|StartSubProcess|SubProcessFinished
      * @throws \InvalidArgumentException
      */
-    public function translateToProcessingMessage(MessageInterface $message)
+    public function translateToProcessingMessage(RemoteMessage $message)
     {
         if (MessageNameUtils::isWorkflowMessage($message->name())) {
             return WorkflowMessage::fromServiceBusMessage($message);

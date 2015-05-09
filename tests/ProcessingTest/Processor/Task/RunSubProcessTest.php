@@ -117,7 +117,7 @@ class RunSubProcessTest extends TestCase
 
         $this->assertEquals($subProcessDefinition, $startSubProcess->subProcessDefinition());
 
-        $this->assertEquals($previousMessage->getMessageName(), $startSubProcess->previousWorkflowMessage()->getMessageName());
+        $this->assertEquals($previousMessage->messageName(), $startSubProcess->previousWorkflowMessage()->messageName());
     }
 }
  

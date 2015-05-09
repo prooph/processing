@@ -11,7 +11,8 @@
 
 namespace Prooph\Processing\Message\ProophPlugin;
 
-use Prooph\ServiceBus\Message\MessageInterface;
+use Prooph\Common\Messaging\HasMessageName;
+use Prooph\Common\Messaging\RemoteMessage;
 
 /**
  * Interface ServiceBusTranslatableMessage
@@ -22,16 +23,16 @@ use Prooph\ServiceBus\Message\MessageInterface;
  * @package Prooph\Processing\Message\ProophPlugin
  * @author Alexander Miertsch <kontakt@codeliner.ws>
  */
-interface ServiceBusTranslatableMessage
+interface ServiceBusTranslatableMessage extends HasMessageName
 {
     /**
-     * @param MessageInterface $aMessage
+     * @param RemoteMessage $aMessage
      * @return static
      */
-    public static function fromServiceBusMessage(MessageInterface $aMessage);
+    public static function fromServiceBusMessage(RemoteMessage $aMessage);
 
     /**
-     * @return MessageInterface
+     * @return RemoteMessage
      */
     public function toServiceBusMessage();
 }

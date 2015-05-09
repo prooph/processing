@@ -71,7 +71,7 @@ class TaskListEntryTest extends TestCase
         $this->assertFalse($taskListEntry->isDone());
         $this->assertFalse($taskListEntry->isFailed());
 
-        $this->assertInstanceOf('\DateTime', $taskListEntry->startedOn());
+        $this->assertInstanceOf('\DateTimeImmutable', $taskListEntry->startedOn());
         $this->assertNull($taskListEntry->finishedOn());
     }
 
@@ -92,8 +92,8 @@ class TaskListEntryTest extends TestCase
         $this->assertTrue($taskListEntry->isDone());
         $this->assertFalse($taskListEntry->isFailed());
 
-        $this->assertInstanceOf('\DateTime', $taskListEntry->startedOn());
-        $this->assertInstanceOf('\DateTime', $taskListEntry->finishedOn());
+        $this->assertInstanceOf('\DateTimeImmutable', $taskListEntry->startedOn());
+        $this->assertInstanceOf('\DateTimeImmutable', $taskListEntry->finishedOn());
     }
 
     /**
@@ -113,8 +113,8 @@ class TaskListEntryTest extends TestCase
         $this->assertFalse($taskListEntry->isDone());
         $this->assertTrue($taskListEntry->isFailed());
 
-        $this->assertInstanceOf('\DateTime', $taskListEntry->startedOn());
-        $this->assertInstanceOf('\DateTime', $taskListEntry->finishedOn());
+        $this->assertInstanceOf('\DateTimeImmutable', $taskListEntry->startedOn());
+        $this->assertInstanceOf('\DateTimeImmutable', $taskListEntry->finishedOn());
     }
 
     /**

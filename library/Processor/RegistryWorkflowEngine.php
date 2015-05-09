@@ -12,6 +12,7 @@
 namespace Prooph\Processing\Processor;
 
 use Assert\Assertion;
+use Prooph\Common\Event\ActionEventListenerAggregate;
 use Prooph\ServiceBus\CommandBus;
 use Prooph\ServiceBus\EventBus;
 use Zend\EventManager\ListenerAggregateInterface;
@@ -141,10 +142,10 @@ class RegistryWorkflowEngine extends AbstractWorkflowEngine
     }
 
     /**
-     * @param ListenerAggregateInterface $plugin
+     * @param ActionEventListenerAggregate $plugin
      * @return void
      */
-    public function attachPluginToAllChannels(ListenerAggregateInterface $plugin)
+    public function attachPluginToAllChannels(ActionEventListenerAggregate $plugin)
     {
         foreach ($this->commandBusList as $commandBus) $commandBus->utilize($plugin);
         foreach ($this->eventBusList as $eventBus) $eventBus->utilize($plugin);

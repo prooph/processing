@@ -45,7 +45,7 @@ class WorkflowMessageTest extends TestCase
 
         $this->assertEquals(
             MessageNameUtils::MESSAGE_NAME_PREFIX . 'proophprocessingtestmockuserdictionary-collect-data',
-            $wfMessage->getMessageName()
+            $wfMessage->messageName()
         );
 
         $this->assertNull($wfMessage->payload()->extractTypeData());
@@ -84,7 +84,7 @@ class WorkflowMessageTest extends TestCase
 
         $this->assertEquals(
             MessageNameUtils::MESSAGE_NAME_PREFIX . 'proophprocessingtestmockuserdictionary-data-collected',
-            $wfMessage->getMessageName()
+            $wfMessage->messageName()
         );
 
         $this->assertEquals($userData, $wfMessage->payload()->extractTypeData());
@@ -120,7 +120,7 @@ class WorkflowMessageTest extends TestCase
 
         $this->assertEquals(
             MessageNameUtils::MESSAGE_NAME_PREFIX . 'proophprocessingtestmockuserdictionary-data-collected',
-            $wfAnswer->getMessageName()
+            $wfAnswer->messageName()
         );
 
         $this->assertEquals($userData, $wfAnswer->payload()->extractTypeData());
@@ -200,7 +200,7 @@ class WorkflowMessageTest extends TestCase
 
         $this->assertEquals(
             MessageNameUtils::MESSAGE_NAME_PREFIX . 'proophprocessingtestmockuserdictionary-process-data',
-            $wfCommand->getMessageName()
+            $wfCommand->messageName()
         );
 
         $this->assertEquals($userData, $wfCommand->payload()->extractTypeData());
@@ -256,7 +256,7 @@ class WorkflowMessageTest extends TestCase
 
         $this->assertEquals(
             MessageNameUtils::MESSAGE_NAME_PREFIX . 'proophprocessingtestmockuserdictionary-data-processed',
-            $wfAnswer->getMessageName()
+            $wfAnswer->messageName()
         );
 
         $this->assertEquals($userData, $wfAnswer->payload()->extractTypeData());
@@ -302,7 +302,7 @@ class WorkflowMessageTest extends TestCase
 
         $this->assertEquals(
             MessageNameUtils::MESSAGE_NAME_PREFIX . 'proophprocessingtestmocktargetuserdictionary-data-collected',
-            $wfMessage->getMessageName()
+            $wfMessage->messageName()
         );
 
         $this->assertEquals('Prooph\ProcessingTest\Mock\TargetUserDictionary', $wfMessage->payload()->getTypeClass());
@@ -322,7 +322,7 @@ class WorkflowMessageTest extends TestCase
 
         $sbMessage = $wfMessage->toServiceBusMessage();
 
-        $this->assertInstanceOf('Prooph\ServiceBus\Message\StandardMessage', $sbMessage);
+        $this->assertInstanceOf('Prooph\Common\Messaging\RemoteMessage', $sbMessage);
 
         $copyOfWfMessage = WorkflowMessage::fromServiceBusMessage($sbMessage);
 
@@ -330,7 +330,7 @@ class WorkflowMessageTest extends TestCase
 
         $this->assertEquals(
             MessageNameUtils::MESSAGE_NAME_PREFIX . 'proophprocessingtestmockuserdictionary-collect-data',
-            $copyOfWfMessage->getMessageName()
+            $copyOfWfMessage->messageName()
         );
 
         $this->assertNull($copyOfWfMessage->payload()->extractTypeData());

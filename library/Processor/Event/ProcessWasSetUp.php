@@ -95,7 +95,7 @@ class ProcessWasSetUp extends AggregateChanged
     public function processId()
     {
         if (is_null($this->processId)) {
-            $this->processId = ProcessId::fromString($this->aggregateId);
+            $this->processId = ProcessId::fromString($this->aggregateId());
         }
 
         return $this->processId;

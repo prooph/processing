@@ -146,11 +146,11 @@ function _set_up_event_store() {
     $es = new \Prooph\EventStore\EventStore($config);
 
     //Attach an output logger which prints information about recorded events
-    $es->getPersistenceEvents()->attach("commit.post", function (\Prooph\EventStore\PersistenceEvent\PostCommitEvent $event) {
+    $es->getActionEventDispatcher()->attachListener("commit.post", function (\Prooph\EventStore\PersistenceEvent\PostCommitEvent $event) {
         foreach ($event->getRecordedEvents() as $recordedEvent) {
             echo sprintf(
                 "Event %s recorded with payload: \n\n%s\n\n",
-                $recordedEvent->eventName()->toString(),
+                $recordedEvent->messageName(),
                 json_encode($recordedEvent->payload())
             );
         }

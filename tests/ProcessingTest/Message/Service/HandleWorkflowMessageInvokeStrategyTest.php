@@ -51,7 +51,7 @@ class HandleWorkflowMessageInvokeStrategyTest extends TestCase
 
         $commandRouter = new CommandRouter();
 
-        $commandRouter->route($wfCommand->getMessageName())->to($this->workflowMessageHandler);
+        $commandRouter->route($wfCommand->messageName())->to($this->workflowMessageHandler);
 
         $commandBus->utilize($commandRouter);
 
@@ -86,7 +86,7 @@ class HandleWorkflowMessageInvokeStrategyTest extends TestCase
 
         $eventRouter = new EventRouter();
 
-        $eventRouter->route($wfEvent->getMessageName())->to($this->workflowMessageHandler);
+        $eventRouter->route($wfEvent->messageName())->to($this->workflowMessageHandler);
 
         $eventBus->utilize($eventRouter);
 

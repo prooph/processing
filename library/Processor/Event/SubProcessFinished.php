@@ -11,6 +11,8 @@
 
 namespace Prooph\Processing\Processor\Event;
 
+use Prooph\Common\Messaging\DomainEvent;
+use Prooph\Common\Messaging\RemoteMessage;
 use Prooph\Processing\Message\ProcessingMessage;
 use Prooph\Processing\Message\LogMessage;
 use Prooph\Processing\Message\MessageNameUtils;
@@ -18,10 +20,6 @@ use Prooph\Processing\Message\WorkflowMessage;
 use Prooph\Processing\Processor\NodeName;
 use Prooph\Processing\Processor\ProcessId;
 use Prooph\Processing\Processor\Task\TaskListPosition;
-use Prooph\ServiceBus\Event;
-use Prooph\ServiceBus\Message\MessageHeader;
-use Prooph\ServiceBus\Message\MessageInterface;
-use Prooph\ServiceBus\Message\StandardMessage;
 
 /**
  * Class SubProcessFinished
@@ -29,7 +27,7 @@ use Prooph\ServiceBus\Message\StandardMessage;
  * @package Prooph\Processing\Processor\Event
  * @author Alexander Miertsch <kontakt@codeliner.ws>
  */
-class SubProcessFinished extends Event implements ProcessingMessage
+class SubProcessFinished extends DomainEvent implements ProcessingMessage
 {
     const MSG_NAME = "processing-processor-event-sub-process-finished";
 
@@ -57,14 +55,6 @@ class SubProcessFinished extends Event implements ProcessingMessage
         ];
 
         return new self(self::MSG_NAME, $payload);
-    }
-
-    /**
-     * @return string
-     */
-    public function messageName()
-    {
-        return $this->getMessageName();
     }
 
     /**
@@ -125,7 +115,7 @@ class SubProcessFinished extends Event implements ProcessingMessage
      */
     public function lastMessage()
     {
-        $sbMessage = StandardMessage::fromArray($this->payload['last_message']);
+        $sbMessage = RemoteMessage::fromArray($this->payload['last_message']);
 
         if (MessageNameUtils::isProcessingLogMessage($sbMessage->name())) {
             return LogMessage::fromServiceBusMessage($sbMessage);
@@ -145,28 +135,20 @@ class SubProcessFinished extends Event implements ProcessingMessage
     }
 
     /**
-     * @param MessageInterface $aMessage
+     * @param RemoteMessage $message
      * @return SubProcessFinished
      */
-    public static function fromServiceBusMessage(MessageInterface $aMessage)
+    public static function fromServiceBusMessage(RemoteMessage $message)
     {
-        return new self(
-            self::MSG_NAME,
-            $aMessage->payload(),
-            $aMessage->header()->version(),
-            $aMessage->header()->uuid(),
-            $aMessage->header()->createdOn()
-        );
+        return self::fromRemoteMessage($message);
     }
 
     /**
-     * @return MessageInterface
+     * @return RemoteMessage
      */
     public function toServiceBusMessage()
     {
-        $header = new MessageHeader($this->uuid(), $this->occurredOn(), $this->version(), MessageHeader::TYPE_EVENT);
-
-        return new StandardMessage(self::MSG_NAME, $header, $this->payload());
+        return $this->toRemoteMessage();
     }
 }
  

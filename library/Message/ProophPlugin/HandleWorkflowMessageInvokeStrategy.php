@@ -12,10 +12,10 @@
 namespace Prooph\Processing\Message\ProophPlugin;
 
 use Prooph\Processing\Message\MessageNameUtils;
+use Prooph\Processing\Message\ProcessingMessage;
 use Prooph\Processing\Message\WorkflowMessage;
 use Prooph\Processing\Message\WorkflowMessageHandler;
 use Prooph\ServiceBus\InvokeStrategy\AbstractInvokeStrategy;
-use Prooph\ServiceBus\Message\MessageNameProvider;
 
 /**
  * Class HandleWorkflowMessageInvokeStrategy
@@ -34,11 +34,11 @@ class HandleWorkflowMessageInvokeStrategy extends AbstractInvokeStrategy
      */
     public function canInvoke($aHandler, $aCommandOrEvent)
     {
-        if (! $aCommandOrEvent instanceof MessageNameProvider) return false;
+        if (! $aCommandOrEvent instanceof ProcessingMessage) return false;
 
         if (! $aHandler instanceof WorkflowMessageHandler) return false;
 
-        if (! MessageNameUtils::isWorkflowMessage($aCommandOrEvent->getMessageName())) return false;
+        if (! MessageNameUtils::isWorkflowMessage($aCommandOrEvent->messageName())) return false;
 
         return true;
     }

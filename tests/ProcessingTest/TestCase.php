@@ -11,7 +11,6 @@
 
 namespace Prooph\ProcessingTest;
 
-use Prooph\Processing\Message\LogMessage;
 use Prooph\Processing\Message\MessageNameUtils;
 use Prooph\Processing\Message\ProophPlugin\FromProcessingMessageTranslator;
 use Prooph\Processing\Message\ProophPlugin\HandleWorkflowMessageInvokeStrategy;
@@ -19,7 +18,6 @@ use Prooph\Processing\Message\ProophPlugin\ToProcessingMessageTranslator;
 use Prooph\Processing\Message\WorkflowMessage;
 use Prooph\Processing\Processor\Command\StartSubProcess;
 use Prooph\Processing\Processor\Definition;
-use Prooph\Processing\Processor\Event\SubProcessFinished;
 use Prooph\Processing\Processor\NodeName;
 use Prooph\Processing\Processor\ProcessFactory;
 use Prooph\Processing\Processor\ProcessRepository;
@@ -33,15 +31,12 @@ use Prooph\EventStore\Adapter\InMemoryAdapter;
 use Prooph\EventStore\Configuration\Configuration;
 use Prooph\EventStore\EventStore;
 use Prooph\EventStore\PersistenceEvent\PostCommitEvent;
-use Prooph\EventStore\Stream\AggregateStreamStrategy;
 use Prooph\EventStore\Stream\Stream;
 use Prooph\EventStore\Stream\StreamName;
 use Prooph\ServiceBus\CommandBus;
 use Prooph\ServiceBus\EventBus;
-use Prooph\ServiceBus\InvokeStrategy\ForwardToMessageDispatcherStrategy;
-use Prooph\ServiceBus\Message\FromMessageTranslator;
-use Prooph\ServiceBus\Message\InMemoryMessageDispatcher;
-use Prooph\ServiceBus\Message\ToMessageTranslator;
+use Prooph\ServiceBus\InvokeStrategy\ForwardToRemoteMessageDispatcherStrategy;
+use Prooph\ServiceBus\Message\InMemoryRemoteMessageDispatcher;
 use Prooph\ServiceBus\Router\CommandRouter;
 use Prooph\ServiceBus\Router\EventRouter;
 
@@ -123,7 +118,7 @@ class TestCase extends \PHPUnit_Framework_TestCase
     private $otherMachineProcessRepository;
 
     /**
-     * @var InMemoryMessageDispatcher
+     * @var InMemoryRemoteMessageDispatcher
      */
     private $otherMachineMessageDispatcher;
 
@@ -193,7 +188,7 @@ class TestCase extends \PHPUnit_Framework_TestCase
         $this->otherMachineWorkflowEngine->registerCommandBus($commandBus, ['test-case', 'test-target', 'other_machine']);
 
         //Add second command bus to local workflow engine to forward StartSubProcess command to message dispatcher
-        $this->otherMachineMessageDispatcher = new InMemoryMessageDispatcher($commandBus, new EventBus());
+        $this->otherMachineMessageDispatcher = new InMemoryRemoteMessageDispatcher($commandBus, new EventBus());
 
         $parentNodeCommandBus = new CommandBus();
 
@@ -203,7 +198,7 @@ class TestCase extends \PHPUnit_Framework_TestCase
 
         $parentNodeCommandBus->utilize($parentCommandRouter);
 
-        $parentNodeCommandBus->utilize(new ForwardToMessageDispatcherStrategy(new ToMessageTranslator()));
+        $parentNodeCommandBus->utilize(new ForwardToRemoteMessageDispatcherStrategy(new FromProcessingMessageTranslator()));
 
         $this->workflowEngine->registerCommandBus($parentNodeCommandBus, ['other_machine']);
 
@@ -222,11 +217,11 @@ class TestCase extends \PHPUnit_Framework_TestCase
 
         $otherMachineEventBus = new EventBus();
 
-        $toParentNodeMessageDispatcher = new InMemoryMessageDispatcher(new CommandBus(), $parentNodeEventBus);
+        $toParentNodeMessageDispatcher = new InMemoryRemoteMessageDispatcher(new CommandBus(), $parentNodeEventBus);
 
         $otherMachineEventBus->utilize(new SingleTargetMessageRouter($toParentNodeMessageDispatcher));
 
-        $otherMachineEventBus->utilize(new ForwardToMessageDispatcherStrategy(new FromProcessingMessageTranslator()));
+        $otherMachineEventBus->utilize(new ForwardToRemoteMessageDispatcherStrategy(new FromProcessingMessageTranslator()));
 
         $this->otherMachineWorkflowEngine->registerEventBus($otherMachineEventBus, [Definition::DEFAULT_NODE_NAME]);
     }
@@ -322,11 +317,11 @@ class TestCase extends \PHPUnit_Framework_TestCase
 
             $this->eventStore = new EventStore($config);
 
-            $this->eventStore->getPersistenceEvents()->attach("commit.post", function(PostCommitEvent $postCommitEvent) {
+            $this->eventStore->getActionEventDispatcher()->attachListener("commit.post", function(PostCommitEvent $postCommitEvent) {
                 $this->lastPostCommitEvent = $postCommitEvent;
 
                 foreach ($postCommitEvent->getRecordedEvents() as $event) {
-                    $this->eventNameLog[] = $event->eventName()->toString();
+                    $this->eventNameLog[] = $event->messageName();
                 }
             });
 
@@ -356,11 +351,11 @@ class TestCase extends \PHPUnit_Framework_TestCase
 
             $this->otherMachineEventStore = new EventStore($config);
 
-            $this->otherMachineEventStore->getPersistenceEvents()->attach("commit.post", function(PostCommitEvent $postCommitEvent) {
+            $this->otherMachineEventStore->getActionEventDispatcher()->attachListener("commit.post", function(PostCommitEvent $postCommitEvent) {
                 $this->otherMachineLastPostCommitEvent = $postCommitEvent;
 
                 foreach ($postCommitEvent->getRecordedEvents() as $event) {
-                    $this->otherMachineEventNameLog[] = $event->eventName()->toString();
+                    $this->otherMachineEventNameLog[] = $event->messageName();
                 }
             });
 
@@ -455,9 +450,9 @@ class TestCase extends \PHPUnit_Framework_TestCase
         return new ProcessFactory(
             [
                 //Scenario 1 definition
-                $wfMessage->getMessageName() => $processDefinitionS1,
+                $wfMessage->messageName() => $processDefinitionS1,
                 //Scenario 2 definition
-                $scenario2Message->getMessageName() => $processDefinitionS2
+                $scenario2Message->messageName() => $processDefinitionS2
             ]
         );
     }

@@ -49,13 +49,13 @@ class ProcessFactory
      */
     public function deriveProcessFromMessage(WorkflowMessage $message, NodeName $nodeName)
     {
-        if (isset($this->processDefinitions[$message->getMessageName()])) {
-            return $this->createProcessFromDefinition($this->processDefinitions[$message->getMessageName()], $nodeName);
+        if (isset($this->processDefinitions[$message->messageName()])) {
+            return $this->createProcessFromDefinition($this->processDefinitions[$message->messageName()], $nodeName);
         }
 
         throw new \InvalidArgumentException(sprintf(
             "Derive process from message failed due to unknown message: %s",
-            $message->getMessageName()
+            $message->messageName()
         ));
     }
 

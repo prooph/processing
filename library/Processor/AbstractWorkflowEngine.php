@@ -11,6 +11,7 @@
 
 namespace Prooph\Processing\Processor;
 
+use Prooph\Common\Messaging\RemoteMessage;
 use Prooph\Processing\Message\ProcessingMessage;
 use Prooph\Processing\Message\MessageNameUtils;
 use Prooph\Processing\Message\ProophPlugin\ToProcessingMessageTranslator;
@@ -66,7 +67,7 @@ abstract class AbstractWorkflowEngine implements WorkflowEngine
      */
     public function dispatch($message, $sender = null)
     {
-        if ($message instanceof MessageInterface) {
+        if ($message instanceof RemoteMessage) {
             $message = $this->getToProcessingMessageTranslator()->translateToProcessingMessage($message);
         }
 

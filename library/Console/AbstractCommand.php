@@ -73,7 +73,7 @@ class AbstractCommand
 
         $env = Environment::setUp($config);
 
-        $env->getEventStore()->getPersistenceEvents()->attach(new PersistedEventsConsoleWriter($consoleWriter));
+        $env->getEventStore()->getActionEventDispatcher()->attachListenerAggregate(new PersistedEventsConsoleWriter($consoleWriter));
 
         return $env;
     }

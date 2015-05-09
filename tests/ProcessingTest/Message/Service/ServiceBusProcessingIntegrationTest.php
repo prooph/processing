@@ -22,12 +22,11 @@ use Prooph\Processing\Processor\ProcessId;
 use Prooph\Processing\Processor\Task\TaskListId;
 use Prooph\Processing\Processor\Task\TaskListPosition;
 use Prooph\ProcessingTest\TestCase;
-use Prooph\ProcessingTest\Mock\UserDictionary;
 use Prooph\ServiceBus\CommandBus;
 use Prooph\ServiceBus\EventBus;
 use Prooph\ServiceBus\InvokeStrategy\CallbackStrategy;
-use Prooph\ServiceBus\InvokeStrategy\ForwardToMessageDispatcherStrategy;
-use Prooph\ServiceBus\Message\InMemoryMessageDispatcher;
+use Prooph\ServiceBus\InvokeStrategy\ForwardToRemoteMessageDispatcherStrategy;
+use Prooph\ServiceBus\Message\InMemoryRemoteMessageDispatcher;
 use Prooph\ServiceBus\Router\CommandRouter;
 use Prooph\ServiceBus\Router\EventRouter;
 
@@ -42,7 +41,7 @@ class ServiceBusProcessingIntegrationTest extends TestCase
     private $receivedMessage;
 
     /**
-     * @var InMemoryMessageDispatcher
+     * @var InMemoryRemoteMessageDispatcher
      */
     private $messageDispatcher;
 
@@ -54,7 +53,7 @@ class ServiceBusProcessingIntegrationTest extends TestCase
 
         $commandBus = new CommandBus();
 
-        $this->messageDispatcher = new InMemoryMessageDispatcher($commandBus, $eventBus);
+        $this->messageDispatcher = new InMemoryRemoteMessageDispatcher($commandBus, $eventBus);
 
         $commandRouter = new CommandRouter();
 
@@ -108,11 +107,11 @@ class ServiceBusProcessingIntegrationTest extends TestCase
 
         $eventRouter = new EventRouter();
 
-        $eventRouter->route($wfMessage->getMessageName())->to($this->messageDispatcher);
+        $eventRouter->route($wfMessage->messageName())->to($this->messageDispatcher);
 
         $eventBus->utilize($eventRouter);
 
-        $eventBus->utilize(new ForwardToMessageDispatcherStrategy(new FromProcessingMessageTranslator()));
+        $eventBus->utilize(new ForwardToRemoteMessageDispatcherStrategy(new FromProcessingMessageTranslator()));
 
         $eventBus->dispatch($wfMessage);
 
@@ -124,7 +123,7 @@ class ServiceBusProcessingIntegrationTest extends TestCase
         $this->assertTrue($wfMessage->uuid()->equals($receivedMessage->uuid()));
         $this->assertEquals($wfMessage->payload()->extractTypeData(), $receivedMessage->payload()->extractTypeData());
         $this->assertEquals($wfMessage->version(), $receivedMessage->version());
-        $this->assertEquals($wfMessage->createdOn()->format('Y-m-d H:i:s'), $receivedMessage->createdOn()->format('Y-m-d H:i:s'));
+        $this->assertEquals($wfMessage->createdAt()->format('Y-m-d H:i:s'), $receivedMessage->createdAt()->format('Y-m-d H:i:s'));
         $this->assertEquals(array('metadata' => true), $receivedMessage->metadata());
     }
 
@@ -145,11 +144,11 @@ class ServiceBusProcessingIntegrationTest extends TestCase
 
         $eventRouter = new EventRouter();
 
-        $eventRouter->route($logMessage->getMessageName())->to($this->messageDispatcher);
+        $eventRouter->route($logMessage->messageName())->to($this->messageDispatcher);
 
         $eventBus->utilize($eventRouter);
 
-        $eventBus->utilize(new ForwardToMessageDispatcherStrategy(new FromProcessingMessageTranslator()));
+        $eventBus->utilize(new ForwardToRemoteMessageDispatcherStrategy(new FromProcessingMessageTranslator()));
 
         $eventBus->dispatch($logMessage);
 
@@ -160,7 +159,7 @@ class ServiceBusProcessingIntegrationTest extends TestCase
         $this->assertTrue($taskListPosition->equals($receivedMessage->processTaskListPosition()));
         $this->assertTrue($logMessage->uuid()->equals($receivedMessage->uuid()));
         $this->assertEquals($logMessage->technicalMsg(), $receivedMessage->technicalMsg());
-        $this->assertEquals($logMessage->createdOn()->format('Y-m-d H:i:s'), $receivedMessage->createdOn()->format('Y-m-d H:i:s'));
+        $this->assertEquals($logMessage->createdAt()->format('Y-m-d H:i:s'), $receivedMessage->createdAt()->format('Y-m-d H:i:s'));
     }
 
     /**
@@ -180,7 +179,7 @@ class ServiceBusProcessingIntegrationTest extends TestCase
 
         $commandBus->utilize($commandRouter);
 
-        $commandBus->utilize(new ForwardToMessageDispatcherStrategy(new FromProcessingMessageTranslator()));
+        $commandBus->utilize(new ForwardToRemoteMessageDispatcherStrategy(new FromProcessingMessageTranslator()));
 
         $commandBus->dispatch($startSupProcess);
 
@@ -191,7 +190,7 @@ class ServiceBusProcessingIntegrationTest extends TestCase
         $this->assertTrue($taskListPosition->equals($receivedMessage->parentTaskListPosition()));
         $this->assertTrue($startSupProcess->uuid()->equals($receivedMessage->uuid()));
         $this->assertEquals($startSupProcess->payload(), $receivedMessage->payload());
-        $this->assertEquals($startSupProcess->createdOn()->format('Y-m-d H:i:s'), $receivedMessage->createdOn()->format('Y-m-d H:i:s'));
+        $this->assertEquals($startSupProcess->createdAt()->format('Y-m-d H:i:s'), $receivedMessage->createdAt()->format('Y-m-d H:i:s'));
         $this->assertEquals($startSupProcess->target(), $receivedMessage->target());
     }
 
@@ -224,7 +223,7 @@ class ServiceBusProcessingIntegrationTest extends TestCase
 
         $eventBus->utilize($eventRouter);
 
-        $eventBus->utilize(new ForwardToMessageDispatcherStrategy(new FromProcessingMessageTranslator()));
+        $eventBus->utilize(new ForwardToRemoteMessageDispatcherStrategy(new FromProcessingMessageTranslator()));
 
         $eventBus->dispatch($subProcessFinished);
 
@@ -237,7 +236,7 @@ class ServiceBusProcessingIntegrationTest extends TestCase
         $this->assertTrue($subProcessFinished->uuid()->equals($receivedMessage->uuid()));
         $this->assertTrue($logMessage->uuid()->equals($receivedMessage->lastMessage()->uuid()));
         $this->assertEquals($logMessage->technicalMsg(), $receivedMessage->lastMessage()->technicalMsg());
-        $this->assertEquals($subProcessFinished->occurredOn()->format('Y-m-d H:i:s'), $receivedMessage->occurredOn()->format('Y-m-d H:i:s'));
+        $this->assertEquals($subProcessFinished->createdAt()->format('Y-m-d H:i:s'), $receivedMessage->createdAt()->format('Y-m-d H:i:s'));
     }
 }
  

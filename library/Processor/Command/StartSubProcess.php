@@ -11,13 +11,11 @@
 
 namespace Prooph\Processing\Processor\Command;
 
+use Prooph\Common\Messaging\Command;
+use Prooph\Common\Messaging\RemoteMessage;
 use Prooph\Processing\Message\ProcessingMessage;
 use Prooph\Processing\Message\WorkflowMessage;
 use Prooph\Processing\Processor\Task\TaskListPosition;
-use Prooph\ServiceBus\Command;
-use Prooph\ServiceBus\Message\MessageHeader;
-use Prooph\ServiceBus\Message\MessageInterface;
-use Prooph\ServiceBus\Message\StandardMessage;
 
 /**
  * Class StartSubProcess
@@ -59,14 +57,6 @@ class StartSubProcess extends Command implements ProcessingMessage
         ];
 
         return new self(self::MSG_NAME, $payload);
-    }
-
-    /**
-     * @return string
-     */
-    public function messageName()
-    {
-        return $this->getMessageName();
     }
 
     /**
@@ -121,7 +111,7 @@ class StartSubProcess extends Command implements ProcessingMessage
     public function previousWorkflowMessage()
     {
         if ($this->payload['previous_message']) {
-            $sbMessage = StandardMessage::fromArray($this->payload['previous_message']);
+            $sbMessage = RemoteMessage::fromArray($this->payload['previous_message']);
 
             return WorkflowMessage::fromServiceBusMessage($sbMessage);
         }
@@ -130,28 +120,20 @@ class StartSubProcess extends Command implements ProcessingMessage
     }
 
     /**
-     * @param MessageInterface $aMessage
-     * @return StartSubProcess
+     * @param RemoteMessage $message
+     * @return static
      */
-    public static function fromServiceBusMessage(MessageInterface $aMessage)
+    public static function fromServiceBusMessage(RemoteMessage $message)
     {
-        return new self(
-            self::MSG_NAME,
-            $aMessage->payload(),
-            $aMessage->header()->version(),
-            $aMessage->header()->uuid(),
-            $aMessage->header()->createdOn()
-        );
+        return self::fromRemoteMessage($message);
     }
 
     /**
-     * @return MessageInterface
+     * @return RemoteMessage
      */
     public function toServiceBusMessage()
     {
-        $header = new MessageHeader($this->uuid(), $this->createdOn(), $this->version(), MessageHeader::TYPE_COMMAND);
-
-        return new StandardMessage(self::MSG_NAME, $header, $this->payload());
+        return $this->toRemoteMessage();
     }
 }
  

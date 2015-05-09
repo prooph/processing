@@ -11,9 +11,10 @@
 
 namespace Prooph\Processing\Console;
 
+use Prooph\Common\Event\ActionEventDispatcher;
+use Prooph\Common\Event\ActionEventListenerAggregate;
+use Prooph\Common\Event\DetachAggregateHandlers;
 use Prooph\EventStore\PersistenceEvent\PostCommitEvent;
-use Zend\EventManager\AbstractListenerAggregate;
-use Zend\EventManager\EventManagerInterface;
 
 /**
  * Class PersistedEventsConsoleWriter
@@ -21,8 +22,10 @@ use Zend\EventManager\EventManagerInterface;
  * @package Prooph\Processing\Console
  * @author Alexander Miertsch <kontakt@codeliner.ws>
  */
-class PersistedEventsConsoleWriter extends AbstractListenerAggregate
+class PersistedEventsConsoleWriter implements ActionEventListenerAggregate
 {
+    use DetachAggregateHandlers;
+
     /**
      * @var ConsoleWriter
      */
@@ -37,18 +40,13 @@ class PersistedEventsConsoleWriter extends AbstractListenerAggregate
     }
 
     /**
-     * Attach one or more listeners
-     *
-     * Implementors may add an optional $priority argument; the EventManager
-     * implementation will pass this to the aggregate.
-     *
-     * @param EventManagerInterface $events
+     * @param ActionEventDispatcher $events
      *
      * @return void
      */
-    public function attach(EventManagerInterface $events)
+    public function attach(ActionEventDispatcher $events)
     {
-        $this->listeners[] = $events->attach('commit.post', [$this, 'onPostCommit']);
+        $this->trackHandler($events->attachListener('commit.post', [$this, 'onPostCommit']));
     }
 
     public function onPostCommit(PostCommitEvent $event) {
@@ -56,7 +54,7 @@ class PersistedEventsConsoleWriter extends AbstractListenerAggregate
             $this->consoleWriter->writeNotice(
                 sprintf(
                     "Event %s recorded with payload: \n\n%s\n\n",
-                    $recordedEvent->eventName()->toString(),
+                    $recordedEvent->messageName(),
                     json_encode($recordedEvent->payload())
                 )
             );

@@ -242,7 +242,7 @@ class WorkflowProcessor
                     $this,
                     [
                         'process_id' => $process->processId()->toString(),
-                        'finished_at' => $lastAnswer->createdOn()->format(\DateTime::ISO8601),
+                        'finished_at' => $lastAnswer->createdAt()->format(\DateTime::ISO8601),
                         'succeed' => $process->isSuccessfulDone()
                     ]
                 )

@@ -94,10 +94,10 @@ class LinearProcess extends Process
      */
     private function isCorrectMessageFor(Task $task, WorkflowMessage $message)
     {
-        if (MessageNameUtils::isProcessingCommand($message->getMessageName())) {
+        if (MessageNameUtils::isProcessingCommand($message->messageName())) {
 
             if (! $task instanceof CollectData
-                || $message->getMessageName() !== MessageNameUtils::getCollectDataCommandName($task->prototype()->of())) {
+                || $message->messageName() !== MessageNameUtils::getCollectDataCommandName($task->prototype()->of())) {
 
                 return false;
             }

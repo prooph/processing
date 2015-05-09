@@ -190,7 +190,7 @@ class LogMessageTest extends TestCase
         $this->assertEquals($wfMessage->processTaskListPosition()->position(), $logMessage->msgParams()['task_list_position']);
         $this->assertEquals(get_class($task), $logMessage->msgParams()['task_class']);
         $this->assertEquals(json_encode($task->getArrayCopy()), $logMessage->msgParams()['task_as_json']);
-        $this->assertEquals($wfMessage->getMessageName(), $logMessage->msgParams()['message_name']);
+        $this->assertEquals($wfMessage->messageName(), $logMessage->msgParams()['message_name']);
     }
 
     /**
@@ -209,7 +209,7 @@ class LogMessageTest extends TestCase
         $this->assertTrue(isset($logMessage->msgParams()['message_name']));
 
         $this->assertEquals($wfMessage->target(), $logMessage->msgParams()['workflow_message_handler']);
-        $this->assertEquals($wfMessage->getMessageName(), $logMessage->msgParams()['message_name']);
+        $this->assertEquals($wfMessage->messageName(), $logMessage->msgParams()['message_name']);
     }
 
     /**
@@ -223,7 +223,7 @@ class LogMessageTest extends TestCase
 
         $sbMessage = $logMessage->toServiceBusMessage();
 
-        $this->assertInstanceOf('Prooph\ServiceBus\Message\StandardMessage', $sbMessage);
+        $this->assertInstanceOf('Prooph\Common\Messaging\RemoteMessage', $sbMessage);
 
         $copyOfLogMessage = LogMessage::fromServiceBusMessage($sbMessage);
 

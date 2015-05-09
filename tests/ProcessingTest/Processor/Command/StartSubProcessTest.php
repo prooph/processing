@@ -67,7 +67,7 @@ class StartSubProcessTest extends TestCase
 
         $this->assertEquals($subProcessDefinition, $command->subProcessDefinition());
 
-        $this->assertEquals($previousMessage->getMessageName(), $command->previousWorkflowMessage()->getMessageName());
+        $this->assertEquals($previousMessage->messageName(), $command->previousWorkflowMessage()->messageName());
 
         $this->assertEquals(NodeName::defaultName()->toString(), $command->origin());
 
@@ -125,7 +125,7 @@ class StartSubProcessTest extends TestCase
 
         $sbMessage = $command->toServiceBusMessage();
 
-        $this->assertInstanceOf('Prooph\ServiceBus\Message\StandardMessage', $sbMessage);
+        $this->assertInstanceOf('Prooph\Common\Messaging\RemoteMessage', $sbMessage);
 
         $copyOfCommand = StartSubProcess::fromServiceBusMessage($sbMessage);
 

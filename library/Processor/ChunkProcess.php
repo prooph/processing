@@ -179,7 +179,7 @@ final class ChunkProcess extends Process
             return;
         }
 
-        if (! MessageNameUtils::isProcessingEvent($workflowMessage->getMessageName())) {
+        if (! MessageNameUtils::isProcessingEvent($workflowMessage->messageName())) {
             $this->recordThat(TaskEntryMarkedAsRunning::at($taskListEntry->taskListPosition()));
             $this->receiveMessage(
                 LogMessage::logWrongMessageReceivedFor($taskListEntry->task(), $taskListEntry->taskListPosition(), $workflowMessage),

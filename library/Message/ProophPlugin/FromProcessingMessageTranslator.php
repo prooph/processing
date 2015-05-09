@@ -11,9 +11,8 @@
 
 namespace Prooph\Processing\Message\ProophPlugin;
 
-use Prooph\Processing\Message\WorkflowMessage;
-use Prooph\ServiceBus\Message\MessageInterface;
-use Prooph\ServiceBus\Message\ToMessageTranslatorInterface;
+use Prooph\Common\Messaging\RemoteMessage;
+use Prooph\ServiceBus\Message\ToRemoteMessageTranslator;
 
 /**
  * Class FromProcessingMessageTranslator
@@ -21,25 +20,24 @@ use Prooph\ServiceBus\Message\ToMessageTranslatorInterface;
  * @package Prooph\Processing\Message\ProophPlugin
  * @author Alexander Miertsch <kontakt@codeliner.ws>
  */
-class FromProcessingMessageTranslator implements ToMessageTranslatorInterface
+class FromProcessingMessageTranslator implements ToRemoteMessageTranslator
 {
     /**
-     * @param $aCommandOrEvent
+     * @param $domainMessage
      * @return bool
      */
-    public function canTranslateToMessage($aCommandOrEvent)
+    public function canTranslateToRemoteMessage($domainMessage)
     {
-        return $aCommandOrEvent instanceof ServiceBusTranslatableMessage;
+        return $domainMessage instanceof ServiceBusTranslatableMessage;
     }
 
     /**
-     * @param WorkflowMessage $aCommandOrEvent
-     * @throws \RuntimeException
-     * @return MessageInterface
+     * @param mixed $domainMessage
+     * @return RemoteMessage
      */
-    public function translateToMessage($aCommandOrEvent)
+    public function translateToRemoteMessage($domainMessage)
     {
-        return $aCommandOrEvent->toServiceBusMessage();
+        return $domainMessage->toServiceBusMessage();
     }
 }
  

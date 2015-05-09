@@ -43,7 +43,7 @@ class CollectCommand extends AbstractCommand
 
             $message = WorkflowMessage::collectDataOf($processingType::prototype(), __CLASS__, $env->getNodeName());
 
-            $consoleWriter->writeInfo('Start workflow with message: ' . $message->getMessageName());
+            $consoleWriter->writeInfo('Start workflow with message: ' . $message->messageName());
 
             $env->getWorkflowProcessor()->receiveMessage($message);
 

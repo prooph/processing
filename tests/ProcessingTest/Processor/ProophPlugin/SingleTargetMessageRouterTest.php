@@ -20,6 +20,7 @@ use Prooph\ProcessingTest\TestCase;
 use Prooph\ServiceBus\CommandBus;
 use Prooph\ServiceBus\EventBus;
 use Prooph\ServiceBus\Message\InMemoryMessageDispatcher;
+use Prooph\ServiceBus\Message\InMemoryRemoteMessageDispatcher;
 use Prooph\ServiceBus\Process\CommandDispatch;
 use Prooph\ServiceBus\Process\EventDispatch;
 
@@ -56,7 +57,7 @@ class SingleTargetMessageRouterTest extends TestCase
         return [
             [$this->getTestWorkflowProcessor()],
             [new TestWorkflowMessageHandler()],
-            [new InMemoryMessageDispatcher(new CommandBus(), new EventBus())],
+            [new InMemoryRemoteMessageDispatcher(new CommandBus(), new EventBus())],
             ["processing.workflow_processor_alias"]
         ];
     }

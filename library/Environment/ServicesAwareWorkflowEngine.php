@@ -12,6 +12,7 @@
 namespace Prooph\Processing\Environment;
 
 use Codeliner\ArrayReader\ArrayReader;
+use Prooph\Common\Event\ActionEventListenerAggregate;
 use Prooph\Processing\Environment\Factory\AbstractChannelFactory;
 use Prooph\Processing\Processor\AbstractWorkflowEngine;
 use Prooph\Processing\Processor\Definition;
@@ -114,10 +115,10 @@ class ServicesAwareWorkflowEngine extends AbstractWorkflowEngine
     }
 
     /**
-     * @param ListenerAggregateInterface $plugin
+     * @param ActionEventListenerAggregate $plugin
      * @return void
      */
-    public function attachPluginToAllChannels(ListenerAggregateInterface $plugin)
+    public function attachPluginToAllChannels(ActionEventListenerAggregate $plugin)
     {
         /** @var $channel CommandBus|EventBus */
         foreach ($this->cachedChannels as $channel) {

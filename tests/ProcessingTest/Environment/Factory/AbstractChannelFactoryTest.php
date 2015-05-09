@@ -169,7 +169,7 @@ class AbstractChannelFactoryTest extends TestCase
 
         $commandBus->dispatch($message);
 
-        $this->assertEquals($message->getMessageName(), $messageDispatcher->getLastReceivedMessage()->name());
+        $this->assertEquals($message->messageName(), $messageDispatcher->getLastReceivedMessage()->name());
     }
 
     /**

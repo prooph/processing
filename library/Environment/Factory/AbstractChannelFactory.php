@@ -13,8 +13,8 @@ namespace Prooph\Processing\Environment\Factory;
 
 use Assert\Assertion;
 use Codeliner\ArrayReader\ArrayReader;
+use Prooph\Common\ServiceLocator\ZF2\Zf2ServiceManagerProxy;
 use Prooph\Processing\Environment\Environment;
-use Prooph\Processing\Environment\ServicesAwareWorkflowEngine;
 use Prooph\Processing\Message\ProophPlugin\FromProcessingMessageTranslator;
 use Prooph\Processing\Message\ProophPlugin\HandleWorkflowMessageInvokeStrategy;
 use Prooph\Processing\Message\ProophPlugin\ToProcessingMessageTranslator;
@@ -23,8 +23,8 @@ use Prooph\Processing\Processor\ProophPlugin\SingleTargetMessageRouter;
 use Prooph\Processing\Processor\ProophPlugin\WorkflowProcessorInvokeStrategy;
 use Prooph\ServiceBus\CommandBus;
 use Prooph\ServiceBus\EventBus;
-use Prooph\ServiceBus\InvokeStrategy\ForwardToMessageDispatcherStrategy;
-use Prooph\ServiceBus\ServiceLocator\Zf2ServiceLocatorProxy;
+use Prooph\ServiceBus\InvokeStrategy\ForwardToRemoteMessageDispatcherStrategy;
+use Prooph\ServiceBus\ServiceLocator\ServiceLocatorProxy;
 use Zend\ServiceManager\AbstractFactoryInterface;
 use Zend\ServiceManager\ServiceLocatorInterface;
 
@@ -100,7 +100,7 @@ class AbstractChannelFactory implements AbstractFactoryInterface
 
         $bus->utilize($this->getInvokeProcessorStrategy());
 
-        $bus->utilize(new Zf2ServiceLocatorProxy($serviceLocator));
+        $bus->utilize(new ServiceLocatorProxy(Zf2ServiceManagerProxy::proxy($serviceLocator)));
 
         $messageHandler = $busConfig->stringValue('message_dispatcher', $target);
 
@@ -127,7 +127,7 @@ class AbstractChannelFactory implements AbstractFactoryInterface
     public function getForwardToMessageDispatcher()
     {
         if (is_null($this->forwardToMessageDispatcher)) {
-            $this->forwardToMessageDispatcher = new ForwardToMessageDispatcherStrategy(new FromProcessingMessageTranslator());
+            $this->forwardToMessageDispatcher = new ForwardToRemoteMessageDispatcherStrategy(new FromProcessingMessageTranslator());
         }
 
         return $this->forwardToMessageDispatcher;

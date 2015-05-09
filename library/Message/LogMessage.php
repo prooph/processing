@@ -12,13 +12,10 @@
 namespace Prooph\Processing\Message;
 
 use Assert\Assertion;
-use Prooph\Processing\Message\ProophPlugin\ServiceBusTranslatableMessage;
+use Prooph\Common\Messaging\MessageHeader;
+use Prooph\Common\Messaging\RemoteMessage;
 use Prooph\Processing\Processor\Task\Task;
 use Prooph\Processing\Processor\Task\TaskListPosition;
-use Prooph\ServiceBus\Message\MessageHeader;
-use Prooph\ServiceBus\Message\MessageInterface;
-use Prooph\ServiceBus\Message\MessageNameProvider;
-use Prooph\ServiceBus\Message\StandardMessage;
 use Rhumsaa\Uuid\Uuid;
 
 /**
@@ -27,7 +24,7 @@ use Rhumsaa\Uuid\Uuid;
  * @package Prooph\Processing\Message
  * @author Alexander Miertsch <kontakt@codeliner.ws>
  */
-final class LogMessage implements MessageNameProvider, ProcessingMessage
+final class LogMessage implements ProcessingMessage
 {
     const LOG_LEVEL_DEBUG = "debug";
     const LOG_LEVEL_WARNING = "warning";
@@ -82,9 +79,9 @@ final class LogMessage implements MessageNameProvider, ProcessingMessage
     private $technicalMsg;
 
     /**
-     * @var \DateTime
+     * @var \DateTimeImmutable
      */
-    private $createdOn;
+    private $createdAt;
 
     /**
      * @param WorkflowMessage $originMessage
@@ -104,6 +101,7 @@ final class LogMessage implements MessageNameProvider, ProcessingMessage
     /**
      * @param \Exception $exception
      * @param WorkflowMessage|TaskListPosition $originMessageOrTaskListPosition
+     * @throws \InvalidArgumentException
      * @return LogMessage
      */
     public static function logException(\Exception $exception, $originMessageOrTaskListPosition)
@@ -225,7 +223,7 @@ final class LogMessage implements MessageNameProvider, ProcessingMessage
             sprintf(
                 "Process %s received wrong message with name %s for task %s at position %d",
                 $taskListPosition->taskListId()->processId()->toString(),
-                $workflowMessage->getMessageName(),
+                $workflowMessage->messageName(),
                 get_class($task),
                 $taskListPosition->position()
             ),
@@ -235,7 +233,7 @@ final class LogMessage implements MessageNameProvider, ProcessingMessage
                 'task_list_position' => $taskListPosition->position(),
                 'task_class' => get_class($task),
                 'task_as_json' => json_encode($task->getArrayCopy()),
-                'message_name' => $workflowMessage->getMessageName(),
+                'message_name' => $workflowMessage->messageName(),
             ));
     }
 
@@ -251,13 +249,13 @@ final class LogMessage implements MessageNameProvider, ProcessingMessage
             sprintf(
                 "Workflow message handler %s received wrong message with name %s for task %s",
                 $workflowMessage->target(),
-                $workflowMessage->getMessageName(),
+                $workflowMessage->messageName(),
                 $workflowMessage->processTaskListPosition()->toString()
             ),
             self::ERROR_UNSUPPORTED_MESSAGE_RECEIVED,
             array(
                 'workflow_message_handler' => $workflowMessage->target(),
-                'message_name' => $workflowMessage->getMessageName(),
+                'message_name' => $workflowMessage->messageName(),
             )
         );
     }
@@ -296,11 +294,11 @@ final class LogMessage implements MessageNameProvider, ProcessingMessage
     }
 
     /**
-     * @param MessageInterface $aMessage
+     * @param RemoteMessage $aMessage
      * @return LogMessage
      * @throws \RuntimeException
      */
-    public static function fromServiceBusMessage(MessageInterface $aMessage)
+    public static function fromServiceBusMessage(RemoteMessage $aMessage)
     {
         $payload = $aMessage->payload();
 
@@ -319,7 +317,7 @@ final class LogMessage implements MessageNameProvider, ProcessingMessage
             $payload['msgCode'],
             $payload['msgParams'],
             $aMessage->header()->uuid(),
-            $aMessage->header()->createdOn()
+            $aMessage->header()->createdAt()
         );
     }
 
@@ -330,9 +328,9 @@ final class LogMessage implements MessageNameProvider, ProcessingMessage
      * @param int $msgCode
      * @param array $msgParams
      * @param Uuid $uuid
-     * @param \DateTime $createdOn
+     * @param \DateTimeImmutable $createdAt
      */
-    private function __construct($origin, TaskListPosition $taskListPosition, $technicalMsg, $msgCode = 0, array $msgParams = array(), Uuid $uuid = null, \DateTime $createdOn = null)
+    private function __construct($origin, TaskListPosition $taskListPosition, $technicalMsg, $msgCode = 0, array $msgParams = array(), Uuid $uuid = null, \DateTimeImmutable $createdAt = null)
     {
         Assertion::string($origin);
         Assertion::notEmpty($origin);
@@ -353,11 +351,11 @@ final class LogMessage implements MessageNameProvider, ProcessingMessage
 
         $this->uuid = $uuid;
 
-        if (is_null($createdOn)) {
-            $createdOn = new \DateTime();
+        if (is_null($createdAt)) {
+            $createdAt = new \DateTimeImmutable();
         }
 
-        $this->createdOn = $createdOn;
+        $this->createdAt = $createdAt;
     }
 
     /**
@@ -397,19 +395,19 @@ final class LogMessage implements MessageNameProvider, ProcessingMessage
     }
 
     /**
-     * @return MessageInterface
+     * @return RemoteMessage
      */
     public function toServiceBusMessage()
     {
         $header = new MessageHeader(
             $this->uuid(),
-            $this->createdOn(),
+            $this->createdAt(),
             1,
             MessageHeader::TYPE_EVENT
         );
 
-        return new StandardMessage(
-            $this->getMessageName(),
+        return new RemoteMessage(
+            $this->messageName(),
             $header,
             [
                 'origin' => $this->origin(),
@@ -434,7 +432,7 @@ final class LogMessage implements MessageNameProvider, ProcessingMessage
             $this->msgCode(),
             $this->msgParams(),
             null,
-            $this->createdOn()
+            $this->createdAt()
         );
     }
 
@@ -479,11 +477,11 @@ final class LogMessage implements MessageNameProvider, ProcessingMessage
     }
 
     /**
-     * @return \DateTime
+     * @return \DateTimeImmutable
      */
-    public function createdOn()
+    public function createdAt()
     {
-        return $this->createdOn;
+        return $this->createdAt;
     }
 
     /**

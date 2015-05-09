@@ -138,7 +138,7 @@ class ProcessFactoryTest extends TestCase
 
         $factory = new ProcessFactory(
             [
-                $wfMessage->getMessageName() => $processDefinition
+                $wfMessage->messageName() => $processDefinition
             ]
         );
 

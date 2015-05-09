@@ -92,7 +92,7 @@ class SubProcessFinishedTest extends TestCase
 
         $sbMessage = $event->toServiceBusMessage();
 
-        $this->assertInstanceOf('Prooph\ServiceBus\Message\StandardMessage', $sbMessage);
+        $this->assertInstanceOf('Prooph\Common\Messaging\RemoteMessage', $sbMessage);
 
         $copyOfEvent = SubProcessFinished::fromServiceBusMessage($sbMessage);
 

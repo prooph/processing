@@ -12,6 +12,7 @@
 namespace Prooph\Processing\Processor\Task;
 
 use Assert\Assertion;
+use Prooph\Common\Messaging\RemoteMessage;
 use Prooph\Processing\Message\LogMessage;
 use Prooph\ServiceBus\Message\StandardMessage;
 
@@ -44,12 +45,12 @@ class TaskListEntry
     private $status;
 
     /**
-     * @var \DateTime
+     * @var \DateTimeImmutable
      */
     private $startedOn;
 
     /**
-     * @var \DateTime
+     * @var \DateTimeImmutable
      */
     private $finishedOn;
 
@@ -171,7 +172,7 @@ class TaskListEntry
     }
 
     /**
-     * @return \DateTime|null
+     * @return \DateTimeImmutable|null
      */
     public function startedOn()
     {
@@ -179,7 +180,7 @@ class TaskListEntry
     }
 
     /**
-     * @return \DateTime|null
+     * @return \DateTimeImmutable|null
      */
     public function finishedOn()
     {
@@ -203,10 +204,10 @@ class TaskListEntry
     }
 
     /**
-     * @param \DateTime|null $startedOn
+     * @param \DateTimeImmutable|null $startedOn
      * @throws \RuntimeException
      */
-    public function markAsRunning(\DateTime $startedOn = null)
+    public function markAsRunning(\DateTimeImmutable $startedOn = null)
     {
         if ($this->isStarted()) {
             //Seems like we've received a duplicate message, we should ignore that
@@ -219,7 +220,7 @@ class TaskListEntry
         }
 
         if (is_null($startedOn)) {
-            $startedOn = new \DateTime();
+            $startedOn = new \DateTimeImmutable();
         }
 
 
@@ -228,18 +229,18 @@ class TaskListEntry
     }
 
     /**
-     * @param \DateTime $finishedOn
+     * @param \DateTimeImmutable $finishedOn
      * @throws \RuntimeException
      */
-    public function markAsSuccessfulDone(\DateTime $finishedOn = null)
+    public function markAsSuccessfulDone(\DateTimeImmutable $finishedOn = null)
     {
         if (is_null($finishedOn)) {
-            $finishedOn = new \DateTime();
+            $finishedOn = new \DateTimeImmutable();
         }
 
         if (! $this->isRunning()) {
             if (! $this->isStarted()) {
-                $this->markAsRunning(new \DateTime());
+                $this->markAsRunning(new \DateTimeImmutable());
             } else {
                 if ($this->finishedOn > $finishedOn) {
                     //Seems like we've received a duplicate message, we should ignore that
@@ -254,18 +255,18 @@ class TaskListEntry
     }
 
     /**
-     * @param \DateTime $finishedOn
+     * @param \DateTimeImmutable $finishedOn
      * @throws \RuntimeException
      */
-    public function markAsFailed(\DateTime $finishedOn = null)
+    public function markAsFailed(\DateTimeImmutable $finishedOn = null)
     {
         if (is_null($finishedOn)) {
-            $finishedOn = new \DateTime();
+            $finishedOn = new \DateTimeImmutable();
         }
 
         if (! $this->isRunning()) {
             if (! $this->isStarted()) {
-                $this->markAsRunning(new \DateTime());
+                $this->markAsRunning(new \DateTimeImmutable());
             } else {
                 if ($this->finishedOn > $finishedOn) {
                     //Seems like we've received a duplicate message, we should ignore that
@@ -333,7 +334,7 @@ class TaskListEntry
     protected function setLogFromArray(array $log)
     {
         foreach ($log as $sbMessageArr) {
-            $sbMessage = StandardMessage::fromArray($sbMessageArr);
+            $sbMessage = RemoteMessage::fromArray($sbMessageArr);
 
             $this->log[] = LogMessage::fromServiceBusMessage($sbMessage);
         }

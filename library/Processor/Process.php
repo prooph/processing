@@ -12,6 +12,7 @@
 namespace Prooph\Processing\Processor;
 
 use Codeliner\ArrayReader\ArrayReader;
+use Prooph\Common\Messaging\RemoteMessage;
 use Prooph\Processing\Message\LogMessage;
 use Prooph\Processing\Message\MessageNameUtils;
 use Prooph\Processing\Message\WorkflowMessage;
@@ -167,7 +168,7 @@ abstract class Process extends AggregateRoot
     public function receiveMessage($message, WorkflowEngine $workflowEngine)
     {
         if ($message instanceof WorkflowMessage) {
-            if (MessageNameUtils::isProcessingCommand($message->getMessageName())) {
+            if (MessageNameUtils::isProcessingCommand($message->messageName())) {
                 $this->perform($workflowEngine, $message);
                 return;
             }
@@ -361,7 +362,7 @@ abstract class Process extends AggregateRoot
         WorkflowEngine $workflowEngine,
         WorkflowMessage $previousMessage)
     {
-        if (! MessageNameUtils::isProcessingEvent($previousMessage->getMessageName())) {
+        if (! MessageNameUtils::isProcessingEvent($previousMessage->messageName())) {
             $this->receiveMessage(
                 LogMessage::logWrongMessageReceivedFor(
                     $task,
@@ -442,7 +443,7 @@ abstract class Process extends AggregateRoot
     {
         $taskListEntry = $this->taskList->getTaskListEntryAtPosition($event->taskListPosition());
 
-        $taskListEntry->markAsRunning($event->occurredOn());
+        $taskListEntry->markAsRunning($event->createdAt());
     }
 
     /**
@@ -452,7 +453,7 @@ abstract class Process extends AggregateRoot
     {
         $taskListEntry = $this->taskList->getTaskListEntryAtPosition($event->taskListPosition());
 
-        $taskListEntry->markAsSuccessfulDone($event->occurredOn());
+        $taskListEntry->markAsSuccessfulDone($event->createdAt());
     }
 
     /**
@@ -462,7 +463,7 @@ abstract class Process extends AggregateRoot
     {
         $taskListEntry = $this->taskList->getTaskListEntryAtPosition($event->taskListPosition());
 
-        $taskListEntry->markAsFailed($event->occurredOn());
+        $taskListEntry->markAsFailed($event->createdAt());
     }
 
     /**
@@ -472,7 +473,7 @@ abstract class Process extends AggregateRoot
     {
         $taskListEntry = $this->taskList->getTaskListEntryAtPosition($event->taskListPosition());
 
-        $sbMessage = StandardMessage::fromArray($event->payload()['message']);
+        $sbMessage = RemoteMessage::fromArray($event->payload()['message']);
 
         $taskListEntry->logMessage(LogMessage::fromServiceBusMessage($sbMessage));
     }

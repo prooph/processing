@@ -12,17 +12,13 @@
 namespace Prooph\Processing\Message;
 
 use Assert\Assertion;
-use Prooph\Processing\Message\ProophPlugin\ServiceBusTranslatableMessage;
+use Prooph\Common\Messaging\MessageHeader;
+use Prooph\Common\Messaging\RemoteMessage;
 use Prooph\Processing\Processor\NodeName;
-use Prooph\Processing\Processor\ProcessId;
 use Prooph\Processing\Processor\Task\TaskListPosition;
 use Prooph\Processing\Type\Exception\InvalidTypeException;
 use Prooph\Processing\Type\Prototype;
 use Prooph\Processing\Type\Type;
-use Prooph\ServiceBus\Message\MessageHeader;
-use Prooph\ServiceBus\Message\MessageInterface;
-use Prooph\ServiceBus\Message\MessageNameProvider;
-use Prooph\ServiceBus\Message\StandardMessage;
 use Rhumsaa\Uuid\Uuid;
 use Zend\Stdlib\ArrayUtils;
 
@@ -32,7 +28,7 @@ use Zend\Stdlib\ArrayUtils;
  * @package Prooph\Processing\Message
  * @author Alexander Miertsch <kontakt@codeliner.ws>
  */
-class WorkflowMessage implements MessageNameProvider, ProcessingMessage
+class WorkflowMessage implements ProcessingMessage
 {
     /**
      * @var string
@@ -77,9 +73,9 @@ class WorkflowMessage implements MessageNameProvider, ProcessingMessage
     protected $version;
 
     /**
-     * @var \DateTime
+     * @var \DateTimeImmutable
      */
-    protected $createdOn;
+    protected $createdAt;
 
     /**
      * @var Payload
@@ -122,11 +118,11 @@ class WorkflowMessage implements MessageNameProvider, ProcessingMessage
     }
 
     /**
-     * @param MessageInterface $aMessage
+     * @param RemoteMessage $aMessage
      * @return WorkflowMessage
      * @throws \RuntimeException
      */
-    public static function fromServiceBusMessage(MessageInterface $aMessage)
+    public static function fromServiceBusMessage(RemoteMessage $aMessage)
     {
         $payload = $aMessage->payload();
 
@@ -152,7 +148,7 @@ class WorkflowMessage implements MessageNameProvider, ProcessingMessage
             $metadata,
             $taskListPosition,
             $aMessage->header()->version(),
-            $aMessage->header()->createdOn(),
+            $aMessage->header()->createdAt(),
             $aMessage->header()->uuid()
         );
     }
@@ -165,7 +161,7 @@ class WorkflowMessage implements MessageNameProvider, ProcessingMessage
      * @param array|null $metadata
      * @param TaskListPosition|null $taskListPosition
      * @param int $version
-     * @param \DateTime|null $createdOn
+     * @param \DateTimeImmutable|null $createdAt
      * @param Uuid|null $uuid
      */
     protected function __construct(
@@ -176,7 +172,7 @@ class WorkflowMessage implements MessageNameProvider, ProcessingMessage
         array $metadata,
         TaskListPosition $taskListPosition = null,
         $version = 1,
-        \DateTime $createdOn = null,
+        \DateTimeImmutable $createdAt = null,
         Uuid $uuid = null
     ) {
         $this->payload = $payload;
@@ -218,11 +214,11 @@ class WorkflowMessage implements MessageNameProvider, ProcessingMessage
 
         $this->version = $version;
 
-        if (is_null($createdOn)) {
-            $createdOn = new \DateTime();
+        if (is_null($createdAt)) {
+            $createdAt = new \DateTimeImmutable();
         }
 
-        $this->createdOn = $createdOn;
+        $this->createdAt = $createdAt;
     }
 
     /**
@@ -323,7 +319,7 @@ class WorkflowMessage implements MessageNameProvider, ProcessingMessage
             throw new \RuntimeException(
                 sprintf(
                     "WorkflowMessage %s (%s) is already connected to a process task",
-                    $this->getMessageName(),
+                    $this->messageName(),
                     $this->uuid()->toString()
                 )
             );
@@ -340,24 +336,14 @@ class WorkflowMessage implements MessageNameProvider, ProcessingMessage
     {
         return new self(
             $this->payload,
-            $this->getMessageName(),
+            $this->messageName(),
             $this->origin,
             $this->target,
             $this->metadata,
             $taskListPosition,
             $this->version,
-            $this->createdOn()
+            $this->createdAt()
         );
-    }
-
-    /**
-     * Alias for messageName() method to fulfill the MessageNameProvider interface
-     *
-     * @return string Name of the message
-     */
-    public function getMessageName()
-    {
-        return $this->messageName();
     }
 
     /**
@@ -373,7 +359,7 @@ class WorkflowMessage implements MessageNameProvider, ProcessingMessage
      */
     public function messageType()
     {
-        return MessageNameUtils::getMessageSuffix($this->getMessageName());
+        return MessageNameUtils::getMessageSuffix($this->messageName());
     }
 
     /**
@@ -425,11 +411,11 @@ class WorkflowMessage implements MessageNameProvider, ProcessingMessage
     }
 
     /**
-     * @return \DateTime
+     * @return \DateTimeImmutable
      */
-    public function createdOn()
+    public function createdAt()
     {
-        return $this->createdOn;
+        return $this->createdAt;
     }
 
     /**
@@ -467,25 +453,25 @@ class WorkflowMessage implements MessageNameProvider, ProcessingMessage
 
     /**
      * @throws \RuntimeException
-     * @return MessageInterface
+     * @return RemoteMessage
      */
     public function toServiceBusMessage()
     {
         $messageType = null;
 
-        if (MessageNameUtils::isProcessingCommand($this->getMessageName()))
+        if (MessageNameUtils::isProcessingCommand($this->messageName()))
             $messageType = MessageHeader::TYPE_COMMAND;
-        else if (MessageNameUtils::isProcessingEvent($this->getMessageName()))
+        else if (MessageNameUtils::isProcessingEvent($this->messageName()))
             $messageType = MessageHeader::TYPE_EVENT;
         else
             throw new \RuntimeException(sprintf(
                 'Processing message %s can not be converted to service bus message. Type of the message could not be detected',
-                $this->getMessageName()
+                $this->messageName()
             ));
 
         $messageHeader = new MessageHeader(
             $this->uuid(),
-            $this->createdOn(),
+            $this->createdAt(),
             $this->version(),
             $messageType
         );
@@ -501,8 +487,8 @@ class WorkflowMessage implements MessageNameProvider, ProcessingMessage
             $msgPayload['processTaskListPosition'] = $this->processTaskListPosition()->toString();
         }
 
-        return new StandardMessage(
-            $this->getMessageName(),
+        return new RemoteMessage(
+            $this->messageName(),
             $messageHeader,
             $msgPayload
         );

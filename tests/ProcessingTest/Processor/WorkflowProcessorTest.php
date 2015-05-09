@@ -81,10 +81,10 @@ class WorkflowProcessorTest extends TestCase
         $recordedProcessId = null;
 
         foreach($recordedEvents as $recordedEvent) {
-            $eventNames[] = $recordedEvent->eventName()->toString();
+            $eventNames[] = $recordedEvent->messageName();
 
-            if ($recordedEvent->eventName()->toString() == 'Prooph\Processing\Processor\Event\ProcessWasSetUp') {
-                $recordedProcessId = $recordedEvent->payload()['aggregate_id'];
+            if ($recordedEvent->messageName() == 'Prooph\Processing\Processor\Event\ProcessWasSetUp') {
+                $recordedProcessId = $recordedEvent->metadata()['aggregate_id'];
             }
         }
 
@@ -133,10 +133,10 @@ class WorkflowProcessorTest extends TestCase
         $recordedProcessId = null;
 
         foreach($recordedEvents as $recordedEvent) {
-            $eventNames[] = $recordedEvent->eventName()->toString();
+            $eventNames[] = $recordedEvent->messageName();
 
-            if ($recordedEvent->eventName()->toString() == 'Prooph\Processing\Processor\Task\Event\TaskEntryMarkedAsDone') {
-                $recordedProcessId = $recordedEvent->payload()['aggregate_id'];
+            if ($recordedEvent->messageName() == 'Prooph\Processing\Processor\Task\Event\TaskEntryMarkedAsDone') {
+                $recordedProcessId = $recordedEvent->metadata()['aggregate_id'];
             }
         }
 
@@ -145,7 +145,7 @@ class WorkflowProcessorTest extends TestCase
         $this->assertEquals($expectedEventNames, $eventNames);
         $this->assertNotNull($processDidFinishId);
         $this->assertEquals($recordedProcessId, $processDidFinishId);
-        $this->assertEquals($wfMessage->createdOn()->format(\DateTime::ISO8601), $processDidFinishAt);
+        $this->assertEquals($wfMessage->createdAt()->format(\DateTime::ISO8601), $processDidFinishAt);
         $this->assertTrue($processDidSuccessfullyFinish);
     }
 
@@ -179,7 +179,7 @@ class WorkflowProcessorTest extends TestCase
         $eventNames = [];
 
         foreach($recordedEvents as $recordedEvent) {
-            $eventNames[] = $recordedEvent->eventName()->toString();
+            $eventNames[] = $recordedEvent->messageName();
         }
 
         $expectedEventNames = ['Prooph\Processing\Processor\Task\Event\LogMessageReceived'];
@@ -232,7 +232,7 @@ class WorkflowProcessorTest extends TestCase
         $eventNames = [];
 
         foreach($recordedEvents as $recordedEvent) {
-            $eventNames[] = $recordedEvent->eventName()->toString();
+            $eventNames[] = $recordedEvent->messageName();
         }
 
         $expectedEventNames = ['Prooph\Processing\Processor\Task\Event\TaskEntryMarkedAsDone'];

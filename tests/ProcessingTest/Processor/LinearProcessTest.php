@@ -104,7 +104,7 @@ class LinearProcessTest extends TestCase
         $eventBus = new EventBus();
 
         $eventBus->utilize(new EventRouter([
-            $answer->getMessageName() => [
+            $answer->messageName() => [
                 function (WorkflowMessage $answer) use ($process) {
                     $process->receiveMessage($answer, $this->workflowEngine);
                 }
@@ -183,20 +183,20 @@ class LinearProcessTest extends TestCase
 
         $taskListPositionProp->setValue($processDataMessage, null);
 
-        $this->commandRouter->route($processDataMessage->getMessageName())->to($this->workflowMessageHandler);
+        $this->commandRouter->route($processDataMessage->messageName())->to($this->workflowMessageHandler);
 
         $answer2 = $processDataMessage->answerWithDataProcessingCompleted();
 
         $eventBus = new EventBus();
 
         $eventRouter = new EventRouter([
-            $answer1->getMessageName() => [
+            $answer1->messageName() => [
                 function (WorkflowMessage $answer) use ($process, $answer2) {
                     $this->workflowMessageHandler->setNextAnswer($answer2);
                     $process->receiveMessage($answer, $this->workflowEngine);
                 }
             ],
-            $answer2->getMessageName() => [
+            $answer2->messageName() => [
                 function (WorkflowMessage $answer) use ($process) {
                     $process->receiveMessage($answer, $this->workflowEngine);
                 }

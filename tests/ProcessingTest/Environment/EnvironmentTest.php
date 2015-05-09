@@ -187,7 +187,7 @@ class EnvironmentTest extends TestCase
         $env = Environment::setUp([
             'processing' => [
                 'processes' => [
-                    $wfMessage->getMessageName() => $processDefinition
+                    $wfMessage->messageName() => $processDefinition
                 ]
             ]
         ]);

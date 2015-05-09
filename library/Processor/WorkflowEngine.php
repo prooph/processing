@@ -11,9 +11,9 @@
 
 namespace Prooph\Processing\Processor;
 
+use Prooph\Common\Event\ActionEventListenerAggregate;
+use Prooph\Common\Messaging\RemoteMessage;
 use Prooph\Processing\Message\ProcessingMessage;
-use Prooph\ServiceBus\Message\MessageInterface;
-use Zend\EventManager\ListenerAggregateInterface;
 
 /**
  * Interface WorkflowEngine
@@ -32,16 +32,16 @@ interface WorkflowEngine
      * If a service bus message is given the workflow engine translates it to a processing message first.
      * If translation is not possible it should throw a InvalidArgumentException
      *
-     * @param MessageInterface|ProcessingMessage $message
+     * @param RemoteMessage|ProcessingMessage $message
      * @param null|string $sender
      * @return void
      */
     public function dispatch($message, $sender = null);
 
     /**
-     * @param ListenerAggregateInterface $plugin
+     * @param ActionEventListenerAggregate $plugin
      * @return void
      */
-    public function attachPluginToAllChannels(ListenerAggregateInterface $plugin);
+    public function attachPluginToAllChannels(ActionEventListenerAggregate $plugin);
 }
  

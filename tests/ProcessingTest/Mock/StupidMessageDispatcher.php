@@ -11,8 +11,8 @@
 
 namespace Prooph\ProcessingTest\Mock;
 
-use Prooph\ServiceBus\Message\MessageDispatcherInterface;
-use Prooph\ServiceBus\Message\MessageInterface;
+use Prooph\Common\Messaging\RemoteMessage;
+use Prooph\ServiceBus\Message\RemoteMessageDispatcher;
 
 /**
  * Class StupidMessageDispatcher
@@ -20,21 +20,21 @@ use Prooph\ServiceBus\Message\MessageInterface;
  * @package Prooph\ProcessingTest\Mock
  * @author Alexander Miertsch <kontakt@codeliner.ws>
  */
-class StupidMessageDispatcher implements MessageDispatcherInterface
+class StupidMessageDispatcher implements RemoteMessageDispatcher
 {
     private $lastReceivedMessage;
 
     /**
-     * @param MessageInterface $message
+     * @param RemoteMessage $message
      * @return void
      */
-    public function dispatch(MessageInterface $message)
+    public function dispatch(RemoteMessage $message)
     {
         $this->lastReceivedMessage = $message;
     }
 
     /**
-     * @return MessageInterface
+     * @return RemoteMessage
      */
     public function getLastReceivedMessage()
     {

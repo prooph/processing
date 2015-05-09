@@ -12,16 +12,15 @@
 namespace Prooph\Processing\Processor\ProophPlugin;
 
 use Assert\Assertion;
-use Prooph\Processing\Message\LogMessage;
-use Prooph\Processing\Message\WorkflowMessage;
+use Prooph\Common\Event\ActionEventDispatcher;
+use Prooph\Common\Event\ActionEventListenerAggregate;
+use Prooph\Common\Event\DetachAggregateHandlers;
 use Prooph\Processing\Message\WorkflowMessageHandler;
-use Prooph\Processing\Processor\Command\StartSubProcess;
 use Prooph\Processing\Processor\WorkflowProcessor;
-use Prooph\ServiceBus\Message\MessageDispatcherInterface;
+use Prooph\ServiceBus\Message\RemoteMessageDispatcher;
 use Prooph\ServiceBus\Process\CommandDispatch;
 use Prooph\ServiceBus\Process\EventDispatch;
-use Zend\EventManager\AbstractListenerAggregate;
-use Zend\EventManager\EventManagerInterface;
+use Prooph\ServiceBus\Process\MessageDispatch;
 
 /**
  * Class SingleTargetMessageRouter
@@ -32,25 +31,27 @@ use Zend\EventManager\EventManagerInterface;
  * @package Prooph\Processing\Processor\ProophPlugin
  * @author Alexander Miertsch <kontakt@codeliner.ws>
  */
-class SingleTargetMessageRouter extends AbstractListenerAggregate
+class SingleTargetMessageRouter implements ActionEventListenerAggregate
 {
+    use DetachAggregateHandlers;
+
     /**
-     * @var WorkflowProcessor|MessageDispatcherInterface|WorkflowMessageHandler|string
+     * @var WorkflowProcessor|RemoteMessageDispatcher|WorkflowMessageHandler|string
      */
     private $targetHandler;
 
     /**
-     * @param WorkflowProcessor|MessageDispatcherInterface|WorkflowMessageHandler|string $targetHandler
+     * @param WorkflowProcessor|RemoteMessageDispatcher|WorkflowMessageHandler|string $targetHandler
      * @throws \InvalidArgumentException
      */
     public function __construct($targetHandler)
     {
         if (is_object($targetHandler)) {
             if (! $targetHandler instanceof WorkflowProcessor
-                && ! $targetHandler instanceof MessageDispatcherInterface
+                && ! $targetHandler instanceof RemoteMessageDispatcher
                 && ! $targetHandler instanceof WorkflowMessageHandler) {
                 throw new \InvalidArgumentException(sprintf(
-                    "Wrong TargetHandler given: %s. Allowed types are instances of Prooph\ProcessingProcessor\WorkflowProcessor or Prooph\ServiceBus\Message\MessageDispatcherInterface or ProcessingMessage\WorkflowMessageHandler or a string",
+                    "Wrong TargetHandler given: %s. Allowed types are instances of Prooph\\Processing\\Processor\\WorkflowProcessor or Prooph\\ServiceBus\\Message\\RemoteMessageDispatcher or Prooph\\Processing\\Message\\WorkflowMessageHandler or a string",
                     get_class($targetHandler)
                 ));
             }
@@ -65,20 +66,24 @@ class SingleTargetMessageRouter extends AbstractListenerAggregate
     /**
      * Attach to CommandBus or EventBus route event
      *
-     * @param EventManagerInterface $events
+     * @param ActionEventDispatcher $events
      *
      * @return void
      */
-    public function attach(EventManagerInterface $events)
+    public function attach(ActionEventDispatcher $events)
     {
-        $identifiers = $events->getIdentifiers();
+        $this->trackHandler($events->attachListener(MessageDispatch::ROUTE, array($this, 'onRouteMessage'), 100));
+    }
 
-        if (in_array('command_bus', $identifiers)) {
-            $this->listeners[] = $events->attach(CommandDispatch::ROUTE, array($this, 'onRouteCommand'), 100);
-        }
-
-        if (in_array('event_bus', $identifiers)) {
-            $this->listeners[] = $events->attach(EventDispatch::ROUTE, array($this, 'onRouteEvent'), 100);
+    /**
+     * @param MessageDispatch $dispatch
+     */
+    public function onRouteMessage(MessageDispatch $dispatch)
+    {
+        if ($dispatch instanceof CommandDispatch) {
+            $this->onRouteCommand($dispatch);
+        } else {
+            $this->onRouteEvent($dispatch);
         }
     }
 

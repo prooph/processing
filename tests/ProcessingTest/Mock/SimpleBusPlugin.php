@@ -11,8 +11,9 @@
 
 namespace Prooph\ProcessingTest\Mock;
 
-use Zend\EventManager\AbstractListenerAggregate;
-use Zend\EventManager\EventManagerInterface;
+use Prooph\Common\Event\ActionEventDispatcher;
+use Prooph\Common\Event\ActionEventListenerAggregate;
+use Prooph\Common\Event\DetachAggregateHandlers;
 
 /**
  * Class SimpleBusPlugin
@@ -20,8 +21,10 @@ use Zend\EventManager\EventManagerInterface;
  * @package Prooph\ProcessingTest\Mock
  * @author Alexander Miertsch <kontakt@codeliner.ws>
  */
-class SimpleBusPlugin extends AbstractListenerAggregate
+class SimpleBusPlugin implements ActionEventListenerAggregate
 {
+    use DetachAggregateHandlers;
+
     private $registered = false;
 
     /**
@@ -35,11 +38,11 @@ class SimpleBusPlugin extends AbstractListenerAggregate
      * Implementors may add an optional $priority argument; the EventManager
      * implementation will pass this to the aggregate.
      *
-     * @param EventManagerInterface $events
+     * @param ActionEventDispatcher $events
      *
      * @return void
      */
-    public function attach(EventManagerInterface $events)
+    public function attach(ActionEventDispatcher $events)
     {
         $this->registered = true;
         $this->attachCount++;
