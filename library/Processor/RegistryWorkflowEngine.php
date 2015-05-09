@@ -15,7 +15,6 @@ use Assert\Assertion;
 use Prooph\Common\Event\ActionEventListenerAggregate;
 use Prooph\ServiceBus\CommandBus;
 use Prooph\ServiceBus\EventBus;
-use Zend\EventManager\ListenerAggregateInterface;
 
 /**
  * Class RegistryWorkflowEngine

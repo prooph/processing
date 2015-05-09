@@ -11,15 +11,14 @@
 
 namespace Prooph\Processing\Processor;
 
+use Prooph\Common\Event\ActionEventDispatcher;
+use Prooph\Common\Event\ZF2\Zf2ActionEventDispatcher;
 use Prooph\Processing\Message\LogMessage;
 use Prooph\Processing\Message\WorkflowMessage;
 use Prooph\Processing\Processor\Command\StartSubProcess;
 use Prooph\Processing\Processor\Event\SubProcessFinished;
 use Prooph\Processing\Processor\Task\TaskListPosition;
 use Prooph\EventStore\EventStore;
-use Zend\EventManager\Event;
-use Zend\EventManager\EventManager;
-use Zend\EventManager\EventManagerInterface;
 
 /**
  * Class WorkflowProcessor
@@ -72,7 +71,7 @@ class WorkflowProcessor
     private $receivedMessageNestingLevel = 0;
 
     /**
-     * @var EventManagerInterface
+     * @var ActionEventDispatcher
      */
     private $events;
 
@@ -136,7 +135,7 @@ class WorkflowProcessor
 
         if (! $this->receivedMessageNestingLevel) {
             while (! $this->processorEventQueue->isEmpty()) {
-                $this->events()->trigger($this->processorEventQueue->dequeue());
+                $this->events()->dispatch($this->processorEventQueue->dequeue());
             }
         }
     }
@@ -165,7 +164,7 @@ class WorkflowProcessor
         }
 
         $this->processorEventQueue->enqueue(
-            new Event(
+            $this->events()->getNewActionEvent(
                 "process_was_started_by_message",
                 $this,
                 [
@@ -237,7 +236,7 @@ class WorkflowProcessor
 
         if ($process->isFinished()) {
             $this->processorEventQueue->enqueue(
-                new Event(
+                $this->events()->getNewActionEvent(
                     'process_did_finish',
                     $this,
                     [
@@ -305,15 +304,12 @@ class WorkflowProcessor
     }
 
     /**
-     * @return EventManagerInterface
+     * @return ActionEventDispatcher
      */
     public function events()
     {
         if (is_null($this->events)) {
-            $this->events = new EventManager([
-                __CLASS__,
-                'processing_workflow_processor'
-            ]);
+            $this->events = new Zf2ActionEventDispatcher();
         }
 
         return $this->events;

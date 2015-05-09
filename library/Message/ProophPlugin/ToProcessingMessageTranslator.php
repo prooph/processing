@@ -21,8 +21,6 @@ use Prooph\Processing\Message\WorkflowMessage;
 use Prooph\Processing\Processor\Command\StartSubProcess;
 use Prooph\Processing\Processor\Event\SubProcessFinished;
 use Prooph\ServiceBus\Process\MessageDispatch;
-use Zend\EventManager\AbstractListenerAggregate;
-use Zend\EventManager\EventManagerInterface;
 
 /**
  * Class ToProcessingMessageTranslator
