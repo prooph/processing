@@ -3,6 +3,8 @@ All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased][unreleased]
+
+## [0.3.0]
 ### Added
 - Add change log
 - All targets wildcard (*) for channel matching
@@ -17,4 +19,5 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ## [0.2.0] - 2015-03-13
 - [Release Notes](https://github.com/prooph/processing/releases/tag/v0.2)
 
-[unreleased]: https://github.com/prooph/processing/compare/v0.2...HEAD
+[unreleased]: https://github.com/prooph/processing/compare/v0.3...HEAD
+[0.3.0]: https://github.com/prooph/processing/compare/v0.2...v0.3
