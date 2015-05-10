@@ -11,6 +11,8 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Changed
 - Name of the stream table from process_stream to prooph_processing_stream - BC Break!
+- Use Prooph\Common\ServiceLocator as type hint in environment - BC Break!
+- Use Prooph\Common\Event\... for triggering processor action events - BC Break!
 
 ## Added
 - Environment now provides a EventStoreDoctrineSchema to help set up the stream table when using doctrine/migrations
