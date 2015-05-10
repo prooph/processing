@@ -327,7 +327,7 @@ class TestCase extends \PHPUnit_Framework_TestCase
 
             $this->eventStore->beginTransaction();
 
-            $this->eventStore->create(new Stream(new StreamName('process_stream'), []));
+            $this->eventStore->create(new Stream(new StreamName('prooph_processing_stream'), []));
 
             $this->eventStore->commit();
         }
@@ -361,7 +361,7 @@ class TestCase extends \PHPUnit_Framework_TestCase
 
             $this->otherMachineEventStore->beginTransaction();
 
-            $this->otherMachineEventStore->create(new Stream(new StreamName('process_stream'), []));
+            $this->otherMachineEventStore->create(new Stream(new StreamName('prooph_processing_stream'), []));
 
             $this->otherMachineEventStore->commit();
         }

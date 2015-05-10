@@ -38,7 +38,7 @@ class ProcessRepository extends AggregateRepository
         parent::__construct(
             $eventStore,
             new AggregateTranslator(),
-            new SingleStreamStrategy($eventStore, 'process_stream'),
+            new SingleStreamStrategy($eventStore, 'prooph_processing_stream'),
             $aggregateType
         );
     }
