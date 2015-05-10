@@ -4,6 +4,17 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased][unreleased]
 
+## [0.4.0]
+### Fixes
+- Aliasing the configuration with config caused an error when config is already registered as service name
+  - Added a check to only set alias when it is not present
+
+## Changed
+- Name of the stream table from process_stream to prooph_processing_stream - BC Break!
+
+## Added
+- Environment now provides a EventStoreDoctrineSchema to help set up the stream table when using doctrine/migrations
+
 ## [0.3.0]
 ### Added
 - Add change log
@@ -20,4 +31,5 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 - [Release Notes](https://github.com/prooph/processing/releases/tag/v0.2)
 
 [unreleased]: https://github.com/prooph/processing/compare/v0.3...HEAD
+[0.4.0]: https://github.com/prooph/processing/compare/v0.3...v0.4
 [0.3.0]: https://github.com/prooph/processing/compare/v0.2...v0.3
