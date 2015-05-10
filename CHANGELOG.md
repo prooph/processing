@@ -4,7 +4,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased][unreleased]
 
-## [0.4.0]
+## [0.4.0] - 2015-05-10
 ### Fixes
 - Aliasing the configuration with config caused an error when config is already registered as service name
   - Added a check to only set alias when it is not present
@@ -15,7 +15,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ## Added
 - Environment now provides a EventStoreDoctrineSchema to help set up the stream table when using doctrine/migrations
 
-## [0.3.0]
+## [0.3.0] - 2015-05-09
 ### Added
 - Add change log
 - All targets wildcard (*) for channel matching
