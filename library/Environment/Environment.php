@@ -201,7 +201,9 @@ class Environment
 
         $env->services()->set('configuration', $envConfig, true);
 
-        $env->services()->setAlias('config', 'configuration');
+        if (! $env->services()->has('config')) {
+            $env->services()->setAlias('config', 'configuration');
+        }
 
         $env->services()->set(Definition::SERVICE_ENVIRONMENT, $env, true);
 
