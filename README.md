@@ -1,7 +1,9 @@
 PROOPH PROCESSING
 =================
 
-Workflow processing made easy - powered by prooph software GmbH
+## Deprecated Package. Will be reomved in 03/2016!
+
+Use https://github.com/proophsoftware/processing instead.
 
 [![Build Status](https://travis-ci.org/prooph/processing.svg?branch=master)](https://travis-ci.org/prooph/processing)
 
